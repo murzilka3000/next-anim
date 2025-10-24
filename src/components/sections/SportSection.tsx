@@ -12,7 +12,7 @@ type Card = {
   id: string;
   name: string;
   subtitle: string;
-  image?: string; // путь к картинке, по желанию
+  image?: string;
 };
 
 const cards: Card[] = [
@@ -33,51 +33,50 @@ export const SportSection: React.FC = () => {
       const section = sectionRef.current!;
       const viewport = viewportRef.current!;
       const track = trackRef.current!;
-      const reduce = window.matchMedia?.("(prefers-reduced-motion: reduce)")?.matches;
 
-      // Считаем ширину дорожки и viewport
       const compute = () => {
-        const total = track.scrollWidth;          // полная ширина контента
-        const visible = viewport.clientWidth;     // ширина видимой области справа
+        const total = track.scrollWidth;
+        const visible = viewport.clientWidth;
         const delta = Math.max(0, total - visible);
-        return { total, visible, delta };
+        return { delta };
       };
 
       let tween: gsap.core.Tween | null = null;
-      let st: ScrollTrigger | null = null;
 
       const init = () => {
         const { delta } = compute();
+        if (delta <= 0) return;
 
-        // Если горизонтального скролла не хватает — просто выходим
-        if (delta <= 0 || reduce) return;
-
-        // Сбрасываем текущий трансформ
         gsap.set(track, { x: 0 });
 
-        // Пин и горизонтальный скролл
         tween = gsap.to(track, {
           x: -delta,
           ease: "none",
           scrollTrigger: {
             trigger: section,
             start: "top top",
-            end: () => `+=${delta + 200}`, // расстояние прокрутки внутри секции
+            end: () => `+=${delta + 200}`,
             pin: true,
+            pinSpacing: true,
             scrub: 1,
             anticipatePin: 1,
+            pinType: "fixed", // фиксированный пин, чтобы не уходить в transform-пин
+            onToggle: (self) => {
+              // поднимаем слой секции только когда она pinned
+              section.classList.toggle(styles.isPinned, self.isActive);
+            },
           },
         });
-
-        st = tween.scrollTrigger!;
       };
 
       init();
 
-      // Пересчёт при ресайзе
       const ro = new ResizeObserver(() => {
-        if (tween) tween.kill();
-        if (st) st.kill();
+        if (tween) {
+          tween.scrollTrigger?.kill();
+          tween.kill();
+          tween = null;
+        }
         init();
       });
       ro.observe(viewport);
@@ -86,8 +85,10 @@ export const SportSection: React.FC = () => {
 
       return () => {
         ro.disconnect();
-        if (tween) tween.kill();
-        if (st) st.kill();
+        if (tween) {
+          tween.scrollTrigger?.kill();
+          tween.kill();
+        }
       };
     },
     { scope: sectionRef }
@@ -104,8 +105,7 @@ export const SportSection: React.FC = () => {
             Он повышает качество жизни и даёт силы для самореализации в бизнесе.
           </p>
           <p className={styles.note}>
-            Листая профайлы известных предпринимателей, чтобы узнать, из какой физической нагрузки
-            они черпают энергию.
+            Листая профайлы известных предпринимателей — узнайте, из какой нагрузки они черпают энергию.
           </p>
         </div>
 
@@ -116,7 +116,6 @@ export const SportSection: React.FC = () => {
               {cards.map((c) => (
                 <li key={c.id} className={styles.card}>
                   <div className={styles.cardInner}>
-                    {/* Картинка (опционально) */}
                     {c.image ? (
                       <img className={styles.portrait} src={c.image} alt={c.name} />
                     ) : (

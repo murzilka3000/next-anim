@@ -1,0 +1,193 @@
+.section {
+  --bg: #fde5cc;
+  --text: #6f5647;
+  --muted: rgba(111, 86, 71, 0.6);
+  --card: #fff6ea;
+  --answer: #fff6ea;
+  --border: rgba(111, 86, 71, 0.35);
+  --shadow: 0 12px 30px rgba(0, 0, 0, 0.08);
+
+  background: var(--bg);
+  color: var(--text);
+  padding: clamp(28px, 6vw, 72px) clamp(20px, 6vw, 72px);
+}
+
+/* Этап 1 */
+.intro {
+  max-width: 980px;
+  margin: 0 auto;
+  min-height: 60vh;
+  display: grid;
+  align-content: center;
+  gap: clamp(8px, 1.6vw, 16px);
+}
+
+.title {
+  margin: 0;
+  font-weight: 800;
+  line-height: 0.95;
+  font-size: clamp(40px, 8vw, 96px);
+  letter-spacing: 0.01em;
+}
+
+.subtitle {
+  margin: 0;
+  font-style: italic;
+  font-weight: 600;
+  color: var(--muted);
+  font-size: clamp(18px, 3vw, 28px);
+  line-height: 1.2;
+}
+
+.lead {
+  margin-top: clamp(12px, 2vw, 20px);
+  max-width: 560px;
+  font-size: clamp(14px, 1.4vw, 18px);
+  line-height: 1.6;
+  color: var(--muted);
+}
+
+/* Этап 2 — playground */
+.playground {
+  min-height: 80vh;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: clamp(16px, 4vw, 48px);
+  align-items: center;
+  margin-top: clamp(24px, 6vw, 64px);
+}
+
+.left, .right {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Draggable карточка мифа */
+.card {
+  width: clamp(260px, 32vw, 420px);
+  height: clamp(320px, 58vh, 520px);
+  perspective: 1000px;
+  cursor: grab;
+  touch-action: none;
+  will-change: transform;
+}
+
+.card:active { cursor: grabbing; }
+
+.cardInner {
+  background: var(--card);
+  height: 100%;
+  border-radius: 20px;
+  box-shadow: var(--shadow);
+  display: grid;
+  grid-template-rows: auto 1fr;
+  padding: clamp(18px, 2vw, 24px);
+}
+
+.cardLabel {
+  font-weight: 700;
+  font-size: clamp(12px, 1.2vw, 14px);
+  color: var(--muted);
+  letter-spacing: 0.04em;
+}
+
+.cardText {
+  align-self: center;
+  font-size: clamp(16px, 1.8vw, 22px);
+  line-height: 1.5;
+}
+
+/* Зона дропа */
+.dropZone {
+  width: clamp(260px, 32vw, 420px);
+  height: clamp(320px, 58vh, 520px);
+  border-radius: 20px;
+  border: 2px dashed var(--border);
+  position: relative;
+  display: grid;
+  place-items: center;
+  transition: border-color .2s ease, background-color .2s ease;
+  background: transparent;
+}
+
+.active { /* подсветка зоны, когда карточка наведена */
+  border-color: rgba(111, 86, 71, 0.7);
+  background: rgba(255, 246, 234, 0.35);
+}
+
+.dropHint {
+  color: var(--muted);
+  font-size: clamp(12px, 1.2vw, 14px);
+  text-align: center;
+  max-width: 80%;
+  display: grid;
+  gap: 8px;
+  align-items: center;
+  justify-items: center;
+}
+
+.cursor {
+  font-size: 24px;
+}
+
+/* Ответ эксперта */
+.answer {
+  background: var(--answer);
+  width: 100%;
+  height: 100%;
+  border-radius: 20px;
+  box-shadow: var(--shadow);
+  padding: clamp(18px, 2vw, 24px);
+  display: grid;
+  grid-template-rows: auto 1fr;
+  will-change: transform, opacity;
+  backface-visibility: hidden;
+}
+
+.expertHeader {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 12px;
+  align-items: center;
+}
+
+.avatar {
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  object-fit: cover;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+}
+
+.avatarPlaceholder {
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  background: #e9d8c9;
+}
+
+.expertName {
+  font-weight: 800;
+  font-size: clamp(14px, 1.4vw, 18px);
+}
+
+.expertRole {
+  font-size: clamp(12px, 1.2vw, 14px);
+  color: var(--muted);
+}
+
+.answerText {
+  margin-top: clamp(10px, 1.6vw, 16px);
+  font-size: clamp(14px, 1.4vw, 16px);
+  line-height: 1.6;
+}
+
+/* Адаптив */
+@media (max-width: 980px) {
+  .playground {
+    grid-template-columns: 1fr;
+    gap: 28px;
+    min-height: 100vh;
+  }
+}

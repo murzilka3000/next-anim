@@ -20,18 +20,19 @@ export const Frisbee = React.forwardRef<
       const container = svg.querySelector("#shines") as SVGGElement | null;
       if (!discTop || !track || !container) return;
 
-      // ——— настройки ———
+      // Настройки
       const OFFSET_PCT = 0.20;                 // сужаем траекторию внутрь
-      const LENGTHS_PCT = [0.12, 0.10, 0.08];  // длины бликов (как доля периметра)
+      const LENGTHS_PCT = [0.12, 0.10, 0.08];  // длины бликов (доля от периметра)
       const STROKE_W = 6;                      // толщина блика
       const SHINES_COUNT = LENGTHS_PCT.length;
+      const STEP_COUNTS = [36, 42, 48];        // шаги (рывки)
+      const DURATIONS   = [1.15, 0.95, 1.3];   // сек на оборот
 
-      // «рывковость» и скорость
-      const STEP_COUNTS = [36, 42, 48];        // сколько «шагов» на один оборот
-      const DURATIONS   = [1.15, 0.95, 1.3];   // секунды на оборот (быстро!)
-      // Чем больше шагов и меньше duration — тем более «стобоскопный» эффект
+      // Порог автоскрытия бликов по масштабу SVG (подгони при необходимости)
+      const HIDE_AT_SCALE = 12;                  // спрятать при scale >= 12
+      const SHOW_BACK_SCALE = HIDE_AT_SCALE * 0.8; // вернуть при scale <= 9.6
 
-      // Параллельный (внутренний) путь к discTop
+      // Построение параллельного пути внутрь диска
       const buildOffsetPath = (
         source: SVGPathElement,
         offsetPx: number,
@@ -47,8 +48,8 @@ export const Frisbee = React.forwardRef<
         const cy = bb.y + bb.height / 2;
 
         const canTestFill = typeof (source as any).isPointInFill === "function";
-
         const pts: { x: number; y: number }[] = [];
+
         for (let i = 0; i < samples; i++) {
           const s = i * step;
           const p = source.getPointAtLength(s);
@@ -63,7 +64,7 @@ export const Frisbee = React.forwardRef<
           const n1x = -dy, n1y = dx;
           const n2x =  dy, n2y = -dx;
 
-          // «внутренняя» нормаль — к центру bbox (fallback если нет isPointInFill)
+          // «внутренняя» нормаль — в сторону центра bbox
           let qx = p.x + n1x * offsetPx;
           let qy = p.y + n1y * offsetPx;
 
@@ -95,9 +96,12 @@ export const Frisbee = React.forwardRef<
         track.setAttribute("d", d);
       };
 
-      const setupShines = () => {
+      // Создание и анимация бликов
+      let killShines: (() => void) | null = null;
+
+      const setupShines = (): (() => void) | null => {
         const total = track.getTotalLength();
-        if (!total) return;
+        if (!total) return null;
 
         container.innerHTML = "";
         const tweens: gsap.core.Tween[] = [];
@@ -122,7 +126,6 @@ export const Frisbee = React.forwardRef<
             strokeDashoffset: (i * total) / SHINES_COUNT,
           });
 
-          // Пошаговое движение: прыжки по пути
           const steps = STEP_COUNTS[i % STEP_COUNTS.length];
           const duration = DURATIONS[i % DURATIONS.length];
 
@@ -130,7 +133,7 @@ export const Frisbee = React.forwardRef<
             gsap.to(seg, {
               strokeDashoffset: `-=${total}`,
               duration,
-              ease: `steps(${steps})`,  // вот они, «урывки»
+              ease: `steps(${steps})`,
               repeat: -1,
             })
           );
@@ -139,15 +142,27 @@ export const Frisbee = React.forwardRef<
         return () => tweens.forEach((t) => t.kill());
       };
 
+      const setShinesActive = (active: boolean) => {
+        if (active) {
+          if (killShines) killShines();
+          killShines = setupShines();
+          container.style.display = "block";
+        } else {
+          if (killShines) killShines();
+          killShines = null;
+          container.innerHTML = "";
+          container.style.display = "none";
+        }
+      };
+
       // init
       setTrack();
-      let killShines = setupShines();
+      setShinesActive(true);
 
-      // пересчёт при изменениях/resize
+      // Пересчёт при изменениях/resize
       const rerun = () => {
         setTrack();
-        if (killShines) killShines();
-        killShines = setupShines();
+        if (killShines) setShinesActive(true);
       };
 
       let ro: ResizeObserver | null = null;
@@ -164,7 +179,33 @@ export const Frisbee = React.forwardRef<
         offResize = () => window.removeEventListener("resize", rerun);
       }
 
+      // Автоскрытие/возврат бликов по масштабу .frisbee (самого SVG)
+      let hiddenByScale = false;
+      const checkScale = () => {
+        const sx = Number(gsap.getProperty(svg, "scaleX")) || 1;
+        const sy = Number(gsap.getProperty(svg, "scaleY")) || 1;
+        const s = Math.max(sx, sy);
+
+        if (!hiddenByScale && s >= HIDE_AT_SCALE) {
+          hiddenByScale = true;
+          // плавно гасим и после — отключаем
+          gsap.to(container, {
+            opacity: 0,
+            duration: 0.2,
+            overwrite: "auto",
+            onComplete: () => setShinesActive(false),
+          });
+        } else if (hiddenByScale && s <= SHOW_BACK_SCALE) {
+          hiddenByScale = false;
+          setShinesActive(true);
+          gsap.fromTo(container, { opacity: 0 }, { opacity: 1, duration: 0.25, overwrite: "auto" });
+        }
+      };
+
+      gsap.ticker.add(checkScale);
+
       return () => {
+        gsap.ticker.remove(checkScale);
         if (killShines) killShines();
         container.innerHTML = "";
         if (ro) ro.disconnect();
