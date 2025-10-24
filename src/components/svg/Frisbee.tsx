@@ -22,10 +22,14 @@ export const Frisbee = React.forwardRef<
 
       // ——— настройки ———
       const OFFSET_PCT = 0.20;                 // сужаем траекторию внутрь
-      const LENGTHS_PCT = [0.12, 0.10, 0.08];  // короткие «змейки»
+      const LENGTHS_PCT = [0.12, 0.10, 0.08];  // длины бликов (как доля периметра)
       const STROKE_W = 6;                      // толщина блика
-      const DURATION = 8;                      // сек на один оборот
       const SHINES_COUNT = LENGTHS_PCT.length;
+
+      // «рывковость» и скорость
+      const STEP_COUNTS = [36, 42, 48];        // сколько «шагов» на один оборот
+      const DURATIONS   = [1.15, 0.95, 1.3];   // секунды на оборот (быстро!)
+      // Чем больше шагов и меньше duration — тем более «стобоскопный» эффект
 
       // Параллельный (внутренний) путь к discTop
       const buildOffsetPath = (
@@ -59,7 +63,7 @@ export const Frisbee = React.forwardRef<
           const n1x = -dy, n1y = dx;
           const n2x =  dy, n2y = -dx;
 
-          // «внутренняя» нормаль — в центр bbox или через isPointInFill
+          // «внутренняя» нормаль — к центру bbox (fallback если нет isPointInFill)
           let qx = p.x + n1x * offsetPx;
           let qy = p.y + n1y * offsetPx;
 
@@ -107,7 +111,6 @@ export const Frisbee = React.forwardRef<
           seg.setAttribute("stroke-width", String(STROKE_W));
           seg.setAttribute("stroke-linecap", "round");
           seg.setAttribute("stroke-linejoin", "round");
-          // без blend-mode, blur на группе
           seg.setAttribute("vector-effect", "non-scaling-stroke");
 
           container.appendChild(seg);
@@ -119,11 +122,15 @@ export const Frisbee = React.forwardRef<
             strokeDashoffset: (i * total) / SHINES_COUNT,
           });
 
+          // Пошаговое движение: прыжки по пути
+          const steps = STEP_COUNTS[i % STEP_COUNTS.length];
+          const duration = DURATIONS[i % DURATIONS.length];
+
           tweens.push(
             gsap.to(seg, {
               strokeDashoffset: `-=${total}`,
-              duration: DURATION,
-              ease: "none",
+              duration,
+              ease: `steps(${steps})`,  // вот они, «урывки»
               repeat: -1,
             })
           );
@@ -146,7 +153,6 @@ export const Frisbee = React.forwardRef<
       let ro: ResizeObserver | null = null;
       let offResize: (() => void) | null = null;
 
-      // безопасные проверки среды
       const isBrowser = typeof window !== "undefined";
       const supportsRO = typeof ResizeObserver !== "undefined";
 

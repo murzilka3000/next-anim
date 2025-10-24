@@ -1,0 +1,173 @@
+.section {
+  --bg: #ffe8d1;
+  --text: #6b5445;
+  --cardBg: #fff6ea;
+  --cardShadow: 0 8px 24px rgba(0, 0, 0, 0.08);
+
+  background: var(--bg);
+  color: var(--text);
+}
+
+.inner {
+  position: relative;
+  min-height: 100vh;
+  display: grid;
+  grid-template-columns: 40% 60%;
+  gap: clamp(16px, 4vw, 48px);
+  align-items: center;
+  padding: clamp(24px, 5vw, 64px);
+}
+
+/* Левый блок текста */
+.left {
+  display: flex;
+  flex-direction: column;
+  gap: clamp(8px, 1.6vw, 16px);
+  max-width: 520px;
+}
+
+.kicker {
+  font-size: clamp(42px, 7vw, 96px);
+  line-height: 0.95;
+  letter-spacing: 0.02em;
+  margin: 0;
+  font-weight: 800;
+}
+
+.subhead {
+  margin: 0;
+  font-size: clamp(18px, 2.6vw, 28px);
+  line-height: 1.2;
+  font-weight: 600;
+  opacity: 0.9;
+}
+
+.lead {
+  margin: 0;
+  font-size: clamp(14px, 1.4vw, 18px);
+  line-height: 1.6;
+  opacity: 0.9;
+}
+
+.note {
+  margin-top: clamp(8px, 1.4vw, 16px);
+  font-size: clamp(12px, 1.2vw, 14px);
+  line-height: 1.5;
+  opacity: 0.7;
+}
+
+/* Правый блок: горизонтальный скроллер */
+.right {
+  height: clamp(320px, 65vh, 520px);
+  display: flex;
+  align-items: center;
+}
+
+/* Видимая область слайдера.
+   Маска делает плавное исчезновение слева (и чутка справа) — карточки не «налезают» на текст. */
+.viewport {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+
+  /* плавный fade по краям для содержимого */
+  -webkit-mask-image: linear-gradient(
+    to right,
+    transparent 0,
+    #000 72px,
+    #000 calc(100% - 32px),
+    transparent 100%
+  );
+  mask-image: linear-gradient(
+    to right,
+    transparent 0,
+    #000 72px,
+    #000 calc(100% - 32px),
+    transparent 100%
+  );
+}
+
+.track {
+  display: flex;
+  align-items: stretch;
+  gap: clamp(16px, 2vw, 28px);
+  height: 100%;
+  will-change: transform;
+  padding: clamp(8px, 1vw, 12px);
+}
+
+/* Карточка */
+.card {
+  flex: 0 0 auto;
+  width: clamp(240px, 28vw, 360px);
+  height: 100%;
+}
+
+.cardInner {
+  background: var(--cardBg);
+  border-radius: 18px;
+  height: 100%;
+  box-shadow: var(--cardShadow);
+  display: grid;
+  grid-template-rows: 1fr auto;
+  overflow: hidden;
+}
+
+/* Заглушка, если нет изображения */
+.placeholder {
+  background: linear-gradient(180deg, #ffe9d7, #fbe0c8);
+}
+
+/* Фото/портрет */
+.portrait {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+/* Подписи */
+.caption {
+  padding: 16px 18px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.name {
+  font-size: clamp(16px, 1.6vw, 20px);
+  font-weight: 700;
+}
+
+.subtitle {
+  font-size: clamp(12px, 1.2vw, 14px);
+  opacity: 0.75;
+}
+
+/* Адаптив: на узких экранах текст и слайдер — по вертикали */
+@media (max-width: 900px) {
+  .inner {
+    grid-template-columns: 1fr;
+    gap: 24px;
+  }
+  .right {
+    height: clamp(280px, 56vh, 480px);
+  }
+  .viewport {
+    -webkit-mask-image: linear-gradient(
+      to right,
+      transparent 0,
+      #000 48px,
+      #000 calc(100% - 16px),
+      transparent 100%
+    );
+    mask-image: linear-gradient(
+      to right,
+      transparent 0,
+      #000 48px,
+      #000 calc(100% - 16px),
+      transparent 100%
+    );
+  }
+}

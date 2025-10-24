@@ -45,7 +45,7 @@
 
 .hand {
   width: 340px;
-  bottom: -150px;
+  bottom: -20px;
   right: 15%;
   transform-origin: bottom center;
   z-index: 6;
@@ -53,8 +53,8 @@
 
 .frisbee {
   width: 774px;
-  bottom: 220px;
-  right: 0;
+  bottom: 320px;
+  right: 50px;
   z-index: 5;
   transform-origin: 45% 70%; // Точка, вокруг которой будет масштабирование
 }
