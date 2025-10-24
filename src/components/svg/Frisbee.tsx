@@ -21,10 +21,10 @@ export const Frisbee = React.forwardRef<
       if (!discTop || !track || !container) return;
 
       // ——— настройки ———
-      const OFFSET_PCT = 0.2; // сужаем траекторию внутрь
-      const LENGTHS_PCT = [0.12, 0.1, 0.08]; // короткие «змейки»
-      const STROKE_W = 6; // толщина блика
-      const DURATION = 8; // сек на один оборот
+      const OFFSET_PCT = 0.20;                 // сужаем траекторию внутрь
+      const LENGTHS_PCT = [0.12, 0.10, 0.08];  // короткие «змейки»
+      const STROKE_W = 6;                      // толщина блика
+      const DURATION = 8;                      // сек на один оборот
       const SHINES_COUNT = LENGTHS_PCT.length;
 
       // Параллельный (внутренний) путь к discTop
@@ -54,13 +54,10 @@ export const Frisbee = React.forwardRef<
           let dx = pNext.x - pPrev.x;
           let dy = pNext.y - pPrev.y;
           const len = Math.hypot(dx, dy) || 1;
-          dx /= len;
-          dy /= len;
+          dx /= len; dy /= len;
 
-          const n1x = -dy,
-            n1y = dx;
-          const n2x = dy,
-            n2y = -dx;
+          const n1x = -dy, n1y = dx;
+          const n2x =  dy, n2y = -dx;
 
           // «внутренняя» нормаль — в центр bbox или через isPointInFill
           let qx = p.x + n1x * offsetPx;
@@ -77,18 +74,13 @@ export const Frisbee = React.forwardRef<
             const rx2 = p.x + n2x * offsetPx;
             const ry2 = p.y + n2y * offsetPx;
             const d2 = (rx2 - cx) ** 2 + (ry2 - cy) ** 2;
-            if (d2 < d1) {
-              qx = rx2;
-              qy = ry2;
-            }
+            if (d2 < d1) { qx = rx2; qy = ry2; }
           }
 
           pts.push({ x: qx, y: qy });
         }
 
-        const d = pts
-          .map((pt, i) => (i === 0 ? `M ${pt.x} ${pt.y}` : `L ${pt.x} ${pt.y}`))
-          .join(" ");
+        const d = pts.map((pt, i) => (i === 0 ? `M ${pt.x} ${pt.y}` : `L ${pt.x} ${pt.y}`)).join(" ");
         return `${d} Z`;
       };
 
@@ -154,19 +146,16 @@ export const Frisbee = React.forwardRef<
       let ro: ResizeObserver | null = null;
       let offResize: (() => void) | null = null;
 
-      // Явно типизируем окно, чтобы не получать window: never
-      const w: (Window & typeof globalThis) | null =
-        typeof window !== "undefined"
-          ? (window as Window & typeof globalThis)
-          : null
+      // безопасные проверки среды
+      const isBrowser = typeof window !== "undefined";
+      const supportsRO = typeof ResizeObserver !== "undefined";
 
-      if (w && "ResizeObserver" in w) {
-        // @ts-ignore: конструктор доступен в браузере
-        ro = new (w as any).ResizeObserver(rerun);
+      if (isBrowser && supportsRO) {
+        ro = new ResizeObserver(rerun);
         ro.observe(svg);
-      } else if (w) {
-        w.addEventListener("resize", rerun);
-        offResize = () => w.removeEventListener("resize", rerun);
+      } else if (isBrowser) {
+        window.addEventListener("resize", rerun);
+        offResize = () => window.removeEventListener("resize", rerun);
       }
 
       return () => {
@@ -182,8 +171,7 @@ export const Frisbee = React.forwardRef<
   const combinedRef = (el: SVGSVGElement | null) => {
     svgRef.current = el;
     if (typeof ref === "function") ref(el as SVGSVGElement);
-    else if (ref)
-      (ref as React.MutableRefObject<SVGSVGElement | null>).current = el;
+    else if (ref) (ref as React.MutableRefObject<SVGSVGElement | null>).current = el;
   };
 
   return (
@@ -223,26 +211,12 @@ export const Frisbee = React.forwardRef<
 
       <defs>
         {/* Градиенты тарелки */}
-        <linearGradient
-          id="paint0_linear_2001_63"
-          x1="358.096"
-          y1="127.775"
-          x2="463.431"
-          y2="472.813"
-          gradientUnits="userSpaceOnUse"
-        >
+        <linearGradient id="paint0_linear_2001_63" x1="358.096" y1="127.775" x2="463.431" y2="472.813" gradientUnits="userSpaceOnUse">
           <stop stopColor="#FCE2C1" />
           <stop offset="0.23" stopColor="#FEE7CB" />
           <stop offset="0.49" stopColor="#FFEACF" />
         </linearGradient>
-        <linearGradient
-          id="paint1_linear_2001_63"
-          x1="0"
-          y1="212.453"
-          x2="773.768"
-          y2="212.453"
-          gradientUnits="userSpaceOnUse"
-        >
+        <linearGradient id="paint1_linear_2001_63" x1="0" y1="212.453" x2="773.768" y2="212.453" gradientUnits="userSpaceOnUse">
           <stop stopColor="#FFEACF" />
           <stop offset="0.15" stopColor="#FFF3E0" />
           <stop offset="0.31" stopColor="#FFF9EC" />
@@ -252,20 +226,13 @@ export const Frisbee = React.forwardRef<
           <stop offset="0.95" stopColor="#FFF0DB" />
           <stop offset="1" stopColor="#FFEACF" />
         </linearGradient>
-        <linearGradient
-          id="paint2_linear_2001_63"
-          x1="49.8305"
-          y1="364.113"
-          x2="729.302"
-          y2="258.049"
-          gradientUnits="userSpaceOnUse"
-        >
+        <linearGradient id="paint2_linear_2001_63" x1="49.8305" y1="364.113" x2="729.302" y2="258.049" gradientUnits="userSpaceOnUse">
           <stop stopColor="#F1D5B2" />
           <stop offset="0.45" stopColor="#F5DCBC" />
           <stop offset="1" stopColor="#FFEACF" />
         </linearGradient>
 
-        {/* Размытие бликов — camelCase атрибуты для React */}
+        {/* Размытие бликов */}
         <filter
           id="shineBlur"
           filterUnits="userSpaceOnUse"
@@ -275,11 +242,7 @@ export const Frisbee = React.forwardRef<
           height="1000"
           colorInterpolationFilters="sRGB"
         >
-          <feGaussianBlur
-            in="SourceGraphic"
-            stdDeviation="1.4"
-            edgeMode="duplicate"
-          />
+          <feGaussianBlur in="SourceGraphic" stdDeviation="1.4" edgeMode="duplicate" />
         </filter>
 
         {/* Clip по верхней части (без <use>) */}
