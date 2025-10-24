@@ -158,7 +158,7 @@ export const Frisbee = React.forwardRef<
       const w: (Window & typeof globalThis) | null =
         typeof window !== "undefined"
           ? (window as Window & typeof globalThis)
-          : null;
+          : null
 
       if (w && "ResizeObserver" in w) {
         // @ts-ignore: конструктор доступен в браузере
