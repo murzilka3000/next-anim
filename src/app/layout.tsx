@@ -1,15 +1,51 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import localFont from 'next/font/local';
 import "./globals.css";
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
-  subsets: ["latin"],
+const inter = localFont({
+  src: '../../public/fonts/inter-v20-cyrillic_cyrillic-ext_latin-regular.woff2',
+  weight: '400',
+  style: 'normal',
+  display: 'swap',
+  variable: '--font-inter',
 });
 
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
+const manrope = localFont({
+  src: [
+    {
+      path: '../../public/fonts/manrope-v20-cyrillic_cyrillic-ext_latin-500.woff2',
+      weight: '500',
+      style: 'normal',
+    },
+    {
+      path: '../../public/fonts/manrope-v20-cyrillic_cyrillic-ext_latin-600.woff2',
+      weight: '600',
+      style: 'normal',
+    },
+    {
+      path: '../../public/fonts/manrope-v20-cyrillic_cyrillic-ext_latin-700.woff2',
+      weight: '700',
+      style: 'normal',
+    },
+  ],
+  display: 'swap',
+  variable: '--font-manrope',
+});
+
+const circe = localFont({
+  src: '../../public/fonts/Circe-Regular.woff2',
+  weight: '400',
+  style: 'normal',
+  display: 'swap',
+  variable: '--font-circe',
+});
+
+const cofoRobert = localFont({
+    src: '../../public/fonts/CoFo-Robert.woff2',
+    weight: '400',
+    style: 'italic',
+    display: 'swap',
+    variable: '--font-cofo-robert',
 });
 
 export const metadata: Metadata = {
@@ -23,8 +59,8 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
-      <body className={`${geistSans.variable} ${geistMono.variable}`}>
+    <html lang="ru">
+      <body className={`${inter.variable} ${manrope.variable} ${circe.variable} ${cofoRobert.variable}`}>
         {children}
       </body>
     </html>

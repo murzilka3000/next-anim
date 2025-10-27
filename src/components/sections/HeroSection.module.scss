@@ -21,11 +21,24 @@
 }
 
 .title {
-  font-weight: 900;
-  font-size: 150px;
-  color: #fff;
+  font-family: var(--second-family);
+  font-weight: 500;
+  font-size: 140px;
+  letter-spacing: -0.02em;
   text-transform: uppercase;
-  margin: 0;
+  color: var(--text-light);
+  line-height: 70%;
+  margin-bottom: 70px;
+  > span {
+    font-family: var(--third-family);
+    font-style: italic;
+    font-weight: 400;
+    letter-spacing: -0.01em;
+    color: var(--text-light);
+    text-transform: lowercase;
+    margin-left: 100px;
+
+  }
 }
 
 .description {
@@ -69,4 +82,11 @@
   flex-direction: column;
   justify-content: space-between;
   height: calc(100vh - 47px);
+}
+
+
+.abs_img {
+  position: absolute;
+  bottom: 50px;
+  right: 50px;
 }
