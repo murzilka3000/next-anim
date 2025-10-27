@@ -16,11 +16,36 @@ type Card = {
 };
 
 const cards: Card[] = [
-  { id: "1", name: "Марк Цукерберг", subtitle: "Бразильское джиу-джитсу", image: "/images/people/mark.png" },
-  { id: "2", name: "Роман Абрамович", subtitle: "Футбол", image: "/images/people/roman.png" },
-  { id: "3", name: "Сергей Брин", subtitle: "Прыжки с парашютом", image: "/images/people/sergey.png" },
-  { id: "4", name: "Опра Уинфри", subtitle: "Йога", image: "/images/people/oprah.png" },
-  { id: "5", name: "Илон Маск", subtitle: "Тяжёлая атлетика", image: "/images/people/elon.png" },
+  {
+    id: "1",
+    name: "Марк Цукерберг",
+    subtitle: "Бразильское джиу-джитсу",
+    image: "/images/mark.svg",
+  },
+  {
+    id: "2",
+    name: "Роман Абрамович",
+    subtitle: "Футбол",
+    image: "/images/mark.svg",
+  },
+  {
+    id: "3",
+    name: "Сергей Брин",
+    subtitle: "Прыжки с парашютом",
+    image: "/images/mark.svg",
+  },
+  {
+    id: "4",
+    name: "Опра Уинфри",
+    subtitle: "Йога",
+    image: "/images/mark.svg",
+  },
+  {
+    id: "5",
+    name: "Илон Маск",
+    subtitle: "Тяжёлая атлетика",
+    image: "/images/mark.svg",
+  },
 ];
 
 export const SportSection: React.FC = () => {
@@ -60,9 +85,8 @@ export const SportSection: React.FC = () => {
             pinSpacing: true,
             scrub: 1,
             anticipatePin: 1,
-            pinType: "fixed", // фиксированный пин, чтобы не уходить в transform-пин
+            pinType: "fixed",
             onToggle: (self) => {
-              // поднимаем слой секции только когда она pinned
               section.classList.toggle(styles.isPinned, self.isActive);
             },
           },
@@ -97,34 +121,41 @@ export const SportSection: React.FC = () => {
   return (
     <section className={styles.section} ref={sectionRef}>
       <div className={styles.inner}>
-        {/* Левый текст */}
         <div className={styles.left}>
-          <h2 className={styles.kicker}>СПОРТ</h2>
-          <p className={styles.subhead}>— это не только про физическую форму.</p>
-          <p className={styles.lead}>
-            Он повышает качество жизни и даёт силы для самореализации в бизнесе.
-          </p>
+          <div>
+            <h2 className={styles.kicker}>СПОРТ</h2>
+            <p className={styles.subhead}>
+              — это не только про <br /> физическую форму.
+            </p>
+            <p className={styles.lead}>
+              Он повышает качество жизни и даёт <br /> силы для самореализации в
+              бизнесе.
+            </p>
+          </div>
           <p className={styles.note}>
-            Листая профайлы известных предпринимателей — узнайте, из какой нагрузки они черпают энергию.
+            Листайте профайлы известных предпринимателей, чтобы <br /> узнать,
+            из какой физической нагрузки они черпают энергию.
           </p>
         </div>
 
-        {/* Правый горизонтальный слайдер */}
         <div className={styles.right}>
           <div className={styles.viewport} ref={viewportRef}>
             <ul className={styles.track} ref={trackRef}>
               {cards.map((c) => (
                 <li key={c.id} className={styles.card}>
                   <div className={styles.cardInner}>
-                    {c.image ? (
-                      <img className={styles.portrait} src={c.image} alt={c.name} />
-                    ) : (
-                      <div className={styles.placeholder} />
-                    )}
-
-                    <div className={styles.caption}>
-                      <div className={styles.name}>{c.name}</div>
-                      <div className={styles.subtitle}>{c.subtitle}</div>
+                    <div
+                      className={styles.portrait}
+                      style={
+                        c.image
+                          ? { backgroundImage: `url(${c.image})` }
+                          : undefined
+                      }
+                    >
+                      <div className={styles.caption}>
+                        <div className={styles.name}>{c.name}</div>
+                        <div className={styles.subtitle}>{c.subtitle}</div>
+                      </div>
                     </div>
                   </div>
                 </li>

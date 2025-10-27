@@ -16,12 +16,10 @@ export const HeroSection = () => {
 
   useGSAP(
     () => {
-      // Лёгкая «качалка»
       gsap
         .timeline({ repeat: -1, yoyo: true, defaults: { ease: "sine.inOut" } })
         .to(".frisbee", { y: "-=12", duration: 1.2 });
 
-      // Скролл-анимация
       const tl = gsap.timeline({
         scrollTrigger: {
           trigger: container.current,

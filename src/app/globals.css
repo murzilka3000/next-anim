@@ -129,7 +129,13 @@ table {
   --third-family: "PT Serif", sans-serif; /* PT Serif не был в файлах, но я оставил переменную */
   --font3: "Circe", sans-serif;
   --font4: "CoFo Robert", sans-serif;
+  --title: #8e705f;
+  --title-2: #ae8873;
+  --text: #ae8873;
+  --text-light: #fff9ec;
+  --orange: #ff6903;
 }
+
 
 body {
   font-family: var(--font-family);

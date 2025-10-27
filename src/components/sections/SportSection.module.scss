@@ -5,13 +5,13 @@
   --cardShadow: 0 8px 24px rgba(0, 0, 0, 0.08);
 
   position: relative;
-  z-index: 0; /* базовый слой */
+  z-index: 0;
   background: var(--bg);
   color: var(--text);
 }
 
 .isPinned {
-  z-index: 50; /* выше всех обычных секций и fixed-кнопок ниже */
+  z-index: 50;
 }
 
 .inner {
@@ -24,52 +24,53 @@
   padding: clamp(24px, 5vw, 64px);
 }
 
-/* Левый блок текста */
 .left {
   display: flex;
   flex-direction: column;
   gap: clamp(8px, 1.6vw, 16px);
   max-width: 520px;
+  justify-content: space-between;
+  height: 70%;
 }
 
 .kicker {
-  font-size: clamp(42px, 7vw, 96px);
-  line-height: 0.95;
-  letter-spacing: 0.02em;
-  margin: 0;
-  font-weight: 800;
+  font-family: var(--second-family);
+  font-weight: 500;
+  font-size: 100px;
+  letter-spacing: -0.01em;
+  color: var(--title);
 }
 
 .subhead {
-  margin: 0;
-  font-size: clamp(18px, 2.6vw, 28px);
-  line-height: 1.2;
-  font-weight: 600;
-  opacity: 0.9;
+  font-family: var(--third-family);
+  font-style: italic;
+  font-weight: 400;
+  font-size: 40px;
+  line-height: 90%;
+  letter-spacing: -0.01em;
+  text-align: right;
+  color: var(--title-2);
+  margin-bottom: 19px;
 }
 
 .lead {
-  margin: 0;
-  font-size: clamp(14px, 1.4vw, 18px);
-  line-height: 1.6;
-  opacity: 0.9;
+  font-weight: 400;
+  font-size: 20px;
+  color: var(--text);
 }
 
 .note {
-  margin-top: clamp(8px, 1.4vw, 16px);
-  font-size: clamp(12px, 1.2vw, 14px);
-  line-height: 1.5;
-  opacity: 0.7;
+  font-weight: 400;
+  font-size: 15px;
+  color: var(--text);
 }
 
-/* Правый блок: горизонтальный скроллер */
 .right {
   height: clamp(320px, 65vh, 520px);
   display: flex;
   align-items: center;
 }
 
-/* Видимая область слайдера с мягкой маской слева/справа */
 .viewport {
   position: relative;
   width: 100%;
@@ -101,7 +102,6 @@
   padding: clamp(8px, 1vw, 12px);
 }
 
-/* Карточка */
 .card {
   flex: 0 0 auto;
   width: clamp(240px, 28vw, 360px);
@@ -118,38 +118,43 @@
   overflow: hidden;
 }
 
-/* Заглушка */
-.placeholder {
-  background: linear-gradient(180deg, #ffe9d7, #fbe0c8);
-}
-
-/* Фото */
 .portrait {
   width: 100%;
   height: 100%;
-  object-fit: cover;
-  display: block;
+  background: linear-gradient(180deg, #ffe9d7, #fbe0c8);
+  background-size: contain;
+  background-repeat: no-repeat;
+  background-position: center bottom;
+  display: flex;
+  align-items: flex-end;
 }
 
-/* Подписи */
 .caption {
-  padding: 16px 18px 20px;
+  padding: 33px;
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 10px;
+  width: 100%;
 }
 
 .name {
-  font-size: clamp(16px, 1.6vw, 20px);
-  font-weight: 700;
+  font-family: var(--third-family);
+  font-style: italic;
+  font-weight: 400;
+  font-size: 30px;
+  line-height: 79%;
+  letter-spacing: -0.01em;
+  text-align: right;
+  color: var(--text-light);
 }
 
 .subtitle {
-  font-size: clamp(12px, 1.2vw, 14px);
-  opacity: 0.75;
+  font-weight: 400;
+  font-size: 18px;
+  text-align: right;
+  color: var(--text-light);
 }
 
-/* Адаптив */
 @media (max-width: 900px) {
   .inner {
     grid-template-columns: 1fr;
