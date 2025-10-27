@@ -18,8 +18,8 @@ type Expert = {
 
 type Myth = {
   id: string;
-  title: string;   // "МИФ №1"
-  text: string;    // сам миф
+  title: string; // "МИФ №1"
+  text: string; // сам миф
   expert: Expert;
 };
 
@@ -27,12 +27,11 @@ const mythsData: Myth[] = [
   {
     id: "1",
     title: "МИФ №1",
-    text:
-      "Спорт — это дополнительная нагрузка для организма, её не стоит добавлять к стрессу на работе",
+    text: "Спорт — это дополнительная нагрузка для организма, её не стоит добавлять к стрессу на работе",
     expert: {
       name: "Алёна Виноградова",
       role: "тренер школы Springle",
-      photo: "/images/experts/alena.jpg",
+      photo: "/images/ava.png",
       answer:
         "Правильная нагрузка — это всегда двойной эффект. Мы тренируем не только мышцы, но и нервную систему, учим её справляться со стрессом и эффективно управлять ресурсами тела. Спорт — хороший способ перезагрузки: он преобразует накопленный стресс в физическую усталость, в конце — выброс дофамина и чувство спокойствия.",
     },
@@ -40,12 +39,11 @@ const mythsData: Myth[] = [
   {
     id: "2",
     title: "МИФ №2",
-    text:
-      "Вечерние тренировки после работы мешают сну и делают меня менее продуктивным",
+    text: "Вечерние тренировки после работы мешают сну и делают меня менее продуктивным",
     expert: {
       name: "Артём Козлов",
       role: "тренер школы Springle",
-      photo: "/images/experts/artem.jpg",
+      photo: "/images/ava.png",
       answer:
         "Время тренировки — индивидуально. Лёгкая/средняя нагрузка вечером улучшает качество сна у большинства людей. Важно корректно подбирать интенсивность и завершать тренировку минимум за 2–3 часа до сна.",
     },
@@ -53,12 +51,11 @@ const mythsData: Myth[] = [
   {
     id: "3",
     title: "МИФ №3",
-    text:
-      "Без 60 минут в зале нет смысла — лучше вообще не начинать",
+    text: "Без 60 минут в зале нет смысла — лучше вообще не начинать",
     expert: {
       name: "Марина Соколова",
       role: "тренер школы Springle",
-      photo: "/images/experts/marina.jpg",
+      photo: "/images/ava.png",
       answer:
         "10–20 минут регулярного движения уже дают эффект: улучшают концентрацию, настроение и здоровье. Привычку строят маленькие шаги, а не разовые подвиги.",
     },
@@ -107,7 +104,9 @@ export const MythsDragSection: React.FC = () => {
         const zr = zone.getBoundingClientRect();
         const cx = cr.left + cr.width / 2;
         const cy = cr.top + cr.height / 2;
-        return cx >= zr.left && cx <= zr.right && cy >= zr.top && cy <= zr.bottom;
+        return (
+          cx >= zr.left && cx <= zr.right && cy >= zr.top && cy <= zr.bottom
+        );
       };
 
       const onDropSuccess = () => {
@@ -117,20 +116,35 @@ export const MythsDragSection: React.FC = () => {
         // Спрятать текущую карточку и вернуть в исходную позицию
         gsap
           .timeline()
-          .to(card, { opacity: 0, scale: 0.95, duration: 0.22, ease: "power2.out" })
+          .to(card, {
+            opacity: 0,
+            scale: 0.95,
+            duration: 0.22,
+            ease: "power2.out",
+          })
           .set(card, { x: 0, y: 0 })
           .call(() => {
             // следующий миф
             setIndex((i) => Math.min(i + 1, myths.length - 1));
           })
-          .to(card, { opacity: 1, scale: 1, duration: 0.28, ease: "power2.out" });
+          .to(card, {
+            opacity: 1,
+            scale: 1,
+            duration: 0.28,
+            ease: "power2.out",
+          });
 
         // анимация появления ответа справа
         const ans = answerRef.current!;
         gsap.killTweensOf(ans);
         gsap.fromTo(
           ans,
-          { rotateY: 90, opacity: 0, transformPerspective: 900, transformOrigin: "50% 50%" },
+          {
+            rotateY: 90,
+            opacity: 0,
+            transformPerspective: 900,
+            transformOrigin: "50% 50%",
+          },
           { rotateY: 0, opacity: 1, duration: 0.55, ease: "power2.out" }
         );
       };
@@ -146,7 +160,8 @@ export const MythsDragSection: React.FC = () => {
         onDragEnd() {
           zone.classList.remove(styles.active);
           if (isOverZone()) onDropSuccess();
-          else gsap.to(card, { x: 0, y: 0, duration: 0.25, ease: "power2.out" });
+          else
+            gsap.to(card, { x: 0, y: 0, duration: 0.25, ease: "power2.out" });
         },
       })[0];
 
@@ -173,11 +188,12 @@ export const MythsDragSection: React.FC = () => {
           Очень хочется делать силовые каждый день
         </h2>
         <p className={styles.subtitle}>
-          как Джефф Безос, однако между намерением и действием часто появляется надоедливое «но».
+          как Джефф Безос, однако между намерением и действием часто появляется
+          надоедливое «но».
         </p>
         <p className={styles.lead}>
-          Давайте вместе с тренерами школы Springle разберём мифы, которые мешают вам сделать
-          занятия спортом лёгкой привычкой.
+          Давайте вместе с тренерами школы Springle разберём мифы, которые
+          мешают вам сделать занятия спортом лёгкой привычкой.
         </p>
       </div>
 
@@ -209,15 +225,21 @@ export const MythsDragSection: React.FC = () => {
                     <div className={styles.avatarPlaceholder} />
                   )}
                   <div>
-                    <div className={styles.expertName}>{answered.expert.name}</div>
-                    <div className={styles.expertRole}>{answered.expert.role}</div>
+                    <div className={styles.expertName}>
+                      {answered.expert.name}
+                    </div>
+                    <div className={styles.expertRole}>
+                      {answered.expert.role}
+                    </div>
                   </div>
                 </div>
-                <div className={styles.answerText}>{answered.expert.answer}</div>
+                <div className={styles.answerText}>
+                  {answered.expert.answer}
+                </div>
               </div>
             ) : (
               <div className={styles.dropHint}>
-                <span className={styles.cursor}>⤧</span>
+                <img className={styles.cursor} src="/images/cursor.svg" alt="" />
                 Перетащите миф в экспертное поле, чтобы развеять его
               </div>
             )}

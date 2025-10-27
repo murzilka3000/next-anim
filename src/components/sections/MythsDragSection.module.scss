@@ -1,13 +1,12 @@
 .section {
   --bg: #fde5cc;
-  --text: #6f5647;
   --muted: rgba(111, 86, 71, 0.6);
   --card: #fff6ea;
   --answer: #fff6ea;
   --border: rgba(111, 86, 71, 0.35);
   --shadow: 0 12px 30px rgba(0, 0, 0, 0.08);
 
-  background: var(--bg);
+  background: #ffeacf;
   color: var(--text);
   padding: clamp(28px, 6vw, 72px) clamp(20px, 6vw, 72px);
 }
@@ -57,7 +56,8 @@
   margin-top: clamp(24px, 6vw, 64px);
 }
 
-.left, .right {
+.left,
+.right {
   display: flex;
   align-items: center;
   justify-content: center;
@@ -66,69 +66,83 @@
 /* Draggable карточка мифа */
 .card {
   width: clamp(260px, 32vw, 420px);
-  height: clamp(320px, 58vh, 520px);
   perspective: 1000px;
   cursor: grab;
   touch-action: none;
   will-change: transform;
 }
 
-.card:active { cursor: grabbing; }
+.card:active {
+  cursor: grabbing;
+}
 
 .cardInner {
-  background: var(--card);
   height: 100%;
+  box-shadow: 0 0 20px 0 rgba(149, 127, 98, 0.15);
+  background: var(--text-light);
+  padding: 23px;
   border-radius: 20px;
-  box-shadow: var(--shadow);
-  display: grid;
-  grid-template-rows: auto 1fr;
-  padding: clamp(18px, 2vw, 24px);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  gap: 7px;
+  text-align: center;
+  min-height: 564px;
 }
 
 .cardLabel {
+  font-family: var(--second-family);
   font-weight: 700;
-  font-size: clamp(12px, 1.2vw, 14px);
-  color: var(--muted);
-  letter-spacing: 0.04em;
+  font-size: 15px;
+  text-transform: uppercase;
+  text-align: center;
+  color: var(--title-2);
 }
 
 .cardText {
-  align-self: center;
-  font-size: clamp(16px, 1.8vw, 22px);
-  line-height: 1.5;
+  font-family: var(--third-family);
+  font-style: italic;
+  font-weight: 400;
+  font-size: 28px;
+  line-height: 107%;
+  letter-spacing: -0.01em;
+  text-align: center;
+  color: var(--title);
 }
 
 /* Зона дропа */
 .dropZone {
   width: clamp(260px, 32vw, 420px);
-  height: clamp(320px, 58vh, 520px);
-  border-radius: 20px;
-  border: 2px dashed var(--border);
   position: relative;
   display: grid;
   place-items: center;
-  transition: border-color .2s ease, background-color .2s ease;
+  transition: border-color 0.2s ease, background-color 0.2s ease;
   background: transparent;
+  border: 2px dashed rgba(142, 112, 95, 0.4);
+  border-radius: 20px;
+  min-height: 564px;
 }
 
-.active { /* подсветка зоны, когда карточка наведена */
+.active {
   border-color: rgba(111, 86, 71, 0.7);
   background: rgba(255, 246, 234, 0.35);
 }
 
 .dropHint {
-  color: var(--muted);
-  font-size: clamp(12px, 1.2vw, 14px);
   text-align: center;
   max-width: 80%;
   display: grid;
-  gap: 8px;
   align-items: center;
   justify-items: center;
+  font-weight: 400;
+  font-size: 15px;
+  text-align: center;
+  color: var(--text);
 }
 
 .cursor {
-  font-size: 24px;
+  margin-bottom: 28px;
 }
 
 /* Ответ эксперта */
@@ -146,18 +160,17 @@
 }
 
 .expertHeader {
-  display: grid;
-  grid-template-columns: auto 1fr;
-  gap: 12px;
+  display: flex;
+  flex-direction: column;
   align-items: center;
 }
 
 .avatar {
-  width: 64px;
-  height: 64px;
+  width: 142px;
+  height: 142px;
   border-radius: 50%;
   object-fit: cover;
-  box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+  margin-bottom: 13px;
 }
 
 .avatarPlaceholder {
@@ -168,19 +181,28 @@
 }
 
 .expertName {
-  font-weight: 800;
-  font-size: clamp(14px, 1.4vw, 18px);
+  font-family: var(--second-family);
+  font-weight: 700;
+  font-size: 15px;
+  text-transform: uppercase;
+  text-align: center;
+  color: var(--title-2);
 }
 
 .expertRole {
-  font-size: clamp(12px, 1.2vw, 14px);
-  color: var(--muted);
+  font-weight: 400;
+  font-size: 13px;
+  text-align: center;
+  color: var(--title-2);
+  margin-top: 5px;
 }
 
 .answerText {
-  margin-top: clamp(10px, 1.6vw, 16px);
-  font-size: clamp(14px, 1.4vw, 16px);
-  line-height: 1.6;
+  margin-top: 24px;
+  font-weight: 400;
+  font-size: 15px;
+  text-align: center;
+  color: var(--text);
 }
 
 /* Адаптив */
