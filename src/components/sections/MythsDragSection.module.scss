@@ -1,8 +1,8 @@
 .section {
-  --bg: #fde5cc;
+  --bg: #ffeacf;
   --muted: rgba(111, 86, 71, 0.6);
-  --card: #fff6ea;
-  --answer: #fff6ea;
+  --card: #fff9ec;
+  --answer: #fff9ec;
   --border: rgba(111, 86, 71, 0.35);
   --shadow: 0 12px 30px rgba(0, 0, 0, 0.08);
 
@@ -13,7 +13,6 @@
 
 /* Этап 1 */
 .intro {
-  max-width: 980px;
   margin: 0 auto;
   min-height: 60vh;
   display: grid;
@@ -21,29 +20,36 @@
   gap: clamp(8px, 1.6vw, 16px);
 }
 
+.subtitle_cont {
+  display: flex;
+  justify-content: flex-end;
+  padding-right: 200px;
+}
+
 .title {
-  margin: 0;
-  font-weight: 800;
-  line-height: 0.95;
-  font-size: clamp(40px, 8vw, 96px);
-  letter-spacing: 0.01em;
+  font-family: var(--second-family);
+  font-weight: 500;
+  font-size: 80px;
+  line-height: 87%;
+  letter-spacing: -0.01em;
+  color: var(--title);
 }
 
 .subtitle {
-  margin: 0;
+  font-family: var(--third-family);
   font-style: italic;
-  font-weight: 600;
-  color: var(--muted);
-  font-size: clamp(18px, 3vw, 28px);
-  line-height: 1.2;
+  font-weight: 400;
+  font-size: 40px;
+  line-height: 90%;
+  letter-spacing: -0.01em;
+  color: var(--title-2);
 }
 
 .lead {
-  margin-top: clamp(12px, 2vw, 20px);
-  max-width: 560px;
-  font-size: clamp(14px, 1.4vw, 18px);
-  line-height: 1.6;
-  color: var(--muted);
+  font-weight: 400;
+  font-size: 20px;
+  color: var(--text);
+  margin-bottom: 19px;
 }
 
 /* Этап 2 — playground */
@@ -171,6 +177,7 @@
   border-radius: 50%;
   object-fit: cover;
   margin-bottom: 13px;
+  margin-top: 50px;
 }
 
 .avatarPlaceholder {

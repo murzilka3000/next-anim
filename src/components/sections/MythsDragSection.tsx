@@ -83,19 +83,22 @@ export const MythsDragSection: React.FC = () => {
 
       gsap.set(play, { opacity: 0, y: 24 });
 
+      // --- НАЧАЛО ИСПРАВЛЕННОГО БЛОКА ---
       gsap
         .timeline({
           scrollTrigger: {
-            trigger: sectionRef.current!,
-            start: "top 70%",
-            end: "top 20%",
+            trigger: intro,
+            start: "center center",
+            end: "+=300",
             scrub: true,
+            refreshPriority: -1,
           },
         })
         .to(intro, { opacity: 0, y: -10, ease: "none" })
         .to(play, { opacity: 1, y: 0, ease: "none" }, "<");
+      // --- КОНЕЦ ИСПРАВЛЕННОГО БЛОКА ---
 
-      // Draggable на левой карточке
+      // Draggable на левой карточке (остальной код не меняется)
       const card = dragCardRef.current!;
       const zone = dropZoneRef.current!;
 
@@ -110,10 +113,8 @@ export const MythsDragSection: React.FC = () => {
       };
 
       const onDropSuccess = () => {
-        // Показать ответ эксперта справа (flip-in)
         setAnsweredIdx(index);
 
-        // Спрятать текущую карточку и вернуть в исходную позицию
         gsap
           .timeline()
           .to(card, {
@@ -124,7 +125,6 @@ export const MythsDragSection: React.FC = () => {
           })
           .set(card, { x: 0, y: 0 })
           .call(() => {
-            // следующий миф
             setIndex((i) => Math.min(i + 1, myths.length - 1));
           })
           .to(card, {
@@ -134,7 +134,6 @@ export const MythsDragSection: React.FC = () => {
             ease: "power2.out",
           });
 
-        // анимация появления ответа справа
         const ans = answerRef.current!;
         gsap.killTweensOf(ans);
         gsap.fromTo(
@@ -185,15 +184,18 @@ export const MythsDragSection: React.FC = () => {
       {/* Этап 1: интро-текст */}
       <div ref={introRef} className={styles.intro}>
         <h2 className={styles.title}>
-          Очень хочется делать силовые каждый день
+          Очень хочется делать <br /> силовые каждый день
         </h2>
-        <p className={styles.subtitle}>
-          как Джефф Безос, однако между намерением и действием часто появляется
-          надоедливое «но».
-        </p>
+        <div className={styles.subtitle_cont}>
+          <p className={styles.subtitle}>
+            как Джефф Безос, однако между <br /> намерением и действием часто{" "}
+            <br />
+            появляется надоедливое «но».
+          </p>
+        </div>
         <p className={styles.lead}>
-          Давайте вместе с тренерами школы Springle разберём мифы, которые
-          мешают вам сделать занятия спортом лёгкой привычкой.
+          Давайте вместе с тренерами школы Springle разберём <br /> мифы,
+          которые мешают вам сделать занятия спортом <br /> лёгкой привычкой.
         </p>
       </div>
 
@@ -239,7 +241,11 @@ export const MythsDragSection: React.FC = () => {
               </div>
             ) : (
               <div className={styles.dropHint}>
-                <img className={styles.cursor} src="/images/cursor.svg" alt="" />
+                <img
+                  className={styles.cursor}
+                  src="/images/cursor.svg"
+                  alt=""
+                />
                 Перетащите миф в экспертное поле, чтобы развеять его
               </div>
             )}
