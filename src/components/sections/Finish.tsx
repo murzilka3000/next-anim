@@ -17,7 +17,9 @@ const Finish = () => {
   const busyRef = useRef(false);
 
   // запоминаем заменённого игрока для отката
-  const swappedRef = useRef<{ el: HTMLImageElement; original: string } | null>(null);
+  const swappedRef = useRef<{ el: HTMLImageElement; original: string } | null>(
+    null
+  );
 
   // реальные размеры диска (учитывает CSS width: 325px)
   const getDiscSize = () => {
@@ -43,8 +45,8 @@ const Finish = () => {
 
     const ax = Number(img.dataset.ax ?? 0.5); // 0..1
     const ay = Number(img.dataset.ay ?? 0.5); // 0..1
-    const ox = Number(img.dataset.ox ?? 0);   // px
-    const oy = Number(img.dataset.oy ?? 0);   // px
+    const ox = Number(img.dataset.ox ?? 0); // px
+    const oy = Number(img.dataset.oy ?? 0); // px
 
     const { w: dw, h: dh } = getDiscSize();
 
@@ -72,8 +74,12 @@ const Finish = () => {
 
   // скрыть оба .finish__content (и текст, и картинку)
   const hideTexts = () => {
-    const c1 = text1Ref.current!.closest(`.${s.finish__content}`) as HTMLDivElement;
-    const c2 = text2Ref.current!.closest(`.${s.finish__content}`) as HTMLDivElement;
+    const c1 = text1Ref.current!.closest(
+      `.${s.finish__content}`
+    ) as HTMLDivElement;
+    const c2 = text2Ref.current!.closest(
+      `.${s.finish__content}`
+    ) as HTMLDivElement;
     return gsap.to([c1, c2], {
       autoAlpha: 0,
       y: 10,
@@ -84,8 +90,12 @@ const Finish = () => {
 
   // показать .finish__content
   const showTexts = () => {
-    const c1 = text1Ref.current!.closest(`.${s.finish__content}`) as HTMLDivElement;
-    const c2 = text2Ref.current!.closest(`.${s.finish__content}`) as HTMLDivElement;
+    const c1 = text1Ref.current!.closest(
+      `.${s.finish__content}`
+    ) as HTMLDivElement;
+    const c2 = text2Ref.current!.closest(
+      `.${s.finish__content}`
+    ) as HTMLDivElement;
     gsap.set([c1, c2], { clearProps: "all" });
     gsap.fromTo(
       [c1, c2],
@@ -181,7 +191,10 @@ const Finish = () => {
       autoAlpha: 1,
     });
 
-    const ctrl = { x: (start.x + end.x) / 2, y: Math.min(start.y, end.y) - 140 };
+    const ctrl = {
+      x: (start.x + end.x) / 2,
+      y: Math.min(start.y, end.y) - 140,
+    };
 
     const tl = gsap.timeline({ defaults: { ease: "power2.out" } });
 
@@ -212,7 +225,10 @@ const Finish = () => {
         motionPath: {
           path: [
             { x: end.x, y: end.y },
-            { x: (end.x + modalTarget.x) / 2, y: Math.min(end.y, modalTarget.y) - 120 },
+            {
+              x: (end.x + modalTarget.x) / 2,
+              y: Math.min(end.y, modalTarget.y) - 120,
+            },
             { x: modalTarget.x, y: modalTarget.y },
           ],
           curviness: 1.2,
@@ -232,8 +248,10 @@ const Finish = () => {
     <section className={s.finish} ref={sectionRef}>
       <div className={s.finish__container} ref={containerRef}>
         <p className={s.finish__intro}>
-          Теперь вы знаете, какая физическая нагрузка будет полезна не только для <br />
-          вашего тела, но и для вашего карьерного трека. Остался последний рывок! <br />
+          Теперь вы знаете, какая физическая нагрузка будет полезна не только
+          для <br />
+          вашего тела, но и для вашего карьерного трека. Остался последний
+          рывок! <br />
           Сделайте уверенный пас и положите начало новой привычке.
         </p>
 
@@ -248,8 +266,8 @@ const Finish = () => {
                   alt=""
                   data-ax="0.99"
                   data-ay="0.33"
-                  data-ox="50"         // опционально: сдвиг по X в px
-                  data-oy="10"         // опционально: сдвиг по Y в px
+                  data-ox="50" // опционально: сдвиг по X в px
+                  data-oy="10" // опционально: сдвиг по Y в px
                   data-alt="/images/f-1-up.svg"
                   // data-endw="91"    // опционально: своя целевая ширина при прилёте
                   onClick={(e) => handleThrow(e.currentTarget)}
@@ -261,11 +279,16 @@ const Finish = () => {
                   <div className={s.finish__text} ref={text1Ref}>
                     <p className={s.finish__name}>Это Паша</p>
                     <p className={s.finish__description}>
-                      Он пришёл прокачать скорость принятия решений и теперь обходит защитников
-                      лучше всех. Ему можно кинуть короткий пас!
+                      Он пришёл прокачать скорость принятия решений и теперь
+                      обходит защитников лучше всех. Ему можно кинуть короткий
+                      пас!
                     </p>
                   </div>
-                  <img className={s.finish__image} src="/images/f-2.svg" alt="" />
+                  <img
+                    className={s.finish__image}
+                    src="/images/f-2.svg"
+                    alt=""
+                  />
                 </div>
               </div>
             </div>
@@ -276,11 +299,16 @@ const Finish = () => {
                   <div className={s.finish__text} ref={text2Ref}>
                     <p className={s.finish__name}>Это Паша</p>
                     <p className={s.finish__description}>
-                      Он пришёл прокачать скорость принятия решений и теперь обходит защитников
-                      лучше всех. Ему можно кинуть короткий пас!
+                      Он пришёл прокачать скорость принятия решений и теперь
+                      обходит защитников лучше всех. Ему можно кинуть короткий
+                      пас!
                     </p>
                   </div>
-                  <img className={s.finish__image} src="/images/f-4.svg" alt="" />
+                  <img
+                    className={s.finish__image}
+                    src="/images/f-4.svg"
+                    alt=""
+                  />
                 </div>
               </div>
 
@@ -290,9 +318,9 @@ const Finish = () => {
                 src="/images/f-3.svg"
                 alt=""
                 data-ax="0.15"
-                data-ay="0.18"
-                data-ox="0"
-                data-oy="0"
+                data-ay="0.29"
+                data-ox="-30"
+                data-oy="8"
                 data-alt="/images/f-3-up.svg"
                 onClick={(e) => handleThrow(e.currentTarget)}
               />
@@ -305,29 +333,48 @@ const Finish = () => {
               <p>Реклама 18+</p>
               <p>Рекламодатель ООО «СПРИНГЛ». ИНН 7714482000</p>
               <p>
-                <a className={s.finish__link} href="/privacy" target="_blank" rel="noopener noreferrer">
+                <a
+                  className={s.finish__link}
+                  href="/privacy"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
                   Политика конфиденциальности
                 </a>
               </p>
             </div>
             <div className={s.finish__credits}>
               <p>
-                Сделано в <a className={s.finish__link} href="">Ander</a> x{" "}
-                <a className={s.finish__link} href="">Loimi</a>
+                Сделано в{" "}
+                <a className={s.finish__link} href="">
+                  Ander
+                </a>{" "}
+                x{" "}
+                <a className={s.finish__link} href="">
+                  Loimi
+                </a>
               </p>
             </div>
           </div>
         </div>
 
         {/* Тарелка */}
-        <img ref={discRef} className={s.tarelka} src="/images/footer.svg" alt="" />
+        <img
+          ref={discRef}
+          className={s.tarelka}
+          src="/images/footer.svg"
+          alt=""
+        />
 
         {/* Модалка */}
         <div className={s.modal} ref={modalRef} aria-hidden>
           <div className={s.modal__card}>
             <h3 className={s.modal__title}>Бесплатное занятие</h3>
             <p className={s.modal__text}>по алтимат фрисби — ваше.</p>
-            <button className={s.modal__btn} onClick={() => hideModal(resetAll)}>
+            <button
+              className={s.modal__btn}
+              onClick={() => hideModal(resetAll)}
+            >
               Записать в календарь
             </button>
           </div>
