@@ -8,11 +8,11 @@ import { PeopleFrisbeeSection } from '@/components/sections/PeopleFrisbeeSection
 export default function HomePage() {
   return (
     <main className={styles.main}>
-      <HeroSection />
+      {/* <HeroSection />
       <SportSection/>
-      <MythsDragSection/>
+      <MythsDragSection/> */}
       <MotivationQuizSection/>
-      <PeopleFrisbeeSection/>
+      {/* <PeopleFrisbeeSection/> */}
     </main>
   );
 }

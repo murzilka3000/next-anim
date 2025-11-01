@@ -22,7 +22,7 @@ const questions: Question[] = [
     id: "q1",
     title: "ВОПРОС 1/5",
     prompt:
-      "Компания готовит крупное обновление автопилота. В финальных тестах инженеры нашли сбои в отдельных сценариях. Вы — ведущий инженер, релиз намечен на завтра. Что будете делать?",
+      "Компания готовит крупное обновление автопилота. В финальных тестах инженеры нашли сбои в отдельных сценариях. Вы — ведущий инженер, релиз намечен на завтра. Что будете делать? Компания готовит крупное обновление автопилота. В финальных тестах инженеры нашли сбои в отдельных сценариях. Вы — ведущий инженер, релиз намечен на завтра. Что будете делать?",
     options: [
       {
         id: "a",
@@ -209,11 +209,25 @@ export const MotivationQuizSection: React.FC = () => {
       <div id="quiz" ref={quizRef} className={styles.quiz}>
         <div className={styles.quizInner}>
           <div className={styles.card} ref={cardRef}>
-            <div className={styles.cardHeader}>
-              <div className={styles.counter}>
-                {q.title ?? `ВОПРОС ${idx + 1}/${total}`}
+            <div className={styles.card_abs}>
+              <div className={styles.cardHeader}>
+                <div className={styles.counter}>
+                  {q.title ?? `ВОПРОС ${idx + 1}/${total}`}
+                </div>
+                <div className={styles.prompt}>{q.prompt}</div>
               </div>
-              <div className={styles.prompt}>{q.prompt}</div>
+              <div
+                className={`${styles.top_card} ${styles.modifier_class_1}`}
+              ></div>
+              <div
+                className={`${styles.top_card} ${styles.modifier_class_2}`}
+              ></div>
+              <div
+                className={`${styles.top_card} ${styles.modifier_class_3}`}
+              ></div>
+              <div
+                className={`${styles.top_card} ${styles.modifier_class_4}`}
+              ></div>
             </div>
             <ul className={styles.options}>
               {q.options.map((opt) => {
@@ -245,7 +259,7 @@ export const MotivationQuizSection: React.FC = () => {
           </div>
           <button
             className={`${styles.nextFab} ${
-              (nextDisabled || quizFinished) ? styles.disabled : ""
+              nextDisabled || quizFinished ? styles.disabled : ""
             }`}
             onClick={nextQuestion}
             disabled={nextDisabled || quizFinished}
@@ -255,7 +269,9 @@ export const MotivationQuizSection: React.FC = () => {
             {quizFinished ? (
               <span className={styles.checkmark}>✓</span>
             ) : (
-              <span className={styles.arrow}>›</span>
+              <span className={styles.arrow}>
+                <img src="/images/str.svg" alt="" />
+              </span>
             )}
           </button>
         </div>
