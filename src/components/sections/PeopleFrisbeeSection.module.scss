@@ -1,8 +1,5 @@
 .section {
-  --text: #6f5647;
-
   position: relative;
-  color: var(--text);
   overflow-x: hidden; /* режем горизонталь */
 }
 
@@ -53,7 +50,7 @@
 .board {
   position: relative;
   z-index: 1;
-  min-height: 90vh;
+  min-height: 800px;
   overflow: hidden; /* на всякий: режем и тут */
   width: 100%;
 }
@@ -157,21 +154,40 @@
   text-align: center;
 }
 
+/* --- НАЧАЛО ИЗМЕНЕНИЙ --- */
+
+/* Новый контейнер для позиционирования попапа НАД ВСЕМИ слоями */
+.popupContainer {
+  position: absolute;
+  /* Координаты берутся из inline-стилей, от данных активного человека */
+  left: var(--x);
+  top: var(--y);
+  /* Самый высокий z-index, чтобы перекрыть .overlay (z-index: 5) и всех людей */
+  z-index: 10;
+  /* Сам контейнер не должен ловить клики */
+  pointer-events: none;
+  /* Эти свойства нужны, чтобы дочерний .popup мог позиционироваться, не создавая размеров */
+  width: 0;
+  height: 0;
+  overflow: visible;
+}
+
 /* Попап */
 .popup {
   position: absolute;
-  left: 50%;
-  top: -8%;
+  /* Координаты и трансформация остаются прежними, но теперь они относительно .popupContainer */
+  left: var(--popup-x, 50%);
+  top: var(--popup-y, -8%);
   transform: translate(-50%, -100%);
+  pointer-events: auto;
   width: min(280px, 90vw);
-  background: #fff6ea;
-  color: var(--text);
   border-radius: 12px;
-  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.18);
-  padding: 14px 16px 14px 16px;
-  z-index: 3;
+  padding: 10px 14px;
   animation: popIn 0.28s ease-out both;
+  box-shadow: 0 0 20px 0 rgba(149, 127, 98, 0.15);
+  background: var(--text-light);
 }
+/* --- КОНЕЦ ИЗМЕНЕНИЙ --- */
 
 @keyframes popIn {
   from {
@@ -185,22 +201,25 @@
 }
 
 .popupTitle {
-  font-weight: 800;
-  margin-bottom: 6px;
+  font-family: var(--second-family);
+  font-weight: 700;
+  font-size: 15px;
+  line-height: 120%;
+  text-transform: uppercase;
+  color: var(--title-2);
+  margin-bottom: 11px;
 }
 
 .popupText {
-  font-size: 14px;
-  line-height: 1.5;
-  opacity: 0.9;
+  font-weight: 400;
+  font-size: 13px;
+  color: var(--text);
 }
 
 .popupClose {
   position: absolute;
-  top: 8px;
-  right: 10px;
-  width: 22px;
-  height: 22px;
+  top: -16px;
+  right: -16px;
   border-radius: 50%;
   border: none;
   background: transparent;

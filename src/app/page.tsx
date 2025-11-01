@@ -10,9 +10,9 @@ export default function HomePage() {
     <main className={styles.main}>
       {/* <HeroSection />
       <SportSection/>
-      <MythsDragSection/> */}
-      <MotivationQuizSection/>
-      {/* <PeopleFrisbeeSection/> */}
+      <MythsDragSection/>
+      <MotivationQuizSection/> */}
+      <PeopleFrisbeeSection/>
     </main>
   );
 }
