@@ -50,9 +50,11 @@
 .board {
   position: relative;
   z-index: 1;
-  min-height: 800px;
+  min-height: 870px;
   overflow: hidden; /* на всякий: режем и тут */
   width: 100%;
+  max-width: 1440px;
+  margin: 0 auto;
 }
 
 /* Человек */

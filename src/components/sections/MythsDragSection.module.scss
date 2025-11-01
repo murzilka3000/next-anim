@@ -18,6 +18,7 @@
   display: grid;
   align-content: center;
   gap: clamp(8px, 1.6vw, 16px);
+  max-width: 1440px;
 }
 
 .subtitle_cont {
@@ -60,6 +61,8 @@
   gap: clamp(16px, 4vw, 48px);
   align-items: center;
   margin-top: clamp(24px, 6vw, 64px);
+  max-width: 1440px;
+  margin: 0 auto;
 }
 
 .left,
