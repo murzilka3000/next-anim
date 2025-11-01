@@ -10,6 +10,11 @@
   position: relative;
 }
 
+.finish__container {
+  position: relative;
+  overflow: hidden;
+}
+
 .finish__intro {
   font-weight: 400;
   font-size: 15px;
@@ -57,9 +62,7 @@
 .finish__grid > :last-child {
   justify-self: flex-end;
   .finish__content {
-    img {
-      align-self: flex-end;
-    }
+    img { align-self: flex-end; }
   }
 }
 
@@ -67,10 +70,18 @@
   display: flex;
   flex-direction: column;
   gap: 24px;
-  img {
-    max-width: 100px;
-  }
+  img { max-width: 100px; }
 }
+
+.finish__imageWrapper {}
+.finish__image {}
+
+.isClickable {
+  cursor: pointer;
+  transition: transform 0.15s ease;
+}
+.isClickable:hover { transform: translateY(-2px); }
+.isClickable:active { transform: translateY(0); }
 
 .flex_bottom {
   display: flex;
@@ -100,8 +111,76 @@
 }
 
 .tarelka {
-    position: absolute;
-    left: 50%;
-    transform: translateX(-50%);
-    bottom: 21px;
+  position: absolute;
+  left: 50%;
+  bottom: 21px;
+  transform: translateX(-50%);
+  width: 325px; /* стартовый размер */
+  height: auto;
+  z-index: 5;
+  pointer-events: none;
 }
+
+.modal {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  pointer-events: none;
+  opacity: 0;
+  z-index: 6;
+}
+
+.modal__card {
+  background: url("/images/modal.svg");
+  background-position: center;
+  background-repeat: no-repeat;
+  background-size: contain;
+  color: var(--title);
+  border-radius: 18px;
+  padding: 24px 24px 20px;
+  text-align: center;
+  min-height: 373px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  width: 800px; /* ширина модалки */
+}
+
+.modal__title {
+  font-family: var(--second-family);
+  font-weight: 500;
+  font-size: 36px;
+  line-height: 194%;
+  letter-spacing: -0.01em;
+  text-transform: uppercase;
+  text-align: center;
+  color: var(--title);
+}
+
+.modal__text {
+  font-family: var(--third-family);
+  font-style: italic;
+  font-weight: 400;
+  font-size: 28px;
+  line-height: 129%;
+  letter-spacing: -0.01em;
+  text-align: center;
+  color: var(--title-2);
+  margin-bottom: 21px;
+}
+
+.modal__btn {
+  font-family: var(--second-family);
+  font-weight: 600;
+  font-size: 18px;
+  text-align: center;
+  color: #fff;
+  box-shadow: 0 0 20px 0 rgba(255, 133, 50, 0.25);
+  border: 1px solid var(--orange);
+  border-radius: 15px;
+  background: var(--orange);
+  padding: 14px 30px;
+}
+.modal__btn:active { transform: translateY(0); }
