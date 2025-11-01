@@ -41,7 +41,7 @@ const questions: Question[] = [
       },
     ],
     explanation:
-      "Скорость принятия решений — умение быстро реагировать и снижать риски. В реальности так и делают: сразу переносят релиз, устраняют баги, а затем выпускают обновление.",
+      "Скорость принятия решений – это умение реагировать быстро и в условиях ограниченного времени находить решение, которое снижает риски. В описанной ситуации Tesla действовала именно так: мгновенно отложила релиз, устранила ошибки и позже выпустила обновление. Это позволило сохранить доверие клиентов и репутацию бренда.",
   },
   {
     id: "q2",
@@ -232,12 +232,20 @@ export const MotivationQuizSection: React.FC = () => {
             <ul className={styles.options}>
               {q.options.map((opt) => {
                 const selectedThis = selected === opt.id;
-                const stateClass =
-                  selected && selectedThis
-                    ? opt.correct
-                      ? styles.correct
-                      : styles.wrong
-                    : undefined;
+                
+                // --- НАЧАЛО ИЗМЕНЕНИЙ ---
+                let stateClass;
+                if (selected) { // Если какой-либо ответ выбран
+                  if (opt.correct) {
+                    // Всегда подсвечивать правильный ответ зеленым
+                    stateClass = styles.correct;
+                  } else if (selectedThis) {
+                    // Подсвечивать выбранный неверный ответ
+                    stateClass = styles.wrong;
+                  }
+                }
+                // --- КОНЕЦ ИЗМЕНЕНИЙ ---
+
                 return (
                   <li
                     key={opt.id}
