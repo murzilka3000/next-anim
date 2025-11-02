@@ -1,6 +1,7 @@
 .section {
   position: relative;
   overflow-x: hidden; /* режем горизонталь */
+  background: url("/images/field.png") center / cover no-repeat;
 }
 
 /* заголовок сверху */
@@ -26,7 +27,11 @@
   position: relative;
   min-height: 100vh;
   overflow: hidden; /* главное: не даём детям раздувать страницу по X */
-  background: url("/images/field.png") center / cover no-repeat;
+
+  max-width: 1440px;
+  margin: 0 auto;
+  padding-left: 10px;
+  padding-right: 10px;
 }
 
 /* Отдельный слой для полёта тарелки */
@@ -252,5 +257,139 @@
   }
   .tag {
     max-width: 120px;
+  }
+}
+
+@media screen and (max-width: 1010px) {
+  .tag_right {
+    text-align: left;
+    bottom: -28%;
+    right: 50%;
+    transform: translateX(50%);
+  }
+}
+
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+.mobileGrid {
+  display: none;
+}
+
+@media screen and (max-width: 871px) {
+  .overlay {
+    display: none;
+  }
+  .board {
+    display: none;
+  }
+
+  .mobileGrid {
+    display: grid;
+    row-gap: 28px;
+    max-width: 1440px;
+    margin: 0 auto;
+  }
+
+  .mobileRow {
+    display: flex;
+    align-items: center;
+    column-gap: 16px;
+  }
+
+  .mobileGrid .mobileRow > :first-child {
+    flex: 1;
+  }
+
+  .mobileGrid .mobileRow > :last-child {
+    flex: 1.8;
+  }
+
+  .mobileRowReverse .mobileImgCol {
+    order: 2;
+  }
+
+  .mobileRowReverse .mobileCardCol {
+    order: 1;
+  }
+
+  .mobileImgCol,
+  .mobileCardCol {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .mobileImg {
+    width: 100px;
+    height: auto;
+    display: block;
+  }
+
+  .mobileSkill {
+    margin-top: 8px;
+    color: #fff;
+    font-weight: 800;
+    font-size: 12px;
+    text-shadow: 0 2px 6px rgba(0, 0, 0, 0.35);
+    text-align: center;
+  }
+
+  .mobileCard {
+    background: var(--text-light);
+    border-radius: 20px;
+    box-shadow: 0 0 20px 0 rgba(149, 127, 98, 0.15);
+    padding: 14px;
+  }
+
+  .mobileCardTitle {
+    font-family: var(--second-family);
+    font-weight: 700;
+    font-size: 13px;
+    text-transform: uppercase;
+    color: var(--title-2);
+    margin-bottom: 8px;
+    text-align: left;
+  }
+
+  .mobileCardText {
+    font-weight: 400;
+    font-size: 13px;
+    color: var(--text);
+    line-height: 1.4;
+    text-align: left;
+  }
+
+  .mobileImgCol {
+    flex-direction: column;
+  }
+
+  .headerText br {
+    display: none;
+  }
+
+ 
+
+  
+
+  .popup {
+    display: none !important;
+    opacity: 0 !important;
+  }
+
+
+  .header {
+    padding-bottom: 42px;
   }
 }

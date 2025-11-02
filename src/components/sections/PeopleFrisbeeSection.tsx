@@ -12,19 +12,14 @@ type Person = {
   id: string;
   name: string;
   img: string;
-  // позиция человека на сцене (проценты от контейнера)
   x: string;
   y: string;
   scale?: number;
-  // якорь руки (проценты от самого блока человека)
   handX: string;
   handY: string;
-  // подпись софт-скилла
   tag?: string;
   tagSide?: "left" | "right" | "bottom";
-  // текст попапа
   popup: string;
-  // Новые опциональные поля для координат попапа
   popupX?: string;
   popupY?: string;
 };
@@ -34,7 +29,7 @@ const peopleData: Person[] = [
     id: "p1",
     name: "Скорость принятия решений",
     img: "/images/p1.svg",
-    x: "13%",
+    x: "17%",
     y: "50%",
     scale: 1,
     handX: "93%",
@@ -113,9 +108,8 @@ export const PeopleFrisbeeSection: React.FC = () => {
   const anchorRefs = useRef<(HTMLDivElement | null)[]>([]);
 
   const people = useMemo(() => peopleData, []);
-  // у кого сейчас тарелка (по умолчанию у 1-го)
   const [holder, setHolder] = useState(0);
-  const [activePopup, setActivePopup] = useState<number | null>(0); // попап сразу у первого
+  const [activePopup, setActivePopup] = useState<number | null>(0);
   const [flying, setFlying] = useState(false);
 
   const placeDiscAt = (i: number) => {
@@ -195,7 +189,7 @@ export const PeopleFrisbeeSection: React.FC = () => {
 
     const ctrl = {
       x: (start.x + end.x) / 2,
-      y: Math.min(start.y, end.y) - 140, // высота дуги
+      y: Math.min(start.y, end.y) - 140,
     };
 
     gsap.to(disc, {
@@ -219,11 +213,7 @@ export const PeopleFrisbeeSection: React.FC = () => {
     });
   };
 
-  // --- НАЧАЛО ИЗМЕНЕНИЙ ---
-  // Получаем данные для активного попапа, чтобы отрендерить его отдельно
-  const activePersonData =
-    activePopup !== null ? people[activePopup] : null;
-  // --- КОНЕЦ ИЗМЕНЕНИЙ ---
+  const activePersonData = activePopup !== null ? people[activePopup] : null;
 
   return (
     <section className={styles.section} ref={sectionRef}>
@@ -237,6 +227,7 @@ export const PeopleFrisbeeSection: React.FC = () => {
           </p>
         </div>
 
+        {/* Десктоп: перелёты диска и хаотичное расположение */}
         <div className={styles.overlay} ref={overlayRef} aria-hidden>
           <img
             ref={discRef}
@@ -262,12 +253,7 @@ export const PeopleFrisbeeSection: React.FC = () => {
                 } as React.CSSProperties
               }
             >
-              <img
-                className={styles.photo}
-                src={p.img}
-                alt={p.name}
-                draggable={false}
-              />
+              <img className={styles.photo} src={p.img} alt={p.name} draggable={false} />
 
               <div
                 className={styles.anchor}
@@ -294,14 +280,11 @@ export const PeopleFrisbeeSection: React.FC = () => {
                   aria-label={`Передать тарелку: ${p.name}`}
                 />
               )}
-
-              {/* Попап был удален отсюда */}
             </div>
           ))}
         </div>
 
-        {/* --- НАЧАЛО ИЗМЕНЕНИЙ --- */}
-        {/* Рендерим активный попап здесь, НАД всеми остальными элементами сцены */}
+        {/* Попап поверх сцены (десктоп) */}
         {activePersonData && (
           <div
             className={styles.popupContainer}
@@ -333,7 +316,30 @@ export const PeopleFrisbeeSection: React.FC = () => {
             </div>
           </div>
         )}
-        {/* --- КОНЕЦ ИЗМЕНЕНИЙ --- */}
+
+        {/* Мобайл ≤ 871px: грид из рядов (картинка + карточка), без попапов и перелётов */}
+        <div className={styles.mobileGrid}>
+          {people.map((p, i) => {
+            const reversed = i % 2 === 1;
+            return (
+              <div
+                key={`m-${p.id}`}
+                className={`${styles.mobileRow} ${reversed ? styles.mobileRowReverse : ""}`}
+              >
+                <div className={styles.mobileImgCol}>
+                  <img src={p.img} alt={p.name} className={styles.mobileImg} />
+                  {p.tag && <div className={styles.mobileSkill}>{p.tag}</div>}
+                </div>
+                <div className={styles.mobileCardCol}>
+                  <div className={styles.mobileCard}>
+                    <div className={styles.mobileCardTitle}>{p.name}</div>
+                    <div className={styles.mobileCardText}>{p.popup}</div>
+                  </div>
+                </div>
+              </div>
+            );
+          })}
+        </div>
       </div>
     </section>
   );
