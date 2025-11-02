@@ -39,7 +39,9 @@
 .introInner,
 .quizInner {
   width: 100%;
-  max-width: 980px;
+  max-width: 1440px;
+  padding-left: 50px;
+  padding-right: 50px;
 }
 
 .title {
@@ -323,4 +325,92 @@
 .modifier_class_4 {
   top: -80px;
   z-index: 1;
+}
+
+@media screen and (max-width: 1100) {
+  .title {
+    font-size: 60px;
+  }
+
+  .subtitle {
+    font-size: 30px;
+  }
+
+  .lead,
+  .leadMuted {
+    font-size: 18px;
+  }
+}
+
+@media screen and (max-width: 880px) {
+  .title {
+    font-size: 36px;
+  }
+
+  .subtitle {
+    font-size: 20px;
+  }
+
+  .lead,
+  .leadMuted {
+    font-size: 16px;
+  }
+
+  .subtitle {
+    text-align: right;
+  }
+
+  .introInner,
+  .quizInner {
+    padding-left: 10px;
+    padding-right: 10px;
+  }
+}
+
+@media screen and (max-width: 821px) {
+  .prompt {
+    font-size: 20px;
+    text-align: center;
+  }
+
+  .optionText {
+    font-size: 14px;
+  }
+
+  .top_card {
+    display: none;
+  }
+
+  .quiz {
+    top: 0;
+  }
+
+  .radio {
+    width: 15px;
+    height: 15px;
+  }
+
+  .dot {
+    width: 10px;
+    height: 10px;
+  }
+
+  .option {
+    padding: 10px 14px;
+  }
+
+  .option {
+    gap: 15px;
+  }
+
+  .cardHeader {
+    padding-left: 22px;
+    padding-right: 22px;
+    padding-bottom: 29px;
+  }
+
+  .explain {
+    text-align: left;
+    margin-top: 0;
+  }
 }
