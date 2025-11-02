@@ -34,12 +34,7 @@ const cards: Card[] = [
     subtitle: "Прыжки с парашютом",
     image: "/images/mark.svg",
   },
-  {
-    id: "4",
-    name: "Опра Уинфри",
-    subtitle: "Йога",
-    image: "/images/mark.svg",
-  },
+  { id: "4", name: "Опра Уинфри", subtitle: "Йога", image: "/images/mark.svg" },
   {
     id: "5",
     name: "Илон Маск",
@@ -59,60 +54,100 @@ export const SportSection: React.FC = () => {
       const viewport = viewportRef.current!;
       const track = trackRef.current!;
 
-      const compute = () => {
+      const computeDelta = () => {
         const total = track.scrollWidth;
         const visible = viewport.clientWidth;
-        const delta = Math.max(0, total - visible);
-        return { delta };
+        return Math.max(0, total - visible);
       };
 
+      const mm = gsap.matchMedia();
       let tween: gsap.core.Tween | null = null;
+      let ro: ResizeObserver | null = null;
 
-      const init = () => {
-        const { delta } = compute();
-        if (delta <= 0) return;
+      mm.add("(min-width: 1112px)", () => {
+        const init = () => {
+          // сброс на всякий случай
+          if (tween) {
+            tween.scrollTrigger?.kill();
+            tween.kill();
+            tween = null;
+          }
+          gsap.set(track, { x: 0 });
 
-        gsap.set(track, { x: 0 });
+          const delta = computeDelta();
+          if (delta <= 0) {
+            ScrollTrigger.refresh();
+            return;
+          }
 
-        tween = gsap.to(track, {
-          x: -delta,
-          ease: "none",
-          scrollTrigger: {
-            trigger: section,
-            start: "top top",
-            end: () => `+=${delta + 200}`,
-            pin: true,
-            pinSpacing: true,
-            scrub: 1,
-            anticipatePin: 1,
-            pinType: "fixed",
-            onToggle: (self) => {
-              section.classList.toggle(styles.isPinned, self.isActive);
+          tween = gsap.to(track, {
+            x: -delta,
+            ease: "none",
+            scrollTrigger: {
+              trigger: section,
+              start: "top top",
+              end: () => `+=${delta + 200}`,
+              pin: true,
+              pinSpacing: true,
+              scrub: 1,
+              anticipatePin: 1,
+              pinType: "fixed",
+              onToggle: (self) => {
+                section.classList.toggle(styles.isPinned, self.isActive);
+              },
             },
-          },
+          });
+
+          // обновим расчёты после инициализации
+          gsap.delayedCall(0, () => ScrollTrigger.refresh());
+        };
+
+        init();
+
+        ro = new ResizeObserver(() => {
+          init();
+          ScrollTrigger.refresh();
         });
-      };
+        ro.observe(viewport);
+        ro.observe(track);
+        ro.observe(document.documentElement);
 
-      init();
+        // cleanup для этого брейкпоинта
+        return () => {
+          if (ro) {
+            ro.disconnect();
+            ro = null;
+          }
+          if (tween) {
+            tween.scrollTrigger?.kill();
+            tween.kill();
+            tween = null;
+          }
+          // на выходе очищаем трансформации
+          gsap.set(track, { clearProps: "transform" });
+          section.classList.remove(styles.isPinned);
+        };
+      });
 
-      const ro = new ResizeObserver(() => {
+      // Мобильный/узкий: нативный горизонтальный скролл
+      mm.add("(max-width: 1111px)", () => {
+        // убить возможный десктопный твин и сбросить transform
         if (tween) {
           tween.scrollTrigger?.kill();
           tween.kill();
           tween = null;
         }
-        init();
+        gsap.set(track, { x: 0, clearProps: "transform" });
+        section.classList.remove(styles.isPinned);
+
+        // Ничего больше не инициализируем — скролл нативный
+        return () => {
+          // no-op
+        };
       });
-      ro.observe(viewport);
-      ro.observe(track);
-      ro.observe(document.documentElement);
 
       return () => {
-        ro.disconnect();
-        if (tween) {
-          tween.scrollTrigger?.kill();
-          tween.kill();
-        }
+        mm.revert();
       };
     },
     { scope: sectionRef }
@@ -163,6 +198,10 @@ export const SportSection: React.FC = () => {
             </ul>
           </div>
         </div>
+        <p className={`${styles.note} ${styles.note_mob}`}>
+          Листайте профайлы известных предпринимателей, чтобы <br /> узнать, из
+          какой физической нагрузки они черпают энергию.
+        </p>
       </div>
     </section>
   );
