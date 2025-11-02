@@ -17,6 +17,11 @@ type Question = {
   explanation: string;
 };
 
+const ICONS = {
+  good: "/images/green.svg",
+  warn: "/images/red.svg",
+};
+
 const questions: Question[] = [
   {
     id: "q1",
@@ -87,10 +92,22 @@ const questions: Question[] = [
   },
 ];
 
+// Маппинг вопросов к навыкам для результата
+type Skill = { id: string; title: React.ReactNode; qId?: Question["id"] };
+
+const skillsMap: Skill[] = [
+  { id: "decision_speed", title: "Скорость принятия решений", qId: "q1" },
+  { id: "teamwork", title: "Работа в команде", qId: "q2" },
+  { id: "negotiation", title: "Умение договариваться", qId: "q3" },
+  { id: "strategic", title: "Стратегическое мышление" },
+  { id: "stress", title: <>Стрессо-<br/>устойчивость</> },
+];
+
 export const MotivationQuizSection: React.FC = () => {
   const sectionRef = useRef<HTMLElement | null>(null);
   const introRef = useRef<HTMLDivElement | null>(null);
   const quizRef = useRef<HTMLDivElement | null>(null);
+  const resultsRef = useRef<HTMLDivElement | null>(null);
   const cardRef = useRef<HTMLDivElement | null>(null);
   const transitionTimeline = useRef<gsap.core.Timeline | null>(null);
 
@@ -98,12 +115,19 @@ export const MotivationQuizSection: React.FC = () => {
   const [selected, setSelected] = useState<string | null>(null);
   const [quizFinished, setQuizFinished] = useState(false);
 
+  // Храним ответы: ключ = id вопроса
+  const [answers, setAnswers] = useState<
+    Record<string, { selectedId: string; correct: boolean }>
+  >({});
+
   const q = questions[idx];
   const total = questions.length;
 
   useGSAP(
     () => {
       gsap.set(quizRef.current, { autoAlpha: 0, pointerEvents: "none" });
+      gsap.set(resultsRef.current, { autoAlpha: 0, pointerEvents: "none" });
+
       transitionTimeline.current = gsap
         .timeline({ paused: true })
         .to(introRef.current, {
@@ -122,12 +146,14 @@ export const MotivationQuizSection: React.FC = () => {
           },
           "<"
         );
+
       const pin = ScrollTrigger.create({
         trigger: sectionRef.current,
         pin: true,
         start: "top top",
         end: "bottom bottom",
       });
+
       return () => {
         pin.kill();
       };
@@ -140,18 +166,78 @@ export const MotivationQuizSection: React.FC = () => {
     transitionTimeline.current?.play();
   };
 
+  const goToResults = () => {
+    gsap
+      .timeline()
+      .to(quizRef.current, {
+        autoAlpha: 0,
+        pointerEvents: "none",
+        duration: 0.4,
+        ease: "power2.inOut",
+      })
+      .to(
+        resultsRef.current,
+        {
+          autoAlpha: 1,
+          pointerEvents: "auto",
+          duration: 0.4,
+          ease: "power2.inOut",
+          onComplete: () => {
+            // на случай изменения высоты — обновим ScrollTrigger
+            ScrollTrigger.refresh();
+          },
+        },
+        "<"
+      );
+  };
+
+  const restartQuiz = () => {
+    setIdx(0);
+    setSelected(null);
+    setQuizFinished(false);
+    setAnswers({});
+
+    gsap
+      .timeline()
+      .to(resultsRef.current, {
+        autoAlpha: 0,
+        pointerEvents: "none",
+        duration: 0.3,
+        ease: "power2.inOut",
+      })
+      .to(
+        quizRef.current,
+        {
+          autoAlpha: 1,
+          pointerEvents: "auto",
+          duration: 0.3,
+          ease: "power2.inOut",
+        },
+        "<"
+      );
+  };
+
   const selectOption = (opt: Option) => {
     if (selected) return;
     setSelected(opt.id);
-    // Если это последний вопрос, сразу помечаем тест как завершенный
+
+    // фиксируем ответ пользователя
+    setAnswers((prev) => ({
+      ...prev,
+      [q.id]: { selectedId: opt.id, correct: opt.correct },
+    }));
+
+    // Если это последний вопрос — отмечаем завершение и показываем результаты
     if (idx === total - 1) {
       setQuizFinished(true);
+      // маленькая пауза, чтобы пользователь увидел подсветку и объяснение
+      gsap.delayedCall(0.7, goToResults);
     }
   };
 
   const nextQuestion = () => {
     const isLast = idx >= total - 1;
-    if (isLast) return; // Просто ничего не делаем, если это последний вопрос
+    if (isLast) return;
 
     gsap.to(cardRef.current, {
       y: -150,
@@ -180,6 +266,7 @@ export const MotivationQuizSection: React.FC = () => {
 
   return (
     <section className={styles.section} ref={sectionRef}>
+      {/* INTRO */}
       <div ref={introRef} className={styles.intro}>
         <div className={styles.introInner}>
           <h2 className={styles.title}>
@@ -206,6 +293,7 @@ export const MotivationQuizSection: React.FC = () => {
         </div>
       </div>
 
+      {/* QUIZ */}
       <div id="quiz" ref={quizRef} className={styles.quiz}>
         <div className={styles.quizInner}>
           <div className={styles.card} ref={cardRef}>
@@ -229,22 +317,20 @@ export const MotivationQuizSection: React.FC = () => {
                 className={`${styles.top_card} ${styles.modifier_class_4}`}
               ></div>
             </div>
+
             <ul className={styles.options}>
               {q.options.map((opt) => {
                 const selectedThis = selected === opt.id;
-                
-                // --- НАЧАЛО ИЗМЕНЕНИЙ ---
+
+                // Подсветка состояний
                 let stateClass;
-                if (selected) { // Если какой-либо ответ выбран
+                if (selected) {
                   if (opt.correct) {
-                    // Всегда подсвечивать правильный ответ зеленым
-                    stateClass = styles.correct;
+                    stateClass = styles.correct; // правильный всегда зелёный
                   } else if (selectedThis) {
-                    // Подсвечивать выбранный неверный ответ
-                    stateClass = styles.wrong;
+                    stateClass = styles.wrong; // выбранный неверный — красный
                   }
                 }
-                // --- КОНЕЦ ИЗМЕНЕНИЙ ---
 
                 return (
                   <li
@@ -263,25 +349,63 @@ export const MotivationQuizSection: React.FC = () => {
                 );
               })}
             </ul>
+
             {selected && <div className={styles.explain}>{q.explanation}</div>}
           </div>
-          <button
-            className={`${styles.nextFab} ${
-              nextDisabled || quizFinished ? styles.disabled : ""
-            }`}
-            onClick={nextQuestion}
-            disabled={nextDisabled || quizFinished}
-            aria-label={quizFinished ? "Тест завершен" : "Следующий вопрос"}
-            title={quizFinished ? "Тест завершен" : "Следующий вопрос"}
-          >
-            {quizFinished ? (
-              <span className={styles.checkmark}>✓</span>
-            ) : (
+
+          {/* Кнопка "далее" прячется, когда тест завершён */}
+          {!quizFinished && (
+            <button
+              className={`${styles.nextFab} ${
+                nextDisabled ? styles.disabled : ""
+              }`}
+              onClick={nextQuestion}
+              disabled={nextDisabled}
+              aria-label="Следующий вопрос"
+              title="Следующий вопрос"
+            >
               <span className={styles.arrow}>
                 <img src="/images/str.svg" alt="" />
               </span>
-            )}
-          </button>
+            </button>
+          )}
+        </div>
+      </div>
+
+      {/* RESULTS */}
+      <div ref={resultsRef} className={styles.results}>
+        <div className={styles.resultsInner}>
+          <div className={styles.resultsHeader}>
+            <h3 className={styles.resultsTitle}>
+              <span className={styles.titlePrimary}>Ваша карта</span>
+              <span className={styles.titleAccent}>гибких навыков</span>
+            </h3>
+          </div>
+
+          <ul className={styles.skills}>
+            {skillsMap.map((s) => {
+              const correct = s.qId ? !!answers[s.qId]?.correct : false;
+              const cls = correct ? styles.skillGood : styles.skillWarn;
+              return (
+                <li key={s.id} className={`${styles.skill} ${cls}`}>
+                  <span
+                    className={`${styles.skillIcon} ${
+                      correct ? styles.iconGood : styles.iconWarn
+                    }`}
+                    aria-hidden
+                  >
+                    <img
+                      className={styles.skillGlyph}
+                      src={correct ? ICONS.good : ICONS.warn}
+                      alt=""
+                      loading="lazy"
+                    />
+                  </span>
+                  <span className={styles.skillTitle}>{s.title}</span>
+                </li>
+              );
+            })}
+          </ul>
         </div>
       </div>
     </section>

@@ -279,4 +279,16 @@
   .note {
     font-size: 13px;
   }
+
+  .inner {
+    padding-left: 10px;
+    padding-right: 10px;
+  }
+}
+
+@media screen and (max-width: 380px) {
+  .card {
+    width: 300px;
+    flex: 0 0 300px;
+  }
 }

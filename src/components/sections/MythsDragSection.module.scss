@@ -266,7 +266,6 @@
     display: flex;
     justify-content: center;
     align-items: stretch;
-    padding: 0 8px;
   }
 
   /* Пагинация Swiper */
@@ -346,5 +345,13 @@
 
   .cardText {
     font-size: 24px;
+  }
+}
+
+
+@media screen and (max-width: 767px) {
+  .section  {
+    padding-left: 10px;
+    padding-right: 10px;
   }
 }

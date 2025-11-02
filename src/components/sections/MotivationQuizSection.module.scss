@@ -414,3 +414,151 @@
     margin-top: 0;
   }
 }
+
+.resultsTitle {
+  display: flex;
+  flex-direction: column;
+  line-height: 1.05;
+  margin: 0;
+  gap: 6px;
+  margin-bottom: 100px;
+
+  .titlePrimary {
+    font-family: var(--second-family);
+    font-weight: 500;
+    font-size: 80px;
+    line-height: 87%;
+    letter-spacing: -0.01em;
+    color: var(--title);
+  }
+
+  .titleAccent {
+    font-family: var(--third-family);
+    font-style: italic;
+    font-weight: 400;
+    font-size: 80px;
+    letter-spacing: -0.01em;
+    color: var(--title);
+    padding-left: 100px;
+  }
+}
+
+/* Сетка карточек 5 в ряд на десктопе */
+.skills {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(160px, 1fr));
+  gap: clamp(12px, 2vw, 20px);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+/* Карточка навыка */
+.skill {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  box-shadow: 0 0 20px 0 rgba(149, 127, 98, 0.15);
+  background: var(--text-light);
+  border-radius: 20px;
+  padding: 35px 10px 50px 10px;
+
+  /* легкий вход при показе блока */
+  transform: translateY(0);
+  opacity: 1;
+
+  .skillTitle {
+    font-family: var(--second-family);
+    font-weight: 700;
+    font-size: 18px;
+    line-height: 120%;
+    text-transform: uppercase;
+    text-align: center;
+    color: var(--title-2);
+  }
+}
+
+@media (max-width: 1200px) {
+  .skills {
+    grid-template-columns: repeat(4, minmax(160px, 1fr));
+  }
+}
+@media (max-width: 980px) {
+  .skills {
+    grid-template-columns: repeat(3, minmax(160px, 1fr));
+  }
+}
+
+
+/* Аксессибилити: меньше движухи при prefers-reduced-motion */
+@media (prefers-reduced-motion: reduce) {
+  .skill {
+    transition: none !important;
+  }
+}
+
+.skillIcon {
+  width: 93px;
+  height: 93px;
+  place-items: center;
+  margin-bottom: 30px;
+}
+
+.skillIcon img {
+  width: 100%;
+}
+
+@media screen and (max-width: 767px) {
+  .titlePrimary {
+    font-size: 36px !important;
+  }
+
+  .titleAccent {
+    font-size: 36px !important;
+  }
+
+  .resultsTitle {
+    margin-bottom: 67px;
+  }
+
+  .skills {
+    grid-template-columns: 1fr;
+  }
+
+  .resultsInner {
+    width: 100%;
+  }
+
+  .skill {
+    flex-direction: row;
+    align-items: center;
+    justify-content: flex-start;
+    gap: 15px;
+  }
+
+  .skillIcon {
+    margin-bottom: 0;
+    width: 40px;
+    height: 40px;
+  }
+
+  .skillTitle {
+    text-align: left!important;
+    font-size: 15px!important;
+  }
+
+  .skill {
+    padding: 17px 14px;
+  }
+
+  .section > :last-child {
+    width: 100%;
+  }
+
+  .section {
+    padding-left: 10px;
+    padding-right: 10px;
+  }
+}
