@@ -64,7 +64,9 @@
 .finish__grid > :last-child {
   justify-self: flex-end;
   .finish__content {
-    img { align-self: flex-end; }
+    img {
+      align-self: flex-end;
+    }
   }
 }
 
@@ -72,18 +74,26 @@
   display: flex;
   flex-direction: column;
   gap: 24px;
-  img { max-width: 100px; }
+  img {
+    max-width: 100px;
+  }
 }
 
-.finish__imageWrapper {}
-.finish__image {}
+.finish__imageWrapper {
+}
+.finish__image {
+}
 
 .isClickable {
   cursor: pointer;
   transition: transform 0.15s ease;
 }
-.isClickable:hover { transform: translateY(-2px); }
-.isClickable:active { transform: translateY(0); }
+.isClickable:hover {
+  transform: translateY(-2px);
+}
+.isClickable:active {
+  transform: translateY(0);
+}
 
 .flex_bottom {
   display: flex;
@@ -187,4 +197,136 @@
   background: var(--orange);
   padding: 14px 30px;
 }
-.modal__btn:active { transform: translateY(0); }
+.modal__btn:active {
+  transform: translateY(0);
+}
+
+@media screen and (max-width: 1343px) {
+  .finish__column {
+    gap: 40px;
+  }
+}
+
+@media screen and (max-width: 1104px) {
+  .finish__content img {
+    display: none !important;
+  }
+
+  .finish__column {
+    flex-direction: column-reverse;
+  }
+
+  .finish__grid > :last-child {
+    flex-direction: column;
+  }
+
+  .finish__column img {
+    max-width: 200px;
+  }
+}
+
+@media screen and (max-width: 932px) {
+  .modal__card {
+    width: 650px;
+  }
+
+  .modal__title {
+    font-size: 28px;
+  }
+
+  .modal__text {
+    font-size: 21px;
+  }
+
+  .modal__btn {
+    font-family: var(--second-family);
+    padding: 10px 20px;
+    font-size: 16px;
+  }
+
+  .tarelka {
+    width: 280px;
+    bottom: 41px;
+  }
+}
+
+@media screen and (max-width: 756px) {
+  .modal__card {
+    width: 550px;
+  }
+
+  .modal__text {
+    font-size: 18px;
+  }
+
+  .finish__intro br {
+    display: none;
+  }
+
+  .finish {
+    padding-left: 10px;
+    padding-right: 10px;
+  }
+}
+
+@media screen and (max-width: 655px) {
+  .modal__card {
+    width: 450px;
+  }
+
+  .modal__title {
+    font-size: 24px;
+  }
+
+  .modal__text {
+    margin-bottom: 10px;
+  }
+}
+
+@media screen and (max-width: 607px) {
+  .finish__footer p {
+    max-width: 200px;
+  }
+
+  .finish__name {
+    font-size: 18px;
+  }
+
+  .finish__text {
+    max-width: 189px;
+  }
+}
+
+@media screen and (max-width: 551px) {
+  .modal__card {
+    width: 400px;
+  }
+
+  .finish__grid {
+    grid-template-columns: 1fr;
+  }
+
+  .finish__grid > :last-child {
+    margin-top: -300px;
+  }
+
+  .tarelka {
+    width: 187px;
+    bottom: 51px;
+  }
+}
+
+@media screen and (max-width: 450px) {
+  .modal__btn {
+    padding: 10px 10px;
+    font-size: 14px;
+  }
+
+  .modal__title {
+    font-size: 21px;
+  }
+
+  .modal__card {
+    width: 350px;
+  }
+}

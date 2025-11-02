@@ -13,8 +13,8 @@ export default function HomePage() {
       <SportSection/> */}
       {/* <MythsDragSection/> */}
       {/* <MotivationQuizSection/> */}
-      <PeopleFrisbeeSection/>
-      {/* <Finish/> */}
+      {/* <PeopleFrisbeeSection/> */}
+      <Finish/>
     </main>
   );
 }
