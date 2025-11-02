@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useMemo, useRef, useState } from "react";
+import React, { useMemo, useRef, useState, useEffect } from "react";
 import gsap from "gsap";
 import { MotionPathPlugin } from "gsap/MotionPathPlugin";
 import { useGSAP } from "@gsap/react";
@@ -106,30 +106,68 @@ export const PeopleFrisbeeSection: React.FC = () => {
   const overlayRef = useRef<HTMLDivElement | null>(null);
   const discRef = useRef<HTMLImageElement | null>(null);
   const anchorRefs = useRef<(HTMLDivElement | null)[]>([]);
+  const mImgRefs = useRef<(HTMLImageElement | null)[]>([]);
 
   const people = useMemo(() => peopleData, []);
   const [holder, setHolder] = useState(0);
   const [activePopup, setActivePopup] = useState<number | null>(0);
   const [flying, setFlying] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
+
+  useEffect(() => {
+    const checkDevice = () => {
+      setIsMobile(window.matchMedia("(max-width: 871px)").matches);
+    };
+    checkDevice();
+    window.addEventListener("resize", checkDevice);
+    return () => {
+      window.removeEventListener("resize", checkDevice);
+    };
+  }, []);
+
+  const toUnit = (v: string) => {
+    const n = parseFloat(v);
+    return isFinite(n) ? n / (v.toString().includes("%") ? 100 : 1) : 0.5;
+  };
+
+  const getAnchorCenter = (i: number) => {
+    const overlay = overlayRef.current!;
+    const or = overlay.getBoundingClientRect();
+
+    if (isMobile && mImgRefs.current[i]) {
+      const img = mImgRefs.current[i]!;
+      const ir = img.getBoundingClientRect();
+      const ax = toUnit(people[i].handX);
+      const ay = toUnit(people[i].handY);
+      const px = ir.left + ir.width * ax - or.left;
+      const py = ir.top + ir.height * ay - or.top;
+      return { x: px, y: py };
+    }
+
+    const a = anchorRefs.current[i];
+    if (a) {
+      const ar = a.getBoundingClientRect();
+      return {
+        x: ar.left + ar.width / 2 - or.left,
+        y: ar.top + ar.height / 2 - or.top,
+      };
+    }
+
+    return { x: or.width / 2, y: or.height / 2 };
+  };
 
   const placeDiscAt = (i: number) => {
-    const overlay = overlayRef.current;
     const disc = discRef.current;
-    const a = anchorRefs.current[i];
+    const overlay = overlayRef.current;
+    if (!disc || !overlay) return;
 
-    if (!overlay || !disc || !a) return;
-    const or = overlay.getBoundingClientRect();
-    const ar = a.getBoundingClientRect();
-
-    const dx = ar.left + ar.width / 2 - or.left;
-    const dy = ar.top + ar.height / 2 - or.top;
-
+    const c = getAnchorCenter(i);
     const dw = disc.width || 58;
     const dh = disc.height || 27;
 
     gsap.set(disc, {
-      x: dx - dw / 2,
-      y: dy - dh / 2,
+      x: c.x - dw / 2,
+      y: c.y - dh / 2,
       rotation: 0,
       force3D: true,
     });
@@ -142,10 +180,11 @@ export const PeopleFrisbeeSection: React.FC = () => {
         const onLoad = () => placeDiscAt(holder);
         img.addEventListener("load", onLoad, { once: true });
       } else {
-        placeDiscAt(holder);
+        requestAnimationFrame(() => placeDiscAt(holder));
       }
 
-      const handleResize = () => placeDiscAt(holder);
+      const handleResize = () =>
+        requestAnimationFrame(() => placeDiscAt(holder));
       const ro = new ResizeObserver(handleResize);
       if (overlayRef.current) ro.observe(overlayRef.current);
       if (sectionRef.current) ro.observe(sectionRef.current);
@@ -156,7 +195,7 @@ export const PeopleFrisbeeSection: React.FC = () => {
         window.removeEventListener("resize", handleResize);
       };
     },
-    { scope: sectionRef, dependencies: [holder] }
+    { scope: sectionRef, dependencies: [holder, isMobile] }
   );
 
   const flyTo = (targetIndex: number) => {
@@ -166,30 +205,18 @@ export const PeopleFrisbeeSection: React.FC = () => {
 
     const overlay = overlayRef.current!;
     const disc = discRef.current!;
-    const startA = anchorRefs.current[holder]!;
-    const endA = anchorRefs.current[targetIndex]!;
 
-    const or = overlay.getBoundingClientRect();
-    const sr = startA.getBoundingClientRect();
-    const er = endA.getBoundingClientRect();
-
-    const start = {
-      x: sr.left + sr.width / 2 - or.left,
-      y: sr.top + sr.height / 2 - or.top,
-    };
-    const end = {
-      x: er.left + er.width / 2 - or.left,
-      y: er.top + er.height / 2 - or.top,
-    };
+    const startC = getAnchorCenter(holder);
+    const endC = getAnchorCenter(targetIndex);
 
     const dw = disc.width || 58;
     const dh = disc.height || 27;
 
-    gsap.set(disc, { x: start.x - dw / 2, y: start.y - dh / 2 });
+    gsap.set(disc, { x: startC.x - dw / 2, y: startC.y - dh / 2 });
 
     const ctrl = {
-      x: (start.x + end.x) / 2,
-      y: Math.min(start.y, end.y) - 140,
+      x: (startC.x + endC.x) / 2,
+      y: Math.min(startC.y, endC.y) - 140,
     };
 
     gsap.to(disc, {
@@ -197,9 +224,9 @@ export const PeopleFrisbeeSection: React.FC = () => {
       ease: "power2.out",
       motionPath: {
         path: [
-          { x: start.x - dw / 2, y: start.y - dh / 2 },
+          { x: startC.x - dw / 2, y: startC.y - dh / 2 },
           { x: ctrl.x - dw / 2, y: ctrl.y - dh / 2 },
-          { x: end.x - dw / 2, y: end.y - dh / 2 },
+          { x: endC.x - dw / 2, y: endC.y - dh / 2 },
         ],
         curviness: 1.2,
         autoRotate: false,
@@ -207,7 +234,7 @@ export const PeopleFrisbeeSection: React.FC = () => {
       onComplete: () => {
         setHolder(targetIndex);
         setFlying(false);
-        setActivePopup(targetIndex);
+        if (!isMobile) setActivePopup(targetIndex);
         placeDiscAt(targetIndex);
       },
     });
@@ -222,12 +249,11 @@ export const PeopleFrisbeeSection: React.FC = () => {
           <p className={styles.headerText}>
             Вы разобрались, какие гибкие навыки у вас уже развиты, а над чем
             можно <br /> ещё поработать. Давайте выясним, какие виды физической
-            нагрузки вам <br /> в этом помогут. Нажимайте на гибкий навык, который
-            хотели бы развить.
+            нагрузки вам <br /> в этом помогут. Нажимайте на гибкий навык,
+            который хотели бы развить.
           </p>
         </div>
 
-        {/* Десктоп: перелёты диска и хаотичное расположение */}
         <div className={styles.overlay} ref={overlayRef} aria-hidden>
           <img
             ref={discRef}
@@ -253,7 +279,12 @@ export const PeopleFrisbeeSection: React.FC = () => {
                 } as React.CSSProperties
               }
             >
-              <img className={styles.photo} src={p.img} alt={p.name} draggable={false} />
+              <img
+                className={styles.photo}
+                src={p.img}
+                alt={p.name}
+                draggable={false}
+              />
 
               <div
                 className={styles.anchor}
@@ -273,19 +304,49 @@ export const PeopleFrisbeeSection: React.FC = () => {
                 </div>
               )}
 
-              {holder !== i && (
-                <button
-                  className={styles.glow}
-                  onClick={() => flyTo(i)}
-                  aria-label={`Передать тарелку: ${p.name}`}
-                />
-              )}
+              <button
+                className={styles.glow}
+                onClick={() => flyTo(i)}
+                aria-label={`Передать тарелку: ${p.name}`}
+              />
             </div>
           ))}
         </div>
 
-        {/* Попап поверх сцены (десктоп) */}
-        {activePersonData && (
+        <div className={styles.mobileGrid}>
+          {people.map((p, i) => {
+            const reversed = i % 2 === 1;
+            return (
+              <div
+                key={`m-${p.id}`}
+                className={`${styles.mobileRow} ${
+                  reversed ? styles.mobileRowReverse : ""
+                }`}
+              >
+                <div className={styles.mobileImgCol}>
+                  <img
+                    src={p.img}
+                    alt={p.name}
+                    className={styles.mobileImg}
+                    ref={(el) => {
+                      mImgRefs.current[i] = el;
+                    }}
+                    onClick={() => flyTo(i)}
+                  />
+                  {p.tag && <div className={styles.mobileSkill}>{p.tag}</div>}
+                </div>
+                <div className={styles.mobileCardCol}>
+                  <div className={styles.mobileCard}>
+                    <div className={styles.mobileCardTitle}>{p.name}</div>
+                    <div className={styles.mobileCardText}>{p.popup}</div>
+                  </div>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+
+        {activePersonData && !isMobile && (
           <div
             className={styles.popupContainer}
             style={
@@ -316,30 +377,6 @@ export const PeopleFrisbeeSection: React.FC = () => {
             </div>
           </div>
         )}
-
-        {/* Мобайл ≤ 871px: грид из рядов (картинка + карточка), без попапов и перелётов */}
-        <div className={styles.mobileGrid}>
-          {people.map((p, i) => {
-            const reversed = i % 2 === 1;
-            return (
-              <div
-                key={`m-${p.id}`}
-                className={`${styles.mobileRow} ${reversed ? styles.mobileRowReverse : ""}`}
-              >
-                <div className={styles.mobileImgCol}>
-                  <img src={p.img} alt={p.name} className={styles.mobileImg} />
-                  {p.tag && <div className={styles.mobileSkill}>{p.tag}</div>}
-                </div>
-                <div className={styles.mobileCardCol}>
-                  <div className={styles.mobileCard}>
-                    <div className={styles.mobileCardTitle}>{p.name}</div>
-                    <div className={styles.mobileCardText}>{p.popup}</div>
-                  </div>
-                </div>
-              </div>
-            );
-          })}
-        </div>
       </div>
     </section>
   );
