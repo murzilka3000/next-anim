@@ -330,3 +330,24 @@
     width: 350px;
   }
 }
+
+
+
+
+
+.tarelka {
+  position: absolute;
+  left: 50%;
+  bottom: 21px;
+  transform: translateX(-50%) rotate(var(--idle-rot, 0deg));
+  transform-origin: 50% 65%;
+  width: 325px;
+  height: auto;
+  z-index: 5;
+  pointer-events: none;
+  will-change: transform;
+}
+
+
+
+

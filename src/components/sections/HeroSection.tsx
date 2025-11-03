@@ -16,10 +16,15 @@ export const HeroSection = () => {
 
   useGSAP(
     () => {
+      const frisbeeSel = ".frisbee";
+      const glintSel = `${frisbeeSel} [data-glint], ${frisbeeSel} .glint`;
+
+      // Лёгкое парение тарелки
       gsap
         .timeline({ repeat: -1, yoyo: true, defaults: { ease: "sine.inOut" } })
-        .to(".frisbee", { y: "-=12", duration: 1.2 });
+        .to(frisbeeSel, { y: "-=12", duration: 1.2 });
 
+      // Скролл-сцена
       const tl = gsap.timeline({
         scrollTrigger: {
           trigger: container.current,
@@ -31,8 +36,10 @@ export const HeroSection = () => {
       });
 
       tl.to(".text-content", { opacity: 0, y: 50, duration: 0.5 })
+        // Прячем блики прямо перед началом зума
+        .to(glintSel, { autoAlpha: 0, duration: 0.2, ease: "none" }, ">-0.1")
         .to(
-          ".frisbee",
+          frisbeeSel,
           {
             scale: 30,
             rotation: 90,
@@ -40,12 +47,12 @@ export const HeroSection = () => {
             ease: "power1.inOut",
             overwrite: "auto",
           },
-          ">-0.2"
+          "<"
         )
         .to(
           ".hand",
           {
-            opacity: 0,
+            opacity: 1,
             y: "100%",
             duration: 1,
             ease: "power1.inOut",
@@ -53,6 +60,7 @@ export const HeroSection = () => {
           },
           "<"
         );
+      // При обратном скролле GSAP сам вернёт autoAlpha для бликов.
     },
     { scope: container }
   );

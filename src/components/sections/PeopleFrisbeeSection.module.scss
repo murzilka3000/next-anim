@@ -13,13 +13,12 @@
 
 .headerText {
   margin: 0;
-  max-width: 980px;
+  max-width: 567px;
   text-align: center;
-  color: #fff;
-  font-weight: 600;
-  line-height: 1.45;
-  font-size: clamp(14px, 1.6vw, 18px);
-  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.35);
+  font-weight: 400;
+  font-size: 15px;
+  text-align: center;
+  color: var(--text-light);
 }
 
 /* Сцена: фон картинкой (трава/текстура) */
@@ -150,7 +149,7 @@
 }
 .tag_right {
   right: -8px;
-  bottom: 16%;
+  bottom: 0;
   transform: translate(100%, 0);
   text-align: left;
 }
@@ -379,15 +378,10 @@
     display: none;
   }
 
- 
-
-  
-
   .popup {
     display: none !important;
     opacity: 0 !important;
   }
-
 
   .header {
     padding-bottom: 42px;

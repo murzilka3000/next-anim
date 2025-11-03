@@ -48,8 +48,8 @@ const peopleData: Person[] = [
     x: "45%",
     y: "50%",
     scale: 1.02,
-    handX: "100%",
-    handY: "10%",
+    handX: "93%",
+    handY: "11%",
     tag: "СТРЕССО-УСТОЙЧИВОСТЬ",
     tagSide: "right",
     popup:
@@ -64,7 +64,7 @@ const peopleData: Person[] = [
     x: "77%",
     y: "44%",
     scale: 1,
-    handX: "7%",
+    handX: "22%",
     handY: "4%",
     tag: "УМЕНИЕ ДОГОВАРИВАТЬСЯ",
     tagSide: "right",
@@ -214,10 +214,31 @@ export const PeopleFrisbeeSection: React.FC = () => {
 
     gsap.set(disc, { x: startC.x - dw / 2, y: startC.y - dh / 2 });
 
-    const ctrl = {
-      x: (startC.x + endC.x) / 2,
-      y: Math.min(startC.y, endC.y) - 140,
-    };
+    // — Настройки более «плоской» дуги —
+    const ARC_FACTOR = 0.08; // 0.05..0.10 — чем меньше, тем «тупее»
+    const ARC_MIN = 28; // минимальный подъём дуги
+    const ARC_MAX = 90; // максимальный подъём дуги
+    const CURVINESS = 0.55; // 0.3..0.7 — меньше = прямее
+
+    // Дистанция между точками
+    const dx = endC.x - startC.x;
+    const dy = endC.y - startC.y;
+    const dist = Math.hypot(dx, dy);
+
+    // Высота дуги (делаем её поменьше)
+    const arc = gsap.utils.clamp(ARC_MIN, ARC_MAX, dist * ARC_FACTOR);
+
+    // Контрольная точка: от середины отрезка отклоняемся перпендикулярно
+    const mx = (startC.x + endC.x) / 2;
+    const my = (startC.y + endC.y) / 2;
+    const angle = Math.atan2(dy, dx);
+    const nx = Math.cos(angle - Math.PI / 2) * arc;
+    const ny = Math.sin(angle - Math.PI / 2) * arc;
+
+    // Берём «верхнюю» из двух возможных перпендикулярных (чтобы дуга шла вверх)
+    const c1 = { x: mx + nx, y: my + ny };
+    const c2 = { x: mx - nx, y: my - ny };
+    const ctrl = c1.y < c2.y ? c1 : c2;
 
     gsap.to(disc, {
       duration: 0.8,
@@ -228,7 +249,7 @@ export const PeopleFrisbeeSection: React.FC = () => {
           { x: ctrl.x - dw / 2, y: ctrl.y - dh / 2 },
           { x: endC.x - dw / 2, y: endC.y - dh / 2 },
         ],
-        curviness: 1.2,
+        curviness: CURVINESS,
         autoRotate: false,
       },
       onComplete: () => {

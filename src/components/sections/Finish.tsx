@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef } from "react";
+import { useRef, useEffect } from "react";
 import gsap from "gsap";
 import { MotionPathPlugin } from "gsap/MotionPathPlugin";
 import s from "./Finish.module.scss";
@@ -16,10 +16,89 @@ const Finish = () => {
   const modalRef = useRef<HTMLDivElement | null>(null);
   const busyRef = useRef(false);
 
-  // запоминаем заменённого игрока для отката
+  // для отката спрайта игрока
   const swappedRef = useRef<{ el: HTMLImageElement; original: string } | null>(
     null
   );
+
+  // Состояние idle-поворота (для плавности и управления из handleThrow)
+  const idleRef = useRef({
+    target: 0, // целевой угол (deg)
+    current: 0, // текущий угол (deg)
+    lastMove: 0, // время последнего движения курсора
+  });
+
+  // ——— Idle: плавное раскачивание по курсору (только rotate), строго по центру ———
+  useEffect(() => {
+    const cont = containerRef.current;
+    const disc = discRef.current;
+    if (!cont || !disc) return;
+
+    const pointerFine = window.matchMedia?.("(pointer: fine)")?.matches;
+    if (!pointerFine) return; // на тачах — выключено
+
+    // старт
+    disc.style.setProperty("--idle-rot", "0deg");
+
+    let r = cont.getBoundingClientRect();
+    const ROT_MAX = 5; // максимальный угол (deg)
+    const SMOOTH = 0.12; // коэффициент сглаживания (0..1), больше — быстрее
+    const IDLE_WOBBLE = 0.6; // амплитуда автоколебаний, когда курсор не двигается (deg)
+    const IDLE_DELAY = 900; // через сколько мс без движения включать автоколебания
+
+    const update = () => {
+      const st = idleRef.current;
+
+      // если курсор не менялся давно и нет полёта — лёгкая автокачалка
+      const idleNow =
+        !busyRef.current && performance.now() - st.lastMove > IDLE_DELAY;
+      const desired = idleNow
+        ? Math.sin((performance.now() / 1000) * 1.2) * IDLE_WOBBLE
+        : st.target;
+
+      // сглаживание к целевому значению
+      st.current += (desired - st.current) * SMOOTH;
+
+      disc.style.setProperty("--idle-rot", `${st.current.toFixed(3)}deg`);
+    };
+
+    const onMove = (e: PointerEvent) => {
+      idleRef.current.lastMove = performance.now();
+      if (busyRef.current) {
+        // во время полёта всегда целимся в 0
+        idleRef.current.target = 0;
+        return;
+      }
+      const cx = r.left + r.width / 2;
+      // нормируем в интервал [-1..1]
+      const nx = gsap.utils.clamp(-1, 1, (e.clientX - cx) / (r.width / 2));
+      // мягкая нелинейность, чтобы около центра движения были плавнее
+      const eased = Math.sign(nx) * Math.pow(Math.abs(nx), 0.7);
+      idleRef.current.target = -eased * ROT_MAX;
+    };
+
+    const onLeave = () => {
+      idleRef.current.lastMove = performance.now();
+      idleRef.current.target = 0;
+    };
+
+    const onResize = () => {
+      r = cont.getBoundingClientRect();
+    };
+
+    gsap.ticker.add(update);
+    cont.addEventListener("pointermove", onMove);
+    cont.addEventListener("pointerleave", onLeave);
+    window.addEventListener("resize", onResize);
+
+    return () => {
+      gsap.ticker.remove(update);
+      cont.removeEventListener("pointermove", onMove);
+      cont.removeEventListener("pointerleave", onLeave);
+      window.removeEventListener("resize", onResize);
+    };
+  }, []);
+  // ——— /Idle ———
 
   // реальные размеры диска (учитывает CSS width: 325px)
   const getDiscSize = () => {
@@ -37,7 +116,7 @@ const Finish = () => {
     return { w, h };
   };
 
-  // точка попадания по data-ax/ay (+ опциональные пиксельные сдвиги data-ox/oy), с учётом конечного масштаба
+  // точка попадания по data-ax/ay (+ data-ox/oy), с учётом конечного масштаба
   const getTargetPoint = (img: HTMLImageElement, scaleForEnd = 1) => {
     const cont = containerRef.current!;
     const cr = cont.getBoundingClientRect();
@@ -56,7 +135,7 @@ const Finish = () => {
     return { x: px - (dw * scaleForEnd) / 2, y: py - (dh * scaleForEnd) / 2 };
   };
 
-  // позиция/масштаб диска под размеры modal__card (фон-тарелка)
+  // позиция/масштаб диска под размеры modal__card
   const getModalTarget = () => {
     const cont = containerRef.current!;
     const modal = modalRef.current!;
@@ -138,8 +217,11 @@ const Finish = () => {
   const resetAll = () => {
     const disc = discRef.current;
     if (disc) {
-      // вернуть в версточное состояние (bottom/left/translateX)
+      // вернуть в версточное состояние
       gsap.set(disc, { clearProps: "all", autoAlpha: 1, scale: 1 });
+      disc.style.setProperty("--idle-rot", "0deg");
+      idleRef.current.current = 0;
+      idleRef.current.target = 0;
     }
     if (swappedRef.current) {
       const { el, original } = swappedRef.current;
@@ -154,7 +236,13 @@ const Finish = () => {
     if (busyRef.current) return;
     busyRef.current = true;
 
-    // смена спрайта игрока на поднятую руку (через data-alt, либо f-x-up.svg по умолчанию)
+    // Сразу скрываем инфоблоки
+    hideTexts();
+
+    // Свести idle к нулю (мягко) и зафиксировать
+    idleRef.current.target = 0;
+
+    // смена спрайта игрока на поднятую руку
     const originalSrc = img.src;
     let altSrc = img.dataset.alt;
     if (!altSrc) altSrc = img.src.replace(/(\.\w+)$/, "-up$1");
@@ -166,18 +254,17 @@ const Finish = () => {
     const cr = cont.getBoundingClientRect();
     const dr = disc.getBoundingClientRect();
 
-    // старт (как в верстке)
+    // старт — фиксируем текущие координаты
     const start = { x: dr.left - cr.left, y: dr.top - cr.top };
 
-    // целевая ширина у игрока — по умолчанию 91px, можно переопределить на img через data-endw
+    // целевая ширина у игрока (по умолчанию 91)
     const { w: startW } = getDiscSize();
     const endW = Number(img.dataset.endw ?? 91);
     const scaleToEnd = endW / startW;
 
-    // финальная точка у игрока
     const end = getTargetPoint(img, scaleToEnd);
 
-    // на время анимации управляем через x/y
+    // На время анимации — управляем через x/y
     gsap.set(disc, {
       top: 0,
       left: 0,
@@ -191,14 +278,15 @@ const Finish = () => {
       autoAlpha: 1,
     });
 
+    // Контрольная точка дуги (плоская)
     const ctrl = {
       x: (start.x + end.x) / 2,
-      y: Math.min(start.y, end.y) - 140,
+      y: Math.min(start.y, end.y) - 120,
     };
 
     const tl = gsap.timeline({ defaults: { ease: "power2.out" } });
 
-    // 1) к игроку — уменьшаемся до endW (по умолчанию 91 px)
+    // 1) к игроку — уменьшаемся до endW
     tl.to(disc, {
       duration: 0.8,
       scale: scaleToEnd,
@@ -208,14 +296,11 @@ const Finish = () => {
           { x: ctrl.x, y: ctrl.y },
           { x: end.x, y: end.y },
         ],
-        curviness: 1.2,
+        curviness: 0.55,
       },
     });
 
-    // 2) скрыть контентные блоки
-    tl.add(hideTexts());
-
-    // 3) к модалке — увеличиваемся до её размеров и становимся по центру карточки
+    // 2) к модалке — увеличиваемся до её размеров
     const modalTarget = getModalTarget();
     tl.to(
       disc,
@@ -227,20 +312,20 @@ const Finish = () => {
             { x: end.x, y: end.y },
             {
               x: (end.x + modalTarget.x) / 2,
-              y: Math.min(end.y, modalTarget.y) - 120,
+              y: Math.min(end.y, modalTarget.y) - 100,
             },
             { x: modalTarget.x, y: modalTarget.y },
           ],
-          curviness: 1.2,
+          curviness: 0.55,
         },
       },
       ">-0.1"
     );
 
-    // 4) исчезновение диска поверх фона модалки
+    // 3) исчезновение диска поверх фона модалки
     tl.to(disc, { autoAlpha: 0, duration: 0.35, ease: "power1.inOut" });
 
-    // 5) показать модалку
+    // 4) показать модалку
     tl.add(showModal);
   };
 
@@ -258,19 +343,41 @@ const Finish = () => {
         <div className={s.flex_bottom}>
           <div className={s.finish__grid}>
             <div className={s.finish__column}>
-              <div className={s.finish__imageWrapper}>
-                {/* Игрок №1 — точка руки и тонкая подгонка в px */}
+              {/* Игрок №1 (с тенью) */}
+              <div
+                className={s.finish__imageWrapper}
+                style={{ position: "relative", display: "inline-block" }}
+              >
+                <span
+                  aria-hidden
+                  style={{
+                    position: "absolute",
+                    left: "50%",
+                    bottom: "-4px",
+                    width: "82%",
+                    maxWidth: "340px",
+                    height: "26px",
+                    transform: "translateX(-50%) scale(1, 0.35)",
+                    borderRadius: "50%",
+                    background:
+                      "radial-gradient(50% 50% at 50% 50%, rgba(0,0,0,0.7) 0%, rgba(0,0,0,1) 100%)",
+                    filter: "blur(33px)",
+                    opacity: 0.45,
+                    pointerEvents: "none",
+                    zIndex: 0,
+                  }}
+                />
                 <img
                   className={`${s.finish__image} ${s.isClickable}`}
                   src="/images/f-1.svg"
                   alt=""
                   data-ax="0.99"
                   data-ay="0.33"
-                  data-ox="50" // опционально: сдвиг по X в px
-                  data-oy="10" // опционально: сдвиг по Y в px
+                  data-ox="50"
+                  data-oy="10"
                   data-alt="/images/f-1-up.svg"
-                  // data-endw="91"    // опционально: своя целевая ширина при прилёте
                   onClick={(e) => handleThrow(e.currentTarget)}
+                  style={{ position: "relative", zIndex: 1 }}
                 />
               </div>
 
@@ -312,18 +419,43 @@ const Finish = () => {
                 </div>
               </div>
 
-              {/* Игрок №2 */}
-              <img
-                className={`${s.finish__image} ${s.isClickable}`}
-                src="/images/f-3.svg"
-                alt=""
-                data-ax="0.15"
-                data-ay="0.29"
-                data-ox="-30"
-                data-oy="8"
-                data-alt="/images/f-3-up.svg"
-                onClick={(e) => handleThrow(e.currentTarget)}
-              />
+              {/* Игрок №2 (с тенью) */}
+              <div
+                className={s.finish__imageWrapper}
+                style={{ position: "relative", display: "inline-block" }}
+              >
+                <span
+                  aria-hidden
+                  style={{
+                    position: "absolute",
+                    left: "50%",
+                    bottom: "40px",
+                    width: "82%",
+                    maxWidth: "340px",
+                    height: "36px",
+                    transform: "translateX(-50%) scale(1, 0.35)",
+                    borderRadius: "50%",
+                    background:
+                      "radial-gradient(50% 50% at 50% 50%, rgba(0,0,0,1) 0%, rgba(0,0,0,1) 100%)",
+                    filter: "blur(33px)",
+                    opacity: 0.45,
+                    pointerEvents: "none",
+                    zIndex: 0,
+                  }}
+                />
+                <img
+                  className={`${s.finish__image} ${s.isClickable}`}
+                  src="/images/f-3.svg"
+                  alt=""
+                  data-ax="0.15"
+                  data-ay="0.29"
+                  data-ox="-30"
+                  data-oy="8"
+                  data-alt="/images/f-3-up.svg"
+                  onClick={(e) => handleThrow(e.currentTarget)}
+                  style={{ position: "relative", zIndex: 1 }}
+                />
+              </div>
             </div>
           </div>
 

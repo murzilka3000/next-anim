@@ -21,16 +21,51 @@ export const Frisbee = React.forwardRef<
       if (!discTop || !track || !container) return;
 
       // Настройки
-      const OFFSET_PCT = 0.20;                 // сужаем траекторию внутрь
-      const LENGTHS_PCT = [0.12, 0.10, 0.08];  // длины бликов (доля от периметра)
-      const STROKE_W = 6;                      // толщина блика
+      const OFFSET_PCT = 0.2;                  // сужаем траекторию внутрь
+      const LENGTHS_PCT = [0.12, 0.1, 0.08];   // длины бликов (доля периметра)
+      const STROKE_W = 6;
       const SHINES_COUNT = LENGTHS_PCT.length;
-      const STEP_COUNTS = [36, 42, 48];        // шаги (рывки)
-      const DURATIONS   = [1.15, 0.95, 1.3];   // сек на оборот
+      const STEP_COUNTS = [36, 42, 48];
+      const DURATIONS = [1.15, 0.95, 1.3];
 
-      // Порог автоскрытия бликов по масштабу SVG (подгони при необходимости)
-      const HIDE_AT_SCALE = 12;                  // спрятать при scale >= 12
-      const SHOW_BACK_SCALE = HIDE_AT_SCALE * 0.8; // вернуть при scale <= 9.6
+      // Порог автоскрытия по масштабу SVG
+      const HIDE_AT_SCALE = 12;
+      const SHOW_BACK_SCALE = HIDE_AT_SCALE * 0.8;
+
+      // Надежное чтение текущего масштаба SVG
+      const readScale = (): number => {
+        // 1) пробуем через gsap.getProperty
+        const sxRaw = gsap.getProperty(svg, "scaleX") as number | string;
+        const syRaw = gsap.getProperty(svg, "scaleY") as number | string;
+        let sx = Number(sxRaw);
+        let sy = Number(syRaw);
+
+        if (Number.isFinite(sx) && Number.isFinite(sy) && (sx !== 0 || sy !== 0)) {
+          return Math.max(sx || 1, sy || 1);
+        }
+
+        // 2) fallback — парсим CSS transform matrix
+        const cs = getComputedStyle(svg);
+        const tr = cs.transform || (cs as any).webkitTransform || "none";
+        if (tr !== "none") {
+          if (tr.startsWith("matrix3d(")) {
+            const v = tr.slice(9, -1).split(",").map(parseFloat);
+            // scaleX = √(m11^2 + m12^2 + m13^2), scaleY = √(m21^2 + m22^2 + m23^2)
+            const sx3d = Math.hypot(v[0], v[1], v[2]);
+            const sy3d = Math.hypot(v[4], v[5], v[6]);
+            return Math.max(sx3d || 1, sy3d || 1);
+          }
+          if (tr.startsWith("matrix(")) {
+            const v = tr.slice(7, -1).split(",").map(parseFloat);
+            // matrix(a, b, c, d, tx, ty)
+            const a = v[0], b = v[1], c = v[2], d = v[3];
+            const sx2d = Math.hypot(a, b);
+            const sy2d = Math.hypot(c, d);
+            return Math.max(sx2d || 1, sy2d || 1);
+          }
+        }
+        return 1;
+      };
 
       // Построение параллельного пути внутрь диска
       const buildOffsetPath = (
@@ -64,7 +99,6 @@ export const Frisbee = React.forwardRef<
           const n1x = -dy, n1y = dx;
           const n2x =  dy, n2y = -dx;
 
-          // «внутренняя» нормаль — в сторону центра bbox
           let qx = p.x + n1x * offsetPx;
           let qy = p.y + n1y * offsetPx;
 
@@ -116,6 +150,7 @@ export const Frisbee = React.forwardRef<
           seg.setAttribute("stroke-linecap", "round");
           seg.setAttribute("stroke-linejoin", "round");
           seg.setAttribute("vector-effect", "non-scaling-stroke");
+          seg.setAttribute("data-glint", "seg"); // метка для Hero-селектора
 
           container.appendChild(seg);
 
@@ -147,6 +182,8 @@ export const Frisbee = React.forwardRef<
           if (killShines) killShines();
           killShines = setupShines();
           container.style.display = "block";
+          container.style.visibility = ""; // чтобы не конфликтовать с autoAlpha
+          container.style.opacity = "";
         } else {
           if (killShines) killShines();
           killShines = null;
@@ -156,10 +193,11 @@ export const Frisbee = React.forwardRef<
       };
 
       // init
+      container.setAttribute("data-glint", "container"); // метка на группу
       setTrack();
       setShinesActive(true);
 
-      // Пересчёт при изменениях/resize
+      // Пересчёт при ресайзе
       const rerun = () => {
         setTrack();
         if (killShines) setShinesActive(true);
@@ -179,16 +217,14 @@ export const Frisbee = React.forwardRef<
         offResize = () => window.removeEventListener("resize", rerun);
       }
 
-      // Автоскрытие/возврат бликов по масштабу .frisbee (самого SVG)
+      // Автоскрытие/возврат бликов по масштабу SVG
       let hiddenByScale = false;
       const checkScale = () => {
-        const sx = Number(gsap.getProperty(svg, "scaleX")) || 1;
-        const sy = Number(gsap.getProperty(svg, "scaleY")) || 1;
-        const s = Math.max(sx, sy);
+        const s = readScale();
 
         if (!hiddenByScale && s >= HIDE_AT_SCALE) {
           hiddenByScale = true;
-          // плавно гасим и после — отключаем
+          // плавно гасим и затем отключаем
           gsap.to(container, {
             opacity: 0,
             duration: 0.2,
@@ -198,7 +234,11 @@ export const Frisbee = React.forwardRef<
         } else if (hiddenByScale && s <= SHOW_BACK_SCALE) {
           hiddenByScale = false;
           setShinesActive(true);
-          gsap.fromTo(container, { opacity: 0 }, { opacity: 1, duration: 0.25, overwrite: "auto" });
+          gsap.fromTo(
+            container,
+            { opacity: 0, display: "block" },
+            { opacity: 1, duration: 0.25, overwrite: "auto" }
+          );
         }
       };
 
@@ -253,7 +293,7 @@ export const Frisbee = React.forwardRef<
         <path id="shine-track" d="" fill="none" stroke="none" />
 
         {/* Блики. Blur на группе, без blend-mode */}
-        <g id="shines" clipPath="url(#discClip)" filter="url(#shineBlur)" />
+        <g id="shines" data-glint clipPath="url(#discClip)" filter="url(#shineBlur)" />
       </g>
 
       <defs>
@@ -292,7 +332,7 @@ export const Frisbee = React.forwardRef<
           <feGaussianBlur in="SourceGraphic" stdDeviation="1.4" edgeMode="duplicate" />
         </filter>
 
-        {/* Clip по верхней части (без <use>) */}
+        {/* Clip по верхней части */}
         <clipPath id="discClip" clipPathUnits="userSpaceOnUse">
           <path d="M513.274 0C326.725 0 0 108.272 0 282.837C0 403.266 139.09 437.209 216.342 438.618C479.155 443.421 773.768 310.46 773.768 164.622C773.768 29.8295 625.111 0 513.274 0Z" />
         </clipPath>
