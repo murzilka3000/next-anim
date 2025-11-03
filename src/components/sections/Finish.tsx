@@ -404,11 +404,10 @@ const Finish = () => {
               <div className={s.finish__card}>
                 <div className={s.finish__content}>
                   <div className={s.finish__text} ref={text2Ref}>
-                    <p className={s.finish__name}>Это Паша</p>
+                    <p className={s.finish__name}>Это Маша</p>
                     <p className={s.finish__description}>
-                      Он пришёл прокачать скорость принятия решений и теперь
-                      обходит защитников лучше всех. Ему можно кинуть короткий
-                      пас!
+                      Она хотела развить выносливость и теперь может бегать на
+                      самые дальние дистанции. Ей можно дать длинный пас!
                     </p>
                   </div>
                   <img

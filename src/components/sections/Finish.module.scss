@@ -79,11 +79,6 @@
   }
 }
 
-.finish__imageWrapper {
-}
-.finish__image {
-}
-
 .isClickable {
   cursor: pointer;
   transition: transform 0.15s ease;
@@ -133,6 +128,19 @@
   height: auto;
   z-index: 5;
   pointer-events: none;
+}
+
+.tarelka {
+  position: absolute;
+  left: 50%;
+  bottom: 21px;
+  transform: translateX(-50%) rotate(var(--idle-rot, 0deg));
+  transform-origin: 50% 65%;
+  width: 325px;
+  height: auto;
+  z-index: 5;
+  pointer-events: none;
+  will-change: transform;
 }
 
 .modal {
@@ -295,6 +303,15 @@
   .finish__text {
     max-width: 189px;
   }
+
+  .modal__card {
+    background-image: url("/images/bg-2.svg");
+  }
+
+  .modal__btn {
+    width: 100%;
+    max-width: 230px;
+  }
 }
 
 @media screen and (max-width: 551px) {
@@ -330,24 +347,3 @@
     width: 350px;
   }
 }
-
-
-
-
-
-.tarelka {
-  position: absolute;
-  left: 50%;
-  bottom: 21px;
-  transform: translateX(-50%) rotate(var(--idle-rot, 0deg));
-  transform-origin: 50% 65%;
-  width: 325px;
-  height: auto;
-  z-index: 5;
-  pointer-events: none;
-  will-change: transform;
-}
-
-
-
-

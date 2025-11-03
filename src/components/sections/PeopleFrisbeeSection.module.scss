@@ -4,6 +4,12 @@
   background: url("/images/field.png") center / cover no-repeat;
 }
 
+@media screen and (max-width: 600px) {
+  .section {
+    background: url("/images/field-2.png") center / cover no-repeat;
+  }
+}
+
 /* заголовок сверху */
 .header {
   display: grid;
@@ -197,12 +203,18 @@
 
 @keyframes popIn {
   from {
-    transform: translate(-50%, -110%);
     opacity: 0;
+    transform: translate(
+      calc(-50% + var(--dx, 0)),
+      calc(-110% + var(--dy, -8%)) /* чуть выше на старте */
+    );
   }
   to {
-    transform: translate(-50%, -100%);
     opacity: 1;
+    transform: translate(
+      calc(-50% + var(--dx, 0)),
+      calc(-100% + var(--dy, -8%))
+    );
   }
 }
 
@@ -241,7 +253,7 @@
     width: clamp(120px, 26vw, 220px);
   }
   .headerText {
-    font-size: clamp(14px, 2.6vw, 16px);
+    font-size: 16px;
   }
 }
 @media (max-width: 640px) {
@@ -386,4 +398,16 @@
   .header {
     padding-bottom: 42px;
   }
+}
+
+@media screen and (max-width: 600px) {
+  .headerText br {
+    display: none;
+  }
+
+  .disc {
+    width: 40px;
+  }
+
+  
 }

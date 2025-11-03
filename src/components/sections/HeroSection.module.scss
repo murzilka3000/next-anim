@@ -29,6 +29,8 @@
   color: var(--text-light);
   line-height: 70%;
   margin-bottom: 70px;
+  max-width: 705px;
+  margin-left: -5px;
   > span {
     font-family: var(--third-family);
     font-style: italic;
@@ -36,7 +38,8 @@
     letter-spacing: -0.01em;
     color: var(--text-light);
     text-transform: lowercase;
-    margin-left: 100px;
+    text-align: right;
+    display: block;
   }
 }
 
@@ -186,7 +189,7 @@
 
 @media screen and (max-width: 500px) {
   .title {
-    font-size: 50px;
+    font-size: 70px;
   }
 
   .logos {
@@ -208,3 +211,27 @@
     width: 300px;
   }
 }
+
+@media screen and (max-width: 1310px) {
+  .title,
+  .description {
+    max-width: 600px;
+  }
+}
+
+@media screen and (max-width: 1149px) {
+  .title,
+  .description {
+    max-width: 500px;
+  }
+}
+
+@media screen and (max-width: 987px) {
+  .title,
+  .description {
+    max-width: 400px;
+  }
+}
+
+
+

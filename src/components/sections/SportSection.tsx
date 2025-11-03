@@ -25,21 +25,26 @@ const cards: Card[] = [
   {
     id: "2",
     name: "Роман Абрамович",
-    subtitle: "Футбол",
-    image: "/images/mark.svg",
+    subtitle: "Яхтинг",
+    image: "/images/mark-2.svg",
   },
   {
     id: "3",
-    name: "Сергей Брин",
-    subtitle: "Прыжки с парашютом",
-    image: "/images/mark.svg",
+    name: "Владимир Потанин",
+    subtitle: "Горные лыжи",
+    image: "/images/mark-3.svg",
   },
-  { id: "4", name: "Опра Уинфри", subtitle: "Йога", image: "/images/mark.svg" },
+  {
+    id: "4",
+    name: "Опра Уинфри",
+    subtitle: "Бег",
+    image: "/images/mark-4.svg",
+  },
   {
     id: "5",
-    name: "Илон Маск",
-    subtitle: "Тяжёлая атлетика",
-    image: "/images/mark.svg",
+    name: "Джефф Безос",
+    subtitle: "Силовые тренировки",
+    image: "/images/mark-5.svg",
   },
 ];
 

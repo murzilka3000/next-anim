@@ -100,7 +100,16 @@ const skillsMap: Skill[] = [
   { id: "teamwork", title: "Работа в команде", qId: "q2" },
   { id: "negotiation", title: "Умение договариваться", qId: "q3" },
   { id: "strategic", title: "Стратегическое мышление" },
-  { id: "stress", title: <>Стрессо-<br/>устойчивость</> },
+  {
+    id: "stress",
+    title: (
+      <>
+        Стрессо-
+        <br />
+        устойчивость
+      </>
+    ),
+  },
 ];
 
 export const MotivationQuizSection: React.FC = () => {
