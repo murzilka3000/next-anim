@@ -20,7 +20,7 @@ const cards: Card[] = [
     id: "1",
     name: "Марк Цукерберг",
     subtitle: "Бразильское джиу-джитсу",
-    image: "/images/mark.png",
+    image: "/images/mark.svg",
   },
   {
     id: "2",
