@@ -30,7 +30,7 @@ export const HeroSection = () => {
           trigger: container.current,
           pin: true,
           start: "top top",
-          end: "+=2000",
+          end: "+=1000",
           scrub: 1,
         },
       });
