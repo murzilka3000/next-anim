@@ -102,7 +102,7 @@ const peopleData: Person[] = [
     tagSide: "right",
     popup:
       "Выносливость хорошо развивают циклические виды физической нагрузки. Например, в алтимат фрисби игроки перемещаются по полю, чтобы поймать пас. Это может быть челночный бег для обхода игроков в защите или длинный забег, чтобы поймать диск в зоне противника.",
-       popupX: "-100%",
+    popupX: "-100%",
     popupY: "00%",
   },
 ];
@@ -311,6 +311,10 @@ export const PeopleFrisbeeSection: React.FC = () => {
                 src={p.img}
                 alt={p.name}
                 draggable={false}
+                onClick={() => flyTo(i)}                  // ← делаем человека кликабельным
+                role="button"
+                aria-label={`Передать тарелку: ${p.name}`}
+                style={{ cursor: "pointer" }}
               />
 
               <div

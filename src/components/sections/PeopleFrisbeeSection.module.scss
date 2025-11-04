@@ -87,6 +87,8 @@
   filter: drop-shadow(0 6px 14px rgba(0, 0, 0, 0.12));
   user-select: none;
   -webkit-user-drag: none;
+  position: relative;
+  z-index: 2;
 }
 
 /* Якорь руки внутри блока человека (берёт координаты с .person) */
@@ -118,6 +120,7 @@
   );
   animation: pulse 1.3s ease-in-out infinite;
   box-shadow: 0 0 18px 6px rgba(255, 105, 3, 0.32);
+  z-index: 1;
 }
 
 @keyframes pulse {
@@ -409,5 +412,7 @@
     width: 40px;
   }
 
-  
 }
+
+
+

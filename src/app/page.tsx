@@ -9,9 +9,9 @@ import Finish from '@/components/sections/Finish';
 export default function HomePage() {
   return (
     <main className={styles.main}>
-      <HeroSection />
+      {/* <HeroSection />
       <SportSection/>
-      <MythsDragSection/>
+      <MythsDragSection/> */}
       <MotivationQuizSection/>
       <PeopleFrisbeeSection/>
       <Finish/>

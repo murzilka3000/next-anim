@@ -32,9 +32,7 @@
   z-index: 2;
 }
 
-.quiz {
-  z-index: 1;
-}
+
 
 .introInner,
 .quizInner {
@@ -43,6 +41,7 @@
   padding-left: 50px;
   padding-right: 50px;
 }
+
 
 .title {
   font-family: var(--second-family);
@@ -104,6 +103,8 @@
   gap: 16px;
   pointer-events: auto;
   z-index: 1;
+  max-width: 955px;
+  margin: 0 auto;
 }
 
 .card::before {
@@ -147,6 +148,7 @@
   letter-spacing: -0.01em;
   text-align: center;
   color: var(--title);
+ 
 }
 
 .options {
@@ -228,8 +230,8 @@
 
 .nextFab {
   position: fixed;
-  right: clamp(16px, 3vw, 28px);
-  bottom: clamp(16px, 3vw, 28px);
+  right: 50px;
+  bottom: 50px;
   width: 56px;
   height: 56px;
   border-radius: 50%;
