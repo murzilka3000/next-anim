@@ -188,6 +188,43 @@ export const MotivationQuizSection: React.FC = () => {
   const transitionTimeline = useRef<gsap.core.Timeline | null>(null);
   const entryTlRef = useRef<gsap.core.Timeline | null>(null);
 
+  // Гейт-скролла до клика
+  const gateRef = useRef<ScrollTrigger | null>(null);
+
+  // Локер скролла
+  const scrollLockY = useRef<number | null>(null);
+  const lockScroll = () => {
+    if (scrollLockY.current !== null) return;
+    scrollLockY.current = window.scrollY || window.pageYOffset || 0;
+    const b = document.body as HTMLBodyElement;
+    b.style.position = "fixed";
+    b.style.top = `-${scrollLockY.current}px`;
+    b.style.left = "0";
+    b.style.right = "0";
+    b.style.width = "100%";
+    b.style.overflow = "hidden";
+  };
+  const unlockScroll = () => {
+    const y = scrollLockY.current ?? 0;
+    const b = document.body as HTMLBodyElement;
+    b.style.position = "";
+    b.style.top = "";
+    b.style.left = "";
+    b.style.right = "";
+    b.style.width = "";
+    b.style.overflow = "";
+    scrollLockY.current = null;
+    requestAnimationFrame(() => {
+      const sec = sectionRef.current;
+      if (sec) {
+        const top = sec.getBoundingClientRect().top + window.scrollY;
+        window.scrollTo({ top, behavior: "auto" });
+      } else {
+        window.scrollTo({ top: y, behavior: "auto" });
+      }
+    });
+  };
+
   const [idx, setIdx] = useState(0);
   const [selected, setSelected] = useState<string | null>(null);
   const [quizFinished, setQuizFinished] = useState(false);
@@ -204,6 +241,14 @@ export const MotivationQuizSection: React.FC = () => {
     () => {
       gsap.set(quizRef.current, { autoAlpha: 0, pointerEvents: "none" });
       gsap.set(resultsRef.current, { autoAlpha: 0, pointerEvents: "none" });
+
+      // Гейт: как только секция у верхнего края — блокируем скролл
+      gateRef.current = ScrollTrigger.create({
+        trigger: sectionRef.current!,
+        start: "top top",
+        onEnter: lockScroll,
+        onEnterBack: lockScroll,
+      });
 
       transitionTimeline.current = gsap
         .timeline({ paused: true })
@@ -225,15 +270,9 @@ export const MotivationQuizSection: React.FC = () => {
         );
       transitionTimeline.current.timeScale(ANIM.speed);
 
-      const pin = ScrollTrigger.create({
-        trigger: sectionRef.current,
-        pin: true,
-        start: "top top",
-        end: "bottom bottom",
-      });
-
       return () => {
-        pin.kill();
+        gateRef.current?.kill();
+        unlockScroll();
       };
     },
     { scope: sectionRef }
@@ -241,6 +280,8 @@ export const MotivationQuizSection: React.FC = () => {
 
   const handleStart = (e: React.MouseEvent) => {
     e.preventDefault();
+    // ВАЖНО: скролл НЕ разблокируем здесь
+    // Просто запускаем переход интро -> квиз
     transitionTimeline.current?.play();
   };
 
@@ -260,16 +301,22 @@ export const MotivationQuizSection: React.FC = () => {
           pointerEvents: "auto",
           duration: 0.4,
           ease: "power2.inOut",
-          onComplete: () => {
-            ScrollTrigger.refresh();
-          },
         },
         "<"
-      );
+      )
+      .add(() => {
+        // Разблокируем скролл ТОЛЬКО после того, как дошли до результатов
+        gateRef.current?.kill();
+        unlockScroll();
+        // небольшой отложенный refresh на случай смены высоты
+        gsap.delayedCall(0.05, () => ScrollTrigger.refresh());
+      });
     tl.timeScale(ANIM.speed);
   };
 
   const restartQuiz = () => {
+    // Можно оставить скролл разблокированным, либо снова залочить — по желанию.
+    // Здесь НЕ лочим повторно — пользователь сам решит, прокручивать ли дальше.
     setIdx(0);
     setSelected(null);
     setQuizFinished(false);
@@ -426,9 +473,8 @@ export const MotivationQuizSection: React.FC = () => {
 
   const nextDisabled = selected === null || isTransitioning;
 
-  // NEW: считаем, сколько «прокладок» показывать: по одной исчезает на каждом шаге
-  const remaining = Math.max(0, total - (idx + 1)); // сколько вопросов остаётся после текущего
-  const topCount = Math.min(4, remaining); // максимум 4 слоя, минимум 0
+  const remaining = Math.max(0, total - (idx + 1));
+  const topCount = Math.min(4, remaining);
 
   return (
     <section className={styles.section} ref={sectionRef}>
@@ -469,7 +515,6 @@ export const MotivationQuizSection: React.FC = () => {
                 <div className={styles.prompt}>{q.prompt}</div>
               </div>
 
-              {/* NEW: рисуем только оставшееся количество «прокладок» */}
               {Array.from({ length: topCount }).map((_, i) => {
                 const modClass = (styles as any)[`modifier_class_${i + 1}`];
                 return (
