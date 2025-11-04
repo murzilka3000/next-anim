@@ -11,8 +11,8 @@
   z-index: 0;
   background: var(--bg);
   color: var(--text);
-  padding: clamp(28px, 6vw, 72px) clamp(20px, 6vw, 72px);
-  min-height: 100vh;
+  padding: 50px;
+  height: 100vh!important;
   display: grid;
   place-items: center;
 }
