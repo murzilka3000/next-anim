@@ -37,7 +37,7 @@ const mythsData: Myth[] = [
     expert: {
       name: "Ксения Ясалова",
       role: "тренер школы Springle",
-      photo: "/images/ava.png",
+      photo: "/images/p-1.svg",
       answer:
         "В этом деле важнее регулярность. Лучше в вашем расписании будет одна тренировка, но каждую неделю, чем четыре тренировки за раз, а потом вы забросите занятия на месяц. По моему опыту, одного-двух раз в неделю достаточно для старта, а дальше уже можно добавить дополнительную нагрузку.",
     },
@@ -49,7 +49,7 @@ const mythsData: Myth[] = [
     expert: {
       name: "Андрей Матрусов",
       role: "тренер школы Springle",
-      photo: "/images/ava.png",
+      photo: "/images/p-2.svg",
       answer:
         "Здесь важно не впадать в крайности и адекватно оценивать свои силы. С одной стороны, не стоит планировать сложные тренировки на выносливость утром, если после у вас планируется насыщенный день. С другой, плохо заканчивать вечернюю тренировку слишком поздно. После тренировки нужно заложить время на то, чтобы успокоиться ментально и физически – часа полтора-два.",
     },
@@ -61,7 +61,7 @@ const mythsData: Myth[] = [
     expert: {
       name: "Алёна Виноградова",
       role: "тренер школы Springle",
-      photo: "/images/ava.png",
+      photo: "/images/p-3.svg",
       answer:
         "Правильная нагрузка – это всегда двойной эффект. Мы тренируем не только мышцы, но и нашу нервную систему, учим её справляться со стрессом и эффективно управлять ресурсами тела. Спорт – это хороший способ перезагрузки. Он действует как катализатор, преобразуя накопленный стресс в физическую усталость, а в завершении идёт выброс дофамина, который дарит чувство удовлетворения и спокойствия.",
     },
@@ -73,7 +73,7 @@ const mythsData: Myth[] = [
     expert: {
       name: "Валерия Васюкова",
       role: "тренер школы Springle",
-      photo: "/images/ava.png",
+      photo: "/images/p-4.svg",
       answer:
         "Нельзя однозначно выделить что-то одно: кардио и силовые нагрузки решают разные задачи. Кардио работает на выносливость и сердце, а силовые тренировки укрепляют опорно-двигательный аппарат, предотвращают травмы. Выбор активности зависит от ваших целей. Но важно соблюдать баланс. Если на ранних этапах не очевидно, что приносит больше пользы, надо комбинировать.",
     },
@@ -85,7 +85,7 @@ const mythsData: Myth[] = [
     expert: {
       name: "Леонид Дивисенко",
       role: "тренер школы Springle",
-      photo: "/images/ava.png",
+      photo: "/images/p-5.svg",
       answer:
         "Регулярность и интенсивность для меня синонимы дисциплины и мотивации. Мотивация она сегодня есть, а завтра ее нет. Дисциплина равна регулярности. Лучше регулярно делать что-то по чуть чуть, чем один раз выжать себя и потом спустя какое-то время прийти и снова выжать себя. Это не действенная техника и дает мало результата.",
     },
@@ -209,6 +209,9 @@ export const MythsDragSection: React.FC = () => {
   const [index, setIndex] = useState(0);
   const [answeredIdx, setAnsweredIdx] = useState<number | null>(null);
 
+  // NEW: скрыть карточку на десктопе после последнего дропа (оставить пустое место)
+  const [desktopCardHidden, setDesktopCardHidden] = useState(false);
+
   const myths = useMemo(() => mythsData, []);
   const current = myths[index];
   const answered = answeredIdx !== null ? myths[answeredIdx] : null;
@@ -223,6 +226,8 @@ export const MythsDragSection: React.FC = () => {
       // Десктоп (>= 812px) — drag & drop
       mm.add("(min-width: 812px)", () => {
         gsap.set(play, { opacity: 0, y: 24 });
+        // при входе в десктопный брейкпоинт не скрываем карточку по умолчанию
+        setDesktopCardHidden(false);
 
         const tlIntro = gsap
           .timeline({
@@ -254,21 +259,32 @@ export const MythsDragSection: React.FC = () => {
           setAnsweredIdx(index);
           const ans = answerRef.current!;
 
+          const isLast = index >= myths.length - 1;
+
           const tl = gsap.timeline();
           tl.to(card, {
             opacity: 0,
             scale: 0.95,
             duration: 0.22,
             ease: "power2.out",
-          })
-            .set(card, { x: 0, y: 0 })
-            .call(() => setIndex((i) => Math.min(i + 1, myths.length - 1)))
-            .to(card, {
+          }).set(card, { x: 0, y: 0 });
+
+          if (isLast) {
+            // Последняя карточка: оставляем её на месте, но полностью прозрачной и неактивной
+            tl.call(() => {
+              setDesktopCardHidden(true);
+            });
+          } else {
+            // Промежуточные карточки: продолжаем как раньше
+            tl.call(() =>
+              setIndex((i) => Math.min(i + 1, myths.length - 1))
+            ).to(card, {
               opacity: 1,
               scale: 1,
               duration: 0.28,
               ease: "power2.out",
             });
+          }
 
           gsap.killTweensOf(ans);
           gsap.fromTo(
@@ -364,7 +380,16 @@ export const MythsDragSection: React.FC = () => {
       {/* Этап 2: playground (десктоп) */}
       <div ref={playgroundRef} className={styles.playground}>
         <div className={styles.left}>
-          <div className={styles.card} ref={dragCardRef}>
+          <div
+            className={styles.card}
+            ref={dragCardRef}
+            style={
+              desktopCardHidden
+                ? { opacity: 0, pointerEvents: "none" }
+                : undefined
+            }
+            aria-hidden={desktopCardHidden}
+          >
             <div className={styles.cardInner}>
               <div className={styles.cardLabel}>{current.title}</div>
               <div className={styles.cardText}>{current.text}</div>
