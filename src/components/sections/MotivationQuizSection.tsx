@@ -22,6 +22,8 @@ const ICONS = {
   warn: "/images/red.svg",
 };
 
+const UNLOCK_AFTER_RESULTS = 2.5;
+
 const ANIM = {
   speed: 0.85,
   delayBeforeResults: 0.9,
@@ -305,12 +307,16 @@ export const MotivationQuizSection: React.FC = () => {
         "<"
       )
       .add(() => {
-        // Разблокируем скролл ТОЛЬКО после того, как дошли до результатов
-        gateRef.current?.kill();
-        unlockScroll();
-        // небольшой отложенный refresh на случай смены высоты
-        gsap.delayedCall(0.05, () => ScrollTrigger.refresh());
+        // Ждём стабилизацию результатов + доп. паузу 2.5с
+        gsap.delayedCall(UNLOCK_AFTER_RESULTS, () => {
+          // снимаем гейт и разблокируем скролл
+          gateRef.current?.kill();
+          unlockScroll();
+          // небольшой отложенный refresh на случай изменения высоты
+          gsap.delayedCall(0.05, () => ScrollTrigger.refresh());
+        });
       });
+
     tl.timeScale(ANIM.speed);
   };
 
@@ -486,7 +492,9 @@ export const MotivationQuizSection: React.FC = () => {
           </h2>
           <div className={styles.cont__cont}>
             <div className={styles.cont}>
-              <p className={styles.subtitle}>Осталось найти верную мотивацию.</p>
+              <p className={styles.subtitle}>
+                Осталось найти верную мотивацию.
+              </p>
               <p className={styles.lead}>
                 Регулярная физическая нагрузка помогает держать себя в форме, а
                 ещё развивает навыки, на которых строится успех в карьере и
