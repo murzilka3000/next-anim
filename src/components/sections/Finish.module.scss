@@ -134,7 +134,8 @@
   position: absolute;
   left: 50%;
   bottom: 21px;
-  transform: translateX(-50%) rotate(var(--idle-rot, 0deg));
+  transform: translateX(calc(-50% + var(--idle-dx, 0px)))
+    rotate(var(--idle-rot, 0deg));
   transform-origin: 50% 65%;
   width: 325px;
   height: auto;

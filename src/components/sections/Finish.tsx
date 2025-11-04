@@ -21,14 +21,16 @@ const Finish = () => {
     null
   );
 
-  // Состояние idle-поворота (для плавности и управления из handleThrow)
+  // Состояние idle (поворот + горизонтальный сдвиг)
   const idleRef = useRef({
-    target: 0, // целевой угол (deg)
-    current: 0, // текущий угол (deg)
-    lastMove: 0, // время последнего движения курсора
+    target: 0,      // целевой угол (deg)
+    current: 0,     // текущий угол (deg)
+    xTarget: 0,     // целевой dx (px)
+    xCurrent: 0,    // текущий dx (px)
+    lastMove: 0,    // время последнего движения курсора
   });
 
-  // ——— Idle: плавное раскачивание по курсору (только rotate), строго по центру ———
+  // ——— Idle: плавное раскачивание и лёгкий сдвиг по X за курсором ———
   useEffect(() => {
     const cont = containerRef.current;
     const disc = discRef.current;
@@ -38,35 +40,45 @@ const Finish = () => {
     if (!pointerFine) return; // на тачах — выключено
 
     // старт
-    disc.style.setProperty("--idle-rot", "0deg");
+    disc.style.transform = "translateX(-50%) rotate(0deg)";
 
     let r = cont.getBoundingClientRect();
-    const ROT_MAX = 5; // максимальный угол (deg)
-    const SMOOTH = 0.12; // коэффициент сглаживания (0..1), больше — быстрее
-    const IDLE_WOBBLE = 0.6; // амплитуда автоколебаний, когда курсор не двигается (deg)
-    const IDLE_DELAY = 900; // через сколько мс без движения включать автоколебания
+    const ROT_MAX = 5;     // максимальный угол (deg)
+    const DX_MAX = 8;      // максимальный сдвиг по X (px)
+    const SMOOTH = 0.12;   // коэффициент сглаживания (0..1)
+    const IDLE_WOBBLE = 0.6; // автоколебания по вращению при простое (deg)
+    const IDLE_DELAY = 900;  // через сколько мс без движения включать автоколебания
 
     const update = () => {
       const st = idleRef.current;
 
-      // если курсор не менялся давно и нет полёта — лёгкая автокачалка
+      // если курсор не менялся давно и нет полёта — лёгкая автокачалка по вращению
       const idleNow =
         !busyRef.current && performance.now() - st.lastMove > IDLE_DELAY;
-      const desired = idleNow
+      const desiredRot = idleNow
         ? Math.sin((performance.now() / 1000) * 1.2) * IDLE_WOBBLE
         : st.target;
 
-      // сглаживание к целевому значению
-      st.current += (desired - st.current) * SMOOTH;
+      const desiredDx = idleNow ? 0 : st.xTarget; // по X без автоколебаний
 
-      disc.style.setProperty("--idle-rot", `${st.current.toFixed(3)}deg`);
+      // сглаживание к целевым значениям
+      st.current += (desiredRot - st.current) * SMOOTH;
+      st.xCurrent += (desiredDx - st.xCurrent) * SMOOTH;
+
+      // не вмешиваемся в полёт — там GSAP управляет transform
+      if (!busyRef.current) {
+        disc.style.transform = `translateX(calc(-50% + ${st.xCurrent.toFixed(
+          2
+        )}px)) rotate(${st.current.toFixed(3)}deg)`;
+      }
     };
 
     const onMove = (e: PointerEvent) => {
       idleRef.current.lastMove = performance.now();
       if (busyRef.current) {
-        // во время полёта всегда целимся в 0
+        // во время полёта целимся в 0
         idleRef.current.target = 0;
+        idleRef.current.xTarget = 0;
         return;
       }
       const cx = r.left + r.width / 2;
@@ -75,11 +87,13 @@ const Finish = () => {
       // мягкая нелинейность, чтобы около центра движения были плавнее
       const eased = Math.sign(nx) * Math.pow(Math.abs(nx), 0.7);
       idleRef.current.target = -eased * ROT_MAX;
+      idleRef.current.xTarget = eased * DX_MAX;
     };
 
     const onLeave = () => {
       idleRef.current.lastMove = performance.now();
       idleRef.current.target = 0;
+      idleRef.current.xTarget = 0;
     };
 
     const onResize = () => {
@@ -219,9 +233,11 @@ const Finish = () => {
     if (disc) {
       // вернуть в версточное состояние
       gsap.set(disc, { clearProps: "all", autoAlpha: 1, scale: 1 });
-      disc.style.setProperty("--idle-rot", "0deg");
+      disc.style.transform = "translateX(-50%) rotate(0deg)";
       idleRef.current.current = 0;
       idleRef.current.target = 0;
+      idleRef.current.xCurrent = 0;
+      idleRef.current.xTarget = 0;
     }
     if (swappedRef.current) {
       const { el, original } = swappedRef.current;
@@ -241,6 +257,7 @@ const Finish = () => {
 
     // Свести idle к нулю (мягко) и зафиксировать
     idleRef.current.target = 0;
+    idleRef.current.xTarget = 0;
 
     // смена спрайта игрока на поднятую руку
     const originalSrc = img.src;
@@ -377,7 +394,7 @@ const Finish = () => {
                   data-oy="10"
                   data-alt="/images/f-1-up.svg"
                   onClick={(e) => handleThrow(e.currentTarget)}
-                  style={{ position: "relative", zIndex: 1 }}
+                  style={{ position: "relative", zIndex: 1, cursor: "pointer" }}
                 />
               </div>
 
@@ -452,7 +469,7 @@ const Finish = () => {
                   data-oy="8"
                   data-alt="/images/f-3-up.svg"
                   onClick={(e) => handleThrow(e.currentTarget)}
-                  style={{ position: "relative", zIndex: 1 }}
+                  style={{ position: "relative", zIndex: 1, cursor: "pointer" }}
                 />
               </div>
             </div>

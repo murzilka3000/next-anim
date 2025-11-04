@@ -12,8 +12,8 @@ export default function HomePage() {
       {/* <HeroSection />
       <SportSection/>
       <MythsDragSection/> */}
-      <MotivationQuizSection/>
-      <PeopleFrisbeeSection/>
+      {/* <MotivationQuizSection/>
+      <PeopleFrisbeeSection/> */}
       <Finish/>
     </main>
   );
