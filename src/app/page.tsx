@@ -9,11 +9,11 @@ import Finish from '@/components/sections/Finish';
 export default function HomePage() {
   return (
     <main className={styles.main}>
-      {/* <HeroSection />
+      <HeroSection />
       <SportSection/>
-      <MythsDragSection/> */}
-      {/* <MotivationQuizSection/>
-      <PeopleFrisbeeSection/> */}
+      <MythsDragSection/>
+      <MotivationQuizSection/>
+      <PeopleFrisbeeSection/>
       <Finish/>
     </main>
   );
