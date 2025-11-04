@@ -22,10 +22,9 @@ const ICONS = {
   warn: "/images/red.svg",
 };
 
-// Глобальные настройки скорости/задержек анимаций
 const ANIM = {
-  speed: 0.85, // 1 = как было; <1 — медленнее; >1 — быстрее
-  delayBeforeResults: 0.9, // пауза перед показом результатов
+  speed: 0.85,
+  delayBeforeResults: 0.9,
 };
 
 const questions: Question[] = [
@@ -156,7 +155,6 @@ const questions: Question[] = [
   },
 ];
 
-// Маппинг вопросов к навыкам для результата
 type Skill = { id: string; title: React.ReactNode; qId?: Question["id"] };
 
 const skillsMap: Skill[] = [
@@ -182,7 +180,6 @@ export const MotivationQuizSection: React.FC = () => {
   const quizRef = useRef<HTMLDivElement | null>(null);
   const resultsRef = useRef<HTMLDivElement | null>(null);
 
-  // Раздельная анимация вопроса/ответов
   const cardRef = useRef<HTMLDivElement | null>(null);
   const headerRef = useRef<HTMLDivElement | null>(null);
   const optionsRef = useRef<HTMLUListElement | null>(null);
@@ -226,8 +223,6 @@ export const MotivationQuizSection: React.FC = () => {
           },
           "<"
         );
-
-      // применяем общий таймскейл
       transitionTimeline.current.timeScale(ANIM.speed);
 
       const pin = ScrollTrigger.create({
@@ -316,7 +311,6 @@ export const MotivationQuizSection: React.FC = () => {
     }
   };
 
-  // Новый nextQuestion: раздельная анимация
   const nextQuestion = () => {
     if (isTransitioning) return;
     const isLast = idx >= total - 1;
@@ -349,25 +343,24 @@ export const MotivationQuizSection: React.FC = () => {
       },
     });
 
-    // 1) Ответы — fade down по очереди
+    // Ответы — fade down
     if (optionEls.length) {
       tl.to(
         optionEls,
         {
           y: 12,
           autoAlpha: 0,
-          duration: 0.3, // можно увеличить
-          stagger: 0.08, // можно увеличить
+          duration: 0.3,
+          stagger: 0.08,
         },
         0
       );
     }
-    // 1a) Объяснение — мягко гасим
     if (explainEl) {
       tl.to(explainEl, { y: 8, autoAlpha: 0, duration: 0.28 }, 0);
     }
 
-    // 2) Заголовок/карточка вопроса — перелистывание «колодой»
+    // Заголовок и стопка — перелистывание
     tl.to(
       header,
       { y: -20, rotate: 5, autoAlpha: 0, duration: 0.32, ease: "power2.in" },
@@ -390,7 +383,7 @@ export const MotivationQuizSection: React.FC = () => {
     tl.timeScale(ANIM.speed);
   };
 
-  // Анимация входа новой карточки и ответов
+  // Вход новой карточки
   useEffect(() => {
     if (!headerRef.current || !optionsRef.current || !cardRef.current) return;
 
@@ -399,11 +392,11 @@ export const MotivationQuizSection: React.FC = () => {
     const optionEls = Array.from(
       optionsList.querySelectorAll(`.${styles.option}`)
     ) as HTMLElement[];
+
     const topCards = Array.from(
       cardRef.current.querySelectorAll(`.${styles.top_card}`)
     ) as HTMLElement[];
 
-    // стартовые состояния (вне кадра)
     gsap.set(header, { y: 20, rotate: -3, autoAlpha: 0 });
     if (topCards.length) gsap.set(topCards, { y: 15, autoAlpha: 0 });
     if (optionEls.length) gsap.set(optionEls, { y: 12, autoAlpha: 0 });
@@ -433,6 +426,10 @@ export const MotivationQuizSection: React.FC = () => {
 
   const nextDisabled = selected === null || isTransitioning;
 
+  // NEW: считаем, сколько «прокладок» показывать: по одной исчезает на каждом шаге
+  const remaining = Math.max(0, total - (idx + 1)); // сколько вопросов остаётся после текущего
+  const topCount = Math.min(4, remaining); // максимум 4 слоя, минимум 0
+
   return (
     <section className={styles.section} ref={sectionRef}>
       {/* INTRO */}
@@ -443,9 +440,7 @@ export const MotivationQuizSection: React.FC = () => {
           </h2>
           <div className={styles.cont__cont}>
             <div className={styles.cont}>
-              <p className={styles.subtitle}>
-                Осталось найти верную мотивацию.
-              </p>
+              <p className={styles.subtitle}>Осталось найти верную мотивацию.</p>
               <p className={styles.lead}>
                 Регулярная физическая нагрузка помогает держать себя в форме, а
                 ещё развивает навыки, на которых строится успех в карьере и
@@ -473,18 +468,17 @@ export const MotivationQuizSection: React.FC = () => {
                 </div>
                 <div className={styles.prompt}>{q.prompt}</div>
               </div>
-              <div
-                className={`${styles.top_card} ${styles.modifier_class_1}`}
-              />
-              <div
-                className={`${styles.top_card} ${styles.modifier_class_2}`}
-              />
-              <div
-                className={`${styles.top_card} ${styles.modifier_class_3}`}
-              />
-              <div
-                className={`${styles.top_card} ${styles.modifier_class_4}`}
-              />
+
+              {/* NEW: рисуем только оставшееся количество «прокладок» */}
+              {Array.from({ length: topCount }).map((_, i) => {
+                const modClass = (styles as any)[`modifier_class_${i + 1}`];
+                return (
+                  <div
+                    key={`tc-${i}`}
+                    className={`${styles.top_card} ${modClass}`}
+                  />
+                );
+              })}
             </div>
 
             <ul className={styles.options} ref={optionsRef}>
@@ -522,7 +516,6 @@ export const MotivationQuizSection: React.FC = () => {
             )}
           </div>
 
-          {/* FAB "далее" */}
           {!quizFinished && (
             <button
               className={`${styles.nextFab} ${
