@@ -245,7 +245,7 @@ export const MotivationQuizSection: React.FC = () => {
       // Гейт: как только секция у верхнего края — блокируем скролл
       gateRef.current = ScrollTrigger.create({
         trigger: sectionRef.current!,
-        start: "top 5%",
+        start: "top 9%",
         onEnter: lockScroll,
         onEnterBack: lockScroll,
       });
