@@ -567,3 +567,11 @@
     width: 100%;
   }
 }
+
+
+
+
+
+.options:has(.wrong) .correct .dot {
+  background: transparent;
+}
