@@ -71,26 +71,12 @@
   align-items: center;
 }
 
+/* Десктоп: без маски, даём выходить контенту трека за рамки вьюпорта */
 .viewport {
   position: relative;
   width: 100%;
   height: 100%;
-  overflow: hidden;
-
-  -webkit-mask-image: linear-gradient(
-    to right,
-    transparent 0,
-    #000 72px,
-    #000 calc(100% - 32px),
-    transparent 100%
-  );
-  mask-image: linear-gradient(
-    to right,
-    transparent 0,
-    #000 72px,
-    #000 calc(100% - 32px),
-    transparent 100%
-  );
+  overflow: visible;
 }
 
 .track {
@@ -165,22 +151,9 @@
   .right {
     height: clamp(280px, 56vh, 480px);
   }
-  .viewport {
-    -webkit-mask-image: linear-gradient(
-      to right,
-      transparent 0,
-      #000 48px,
-      #000 calc(100% - 16px),
-      transparent 100%
-    );
-    mask-image: linear-gradient(
-      to right,
-      transparent 0,
-      #000 48px,
-      #000 calc(100% - 16px),
-      transparent 100%
-    );
-  }
+
+  /* На планшетах можно оставить маску, если нужно «смягчение краёв» —
+     но по задаче достаточно моб. варианта ниже */
 }
 
 @media screen and (max-width: 1214px) {
@@ -193,11 +166,12 @@
   display: none;
 }
 
+/* Мобилка/узкий: нативный горизонтальный скролл трека */
 @media screen and (max-width: 1111px) {
   .inner {
     display: flex;
     flex-direction: column;
-    align-items: stretch; /* ВАЖНО: растягиваем .right на всю ширину */
+    align-items: stretch;
     justify-content: center;
   }
 
@@ -210,7 +184,6 @@
   }
 
   .right {
-    /* если не хочешь менять align-items — оставь flex-start и добавь эту строку */
     width: 100%;
   }
 
@@ -218,6 +191,8 @@
     overflow-x: auto;
     overflow-y: hidden;
     -webkit-overflow-scrolling: touch;
+
+    /* убираем маски/градиенты на мобилке */
     -webkit-mask-image: none;
     mask-image: none;
   }
@@ -257,9 +232,7 @@
   }
 
   .viewport::-webkit-scrollbar {
-    display: none; /* Chrome/Safari/новый Edge */
-    /* или точечно горизонтальную:
-     height: 0;  */
+    display: none;
   }
 }
 

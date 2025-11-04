@@ -50,34 +50,43 @@ const cards: Card[] = [
 
 export const SportSection: React.FC = () => {
   const sectionRef = useRef<HTMLElement | null>(null);
+  const innerRef = useRef<HTMLDivElement | null>(null);
   const viewportRef = useRef<HTMLDivElement | null>(null);
   const trackRef = useRef<HTMLUListElement | null>(null);
 
   useGSAP(
     () => {
       const section = sectionRef.current!;
+      const inner = innerRef.current!;
       const viewport = viewportRef.current!;
       const track = trackRef.current!;
 
+      // считаем, сколько нужно сдвинуть всю секцию влево, чтобы правый край трека
+      // пришёл к правому краю окна
       const computeDelta = () => {
-        const total = track.scrollWidth;
-        const visible = viewport.clientWidth;
-        return Math.max(0, total - visible);
+        // меряем при x = 0
+        gsap.set(inner, { x: 0 });
+        const tr = track.getBoundingClientRect();
+        const rightEdge = tr.left + track.scrollWidth;
+        const winW = window.innerWidth;
+        const delta = Math.max(0, rightEdge - winW);
+        return delta;
       };
 
       const mm = gsap.matchMedia();
       let tween: gsap.core.Tween | null = null;
       let ro: ResizeObserver | null = null;
 
+      // Десктоп: пинним и двигаем всю .inner
       mm.add("(min-width: 1112px)", () => {
         const init = () => {
-          // сброс на всякий случай
           if (tween) {
             tween.scrollTrigger?.kill();
             tween.kill();
             tween = null;
           }
-          gsap.set(track, { x: 0 });
+
+          gsap.set(inner, { x: 0 });
 
           const delta = computeDelta();
           if (delta <= 0) {
@@ -85,7 +94,7 @@ export const SportSection: React.FC = () => {
             return;
           }
 
-          tween = gsap.to(track, {
+          tween = gsap.to(inner, {
             x: -delta,
             ease: "none",
             scrollTrigger: {
@@ -103,7 +112,7 @@ export const SportSection: React.FC = () => {
             },
           });
 
-          // обновим расчёты после инициализации
+          // чтобы всё пересчиталось после инициализации
           gsap.delayedCall(0, () => ScrollTrigger.refresh());
         };
 
@@ -117,7 +126,6 @@ export const SportSection: React.FC = () => {
         ro.observe(track);
         ro.observe(document.documentElement);
 
-        // cleanup для этого брейкпоинта
         return () => {
           if (ro) {
             ro.disconnect();
@@ -128,27 +136,21 @@ export const SportSection: React.FC = () => {
             tween.kill();
             tween = null;
           }
-          // на выходе очищаем трансформации
-          gsap.set(track, { clearProps: "transform" });
+          gsap.set(inner, { clearProps: "transform" });
           section.classList.remove(styles.isPinned);
         };
       });
 
-      // Мобильный/узкий: нативный горизонтальный скролл
+      // Мобилка/узкий: нативный горизонтальный скролл трека
       mm.add("(max-width: 1111px)", () => {
-        // убить возможный десктопный твин и сбросить transform
         if (tween) {
           tween.scrollTrigger?.kill();
           tween.kill();
           tween = null;
         }
-        gsap.set(track, { x: 0, clearProps: "transform" });
+        gsap.set(inner, { x: 0, clearProps: "transform" });
         section.classList.remove(styles.isPinned);
-
-        // Ничего больше не инициализируем — скролл нативный
-        return () => {
-          // no-op
-        };
+        return () => {};
       });
 
       return () => {
@@ -160,7 +162,7 @@ export const SportSection: React.FC = () => {
 
   return (
     <section className={styles.section} ref={sectionRef}>
-      <div className={styles.inner}>
+      <div className={styles.inner} ref={innerRef}>
         <div className={styles.left}>
           <div>
             <h2 className={styles.kicker}>СПОРТ</h2>
@@ -203,6 +205,7 @@ export const SportSection: React.FC = () => {
             </ul>
           </div>
         </div>
+
         <p className={`${styles.note} ${styles.note_mob}`}>
           Листайте профайлы известных предпринимателей, чтобы <br /> узнать, из
           какой физической нагрузки они черпают энергию.
