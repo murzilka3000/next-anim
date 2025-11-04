@@ -141,13 +141,13 @@
 /* Подписи soft-скиллов */
 .tag {
   position: absolute;
-  color: #ffffff;
-  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
-  font-weight: 800;
-  font-size: clamp(10px, 1.2vw, 14px);
-  letter-spacing: 0.04em;
   max-width: 160px;
-  line-height: 1.15;
+  font-family: var(--second-family);
+  font-weight: 700;
+  font-size: 15px;
+  line-height: 120%;
+  text-transform: uppercase;
+  color: var(--text-light);
 }
 
 .tag_left {
@@ -195,7 +195,7 @@
   top: var(--popup-y, -8%);
   transform: translate(-50%, -100%);
   pointer-events: auto;
-  width: min(280px, 90vw);
+  width: 250px;
   border-radius: 12px;
   padding: 10px 14px;
   animation: popIn 0.28s ease-out both;
@@ -411,8 +411,4 @@
   .disc {
     width: 40px;
   }
-
 }
-
-
-
