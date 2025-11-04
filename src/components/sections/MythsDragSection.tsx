@@ -92,34 +92,15 @@ const mythsData: Myth[] = [
   },
 ];
 
-export const MythsDragSection: React.FC = () => {
-  const sectionRef = useRef<HTMLElement | null>(null);
-  const introRef = useRef<HTMLDivElement | null>(null);
+// Внутренний компонент для мобильного “ответного” слайда с переворотом
+const MobileAnswerSlide: React.FC<{ myth: Myth }> = ({ myth }) => {
+  const hintRef = useRef<HTMLDivElement | null>(null);
+  const ansRef = useRef<HTMLDivElement | null>(null);
+  const [revealed, setRevealed] = useState(false);
 
-  // desktop
-  const playgroundRef = useRef<HTMLDivElement | null>(null);
-  const dragCardRef = useRef<HTMLDivElement | null>(null);
-  const dropZoneRef = useRef<HTMLDivElement | null>(null);
-  const answerRef = useRef<HTMLDivElement | null>(null);
-
-  // mobile
-  const mobileRef = useRef<HTMLDivElement | null>(null);
-  const mobileHintRef = useRef<HTMLDivElement | null>(null);
-  const mobileAnswerRef = useRef<HTMLDivElement | null>(null);
-
-  const [index, setIndex] = useState(0);
-  const [answeredIdx, setAnsweredIdx] = useState<number | null>(null);
-  const [mobileRevealed, setMobileRevealed] = useState(false);
-
-  const myths = useMemo(() => mythsData, []);
-  const current = myths[index];
-  const answered = answeredIdx !== null ? myths[answeredIdx] : null;
-
-  // Сбрасываем мобильное раскрытие при смене мифа
   useEffect(() => {
-    setMobileRevealed(false);
-    const hint = mobileHintRef.current;
-    const ans = mobileAnswerRef.current;
+    const hint = hintRef.current;
+    const ans = ansRef.current;
     if (hint && ans) {
       gsap.set(hint, {
         autoAlpha: 1,
@@ -134,15 +115,14 @@ export const MythsDragSection: React.FC = () => {
         transformOrigin: "50% 50%",
       });
     }
-  }, [index]);
+  }, []);
 
-  // Нажатие на мобильный второй слайд — переворот “подсказка -> ответ”
-  const revealMobileAnswer = () => {
-    if (mobileRevealed) return;
-    setMobileRevealed(true);
-    const hint = mobileHintRef.current;
-    const ans = mobileAnswerRef.current;
-    if (!hint || !ans) return;
+  const reveal = () => {
+    if (revealed) return;
+    setRevealed(true);
+
+    const hint = hintRef.current!;
+    const ans = ansRef.current!;
 
     const tl = gsap.timeline();
     tl.to(hint, {
@@ -169,6 +149,69 @@ export const MythsDragSection: React.FC = () => {
       "<0.05"
     );
   };
+
+  return (
+    <div
+      className={`${styles.dropZone} ${styles.cardMobile}`}
+      onClick={reveal}
+      role="button"
+      tabIndex={0}
+      onKeyDown={(e) => {
+        if (e.key === "Enter" || e.key === " ") {
+          e.preventDefault();
+          reveal();
+        }
+      }}
+      style={{ cursor: revealed ? "default" : "pointer" }}
+    >
+      {/* Передняя сторона: подсказка (как на десктопе) */}
+      <div className={styles.dropHint} ref={hintRef} aria-hidden={revealed}>
+        <img className={styles.cursor} src="/images/cursor.svg" alt="" />
+        Нажмите, чтобы увидеть ответ эксперта
+      </div>
+
+      {/* Задняя сторона: ответ */}
+      <div className={styles.answer} ref={ansRef} aria-hidden={!revealed}>
+        <div className={styles.expertHeader}>
+          {myth.expert.photo ? (
+            <img
+              className={styles.avatar}
+              src={myth.expert.photo}
+              alt={myth.expert.name}
+            />
+          ) : (
+            <div className={styles.avatarPlaceholder} />
+          )}
+          <div>
+            <div className={styles.expertName}>{myth.expert.name}</div>
+            <div className={styles.expertRole}>{myth.expert.role}</div>
+          </div>
+        </div>
+        <div className={styles.answerText}>{myth.expert.answer}</div>
+      </div>
+    </div>
+  );
+};
+
+export const MythsDragSection: React.FC = () => {
+  const sectionRef = useRef<HTMLElement | null>(null);
+  const introRef = useRef<HTMLDivElement | null>(null);
+
+  // desktop
+  const playgroundRef = useRef<HTMLDivElement | null>(null);
+  const dragCardRef = useRef<HTMLDivElement | null>(null);
+  const dropZoneRef = useRef<HTMLDivElement | null>(null);
+  const answerRef = useRef<HTMLDivElement | null>(null);
+
+  // mobile
+  const mobileRef = useRef<HTMLDivElement | null>(null);
+
+  const [index, setIndex] = useState(0);
+  const [answeredIdx, setAnsweredIdx] = useState<number | null>(null);
+
+  const myths = useMemo(() => mythsData, []);
+  const current = myths[index];
+  const answered = answeredIdx !== null ? myths[answeredIdx] : null;
 
   useGSAP(
     () => {
@@ -269,7 +312,7 @@ export const MythsDragSection: React.FC = () => {
         };
       });
 
-      // Мобилка (<= 811px) — двуслайдовый слайдер (миф/ответ)
+      // Мобилка (<= 811px) — двуслайдовый слайдер (миф/ответ) для каждого мифа
       mm.add("(max-width: 811px)", () => {
         gsap.set(mobile, { opacity: 0, y: 24 });
         const tlIntro = gsap
@@ -370,7 +413,7 @@ export const MythsDragSection: React.FC = () => {
         </div>
       </div>
 
-      {/* Этап 2: мобильный слайдер (миф/ответ) */}
+      {/* Этап 2: мобильный слайдер (миф/ответ) — данные из массива */}
       <div ref={mobileRef} className={styles.mobileSlider}>
         <Swiper
           modules={[Pagination]}
@@ -380,74 +423,24 @@ export const MythsDragSection: React.FC = () => {
             clickable: true,
           }}
         >
-          {/* Слайд 1 — миф */}
-          <SwiperSlide className={styles.mobileSlide}>
-            <div className={`${styles.card} ${styles.cardMobile}`}>
-              <div className={styles.cardInner}>
-                <div className={styles.cardLabel}>{current.title}</div>
-                <div className={styles.cardText}>{current.text}</div>
-              </div>
-            </div>
-          </SwiperSlide>
-
-          {/* Слайд 2 — ответ (с “переворотом” по тапу) */}
-          <SwiperSlide className={styles.mobileSlide}>
-            <div
-              className={`${styles.dropZone} ${styles.cardMobile}`}
-              onClick={revealMobileAnswer}
-              role="button"
-              tabIndex={0}
-              onKeyDown={(e) => {
-                if (e.key === "Enter" || e.key === " ") {
-                  e.preventDefault();
-                  revealMobileAnswer();
-                }
-              }}
-              style={{ cursor: mobileRevealed ? "default" : "pointer" }}
-            >
-              {/* Передняя сторона: подсказка (как на десктопе) */}
-              <div
-                className={styles.dropHint}
-                ref={mobileHintRef}
-                aria-hidden={mobileRevealed}
-              >
-                <img
-                  className={styles.cursor}
-                  src="/images/cursor.svg"
-                  alt=""
-                />
-                Нажмите, чтобы увидеть ответ эксперта
-              </div>
-
-              {/* Задняя сторона: ответ */}
-              <div
-                className={styles.answer}
-                ref={mobileAnswerRef}
-                aria-hidden={!mobileRevealed}
-              >
-                <div className={styles.expertHeader}>
-                  {current.expert.photo ? (
-                    <img
-                      className={styles.avatar}
-                      src={current.expert.photo}
-                      alt={current.expert.name}
-                    />
-                  ) : (
-                    <div className={styles.avatarPlaceholder} />
-                  )}
-                  <div>
-                    <div className={styles.expertName}>
-                      {current.expert.name}
-                    </div>
-                    <div className={styles.expertRole}>
-                      {current.expert.role}
-                    </div>
+          {myths.map((m) => (
+            <React.Fragment key={`pair-${m.id}`}>
+              {/* Слайд мифа */}
+              <SwiperSlide className={styles.mobileSlide} key={`myth-${m.id}`}>
+                <div className={`${styles.card} ${styles.cardMobile}`}>
+                  <div className={styles.cardInner}>
+                    <div className={styles.cardLabel}>{m.title}</div>
+                    <div className={styles.cardText}>{m.text}</div>
                   </div>
                 </div>
-                <div className={styles.answerText}>{current.expert.answer}</div>
-              </div>
-            </div>
-          </SwiperSlide>
+              </SwiperSlide>
+
+              {/* Слайд ответа с переворотом */}
+              <SwiperSlide className={styles.mobileSlide} key={`ans-${m.id}`}>
+                <MobileAnswerSlide myth={m} />
+              </SwiperSlide>
+            </React.Fragment>
+          ))}
         </Swiper>
 
         {/* ВНЕШНЯЯ пагинация (под слайдером) */}
