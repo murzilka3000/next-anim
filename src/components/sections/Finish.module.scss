@@ -347,4 +347,18 @@
   .modal__card {
     width: 350px;
   }
+
+  .isClickable {
+    max-width: 140px!important;
+  }
+
+  .finish__grid > :last-child > :last-child {
+    display: flex!important;
+    justify-content: flex-end;
+  }
+
+  .finish__grid > :first-child img {
+    max-width: 120px!important;
+  }
 }
+
