@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useMemo, useRef, useState } from "react";
+import React, { useMemo, useRef, useState, useEffect } from "react";
 import gsap from "gsap";
 import { useGSAP } from "@gsap/react";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
@@ -82,13 +82,71 @@ export const MythsDragSection: React.FC = () => {
 
   // mobile
   const mobileRef = useRef<HTMLDivElement | null>(null);
+  const mobileHintRef = useRef<HTMLDivElement | null>(null);
+  const mobileAnswerRef = useRef<HTMLDivElement | null>(null);
 
   const [index, setIndex] = useState(0);
   const [answeredIdx, setAnsweredIdx] = useState<number | null>(null);
+  const [mobileRevealed, setMobileRevealed] = useState(false);
 
   const myths = useMemo(() => mythsData, []);
   const current = myths[index];
   const answered = answeredIdx !== null ? myths[answeredIdx] : null;
+
+  // Сбрасываем мобильное раскрытие при смене мифа
+  useEffect(() => {
+    setMobileRevealed(false);
+    const hint = mobileHintRef.current;
+    const ans = mobileAnswerRef.current;
+    if (hint && ans) {
+      gsap.set(hint, {
+        autoAlpha: 1,
+        rotateY: 0,
+        transformPerspective: 900,
+        transformOrigin: "50% 50%",
+      });
+      gsap.set(ans, {
+        autoAlpha: 0,
+        rotateY: 90,
+        transformPerspective: 900,
+        transformOrigin: "50% 50%",
+      });
+    }
+  }, [index]);
+
+  // Нажатие на мобильный второй слайд — переворот “подсказка -> ответ”
+  const revealMobileAnswer = () => {
+    if (mobileRevealed) return;
+    setMobileRevealed(true);
+    const hint = mobileHintRef.current;
+    const ans = mobileAnswerRef.current;
+    if (!hint || !ans) return;
+
+    const tl = gsap.timeline();
+    tl.to(hint, {
+      rotateY: -90,
+      autoAlpha: 0,
+      duration: 0.25,
+      ease: "power2.in",
+      transformPerspective: 900,
+      transformOrigin: "50% 50%",
+    }).fromTo(
+      ans,
+      {
+        rotateY: 90,
+        autoAlpha: 0,
+        transformPerspective: 900,
+        transformOrigin: "50% 50%",
+      },
+      {
+        rotateY: 0,
+        autoAlpha: 1,
+        duration: 0.5,
+        ease: "power2.out",
+      },
+      "<0.05"
+    );
+  };
 
   useGSAP(
     () => {
@@ -261,7 +319,7 @@ export const MythsDragSection: React.FC = () => {
           modules={[Pagination]}
           className={styles.swiper}
           pagination={{
-            el: `.${styles.mobilePagination}`, // внешний контейнер под слайдером
+            el: `.${styles.mobilePagination}`,
             clickable: true,
           }}
         >
@@ -275,10 +333,29 @@ export const MythsDragSection: React.FC = () => {
             </div>
           </SwiperSlide>
 
-          {/* Слайд 2 — ответ */}
+          {/* Слайд 2 — ответ (с “переворотом” по тапу) */}
           <SwiperSlide className={styles.mobileSlide}>
-            <div className={`${styles.dropZone} ${styles.cardMobile}`}>
-              <div className={styles.answer}>
+            <div
+              className={`${styles.dropZone} ${styles.cardMobile}`}
+              onClick={revealMobileAnswer}
+              role="button"
+              tabIndex={0}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" || e.key === " ") {
+                  e.preventDefault();
+                  revealMobileAnswer();
+                }
+              }}
+              style={{ cursor: mobileRevealed ? "default" : "pointer" }}
+            >
+              {/* Передняя сторона: подсказка (как на десктопе) */}
+              <div className={styles.dropHint} ref={mobileHintRef} aria-hidden={mobileRevealed}>
+                <img className={styles.cursor} src="/images/cursor.svg" alt="" />
+                Нажмите, чтобы увидеть ответ эксперта
+              </div>
+
+              {/* Задняя сторона: ответ */}
+              <div className={styles.answer} ref={mobileAnswerRef} aria-hidden={!mobileRevealed}>
                 <div className={styles.expertHeader}>
                   {current.expert.photo ? (
                     <img className={styles.avatar} src={current.expert.photo} alt={current.expert.name} />

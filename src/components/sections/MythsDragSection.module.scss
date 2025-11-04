@@ -273,13 +273,13 @@
     bottom: 8px;
   }
   :global(.swiper-pagination-bullet) {
-    background: var(--text-light)!important;
-    opacity: 1!important;
-    width: 15px!important;
-    height: 15px!important;
+    background: var(--text-light) !important;
+    opacity: 1 !important;
+    width: 15px !important;
+    height: 15px !important;
   }
   :global(.swiper-pagination-bullet-active) {
-    background: var(--orange)!important;
+    background: var(--orange) !important;
   }
 
   .intro {
@@ -291,13 +291,7 @@
     text-align: left;
   }
 
-
-
-
-
-
-
-   .mobilePagination {
+  .mobilePagination {
     display: flex;
     justify-content: center;
     align-items: center;
@@ -315,7 +309,7 @@
   }
 
   .mobilePagination :global(.swiper-pagination-bullet-active) {
-    background: var(--orange)!important;
+    background: var(--orange) !important;
     transform: scale(1.1);
   }
 }
@@ -348,10 +342,21 @@
   }
 }
 
-
 @media screen and (max-width: 767px) {
-  .section  {
+  .section {
     padding-left: 10px;
     padding-right: 10px;
   }
+}
+
+.dropZone {
+  position: relative;
+}
+
+
+.dropHint {
+  position: absolute;
+  bottom: 50%;
+  left: 50%;
+  transform: translate(-50%, 50%);
 }
