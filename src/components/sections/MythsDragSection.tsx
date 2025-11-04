@@ -33,39 +33,61 @@ const mythsData: Myth[] = [
   {
     id: "1",
     title: "МИФ №1",
-    text:
-      "Спорт — это дополнительная нагрузка для организма, её не стоит добавлять к стрессу на работе",
+    text: "Чтобы получить хоть какой-то результат, нужно заниматься спортом почти каждый день.",
     expert: {
-      name: "Алёна Виноградова",
+      name: "Ксения Ясалова",
       role: "тренер школы Springle",
       photo: "/images/ava.png",
       answer:
-        "Правильная нагрузка — это всегда двойной эффект. Мы тренируем не только мышцы, но и нервную систему, учим её справляться со стрессом и эффективно управлять ресурсами тела.",
+        "В этом деле важнее регулярность. Лучше в вашем расписании будет одна тренировка, но каждую неделю, чем четыре тренировки за раз, а потом вы забросите занятия на месяц. По моему опыту, одного-двух раз в неделю достаточно для старта, а дальше уже можно добавить дополнительную нагрузку.",
     },
   },
   {
     id: "2",
     title: "МИФ №2",
-    text:
-      "Вечерние тренировки после работы мешают сну и делают меня менее продуктивным",
+    text: "Вечерние тренировки после работы мешают сну и менее продуктивны.",
     expert: {
-      name: "Артём Козлов",
+      name: "Андрей Матрусов",
       role: "тренер школы Springle",
       photo: "/images/ava.png",
       answer:
-        "Время тренировки — индивидуально. Лёгкая/средняя нагрузка вечером улучшает качество сна у большинства людей.",
+        "Здесь важно не впадать в крайности и адекватно оценивать свои силы. С одной стороны, не стоит планировать сложные тренировки на выносливость утром, если после у вас планируется насыщенный день. С другой, плохо заканчивать вечернюю тренировку слишком поздно. После тренировки нужно заложить время на то, чтобы успокоиться ментально и физически – часа полтора-два.",
     },
   },
   {
     id: "3",
     title: "МИФ №3",
-    text: "Без 60 минут в зале нет смысла — лучше вообще не начинать",
+    text: "Спорт – это дополнительная нагрузка для организма, её не стоит добавлять к стрессу на работе.",
     expert: {
-      name: "Марина Соколова",
+      name: "Алёна Виноградова",
       role: "тренер школы Springle",
       photo: "/images/ava.png",
       answer:
-        "10–20 минут регулярного движения уже дают эффект: улучшают концентрацию, настроение и здоровье.",
+        "Правильная нагрузка – это всегда двойной эффект. Мы тренируем не только мышцы, но и нашу нервную систему, учим её справляться со стрессом и эффективно управлять ресурсами тела. Спорт – это хороший способ перезагрузки. Он действует как катализатор, преобразуя накопленный стресс в физическую усталость, а в завершении идёт выброс дофамина, который дарит чувство удовлетворения и спокойствия.",
+    },
+  },
+  {
+    id: "4",
+    title: "МИФ №4",
+    text: "Силовые тренировки – только для бодибилдеров, а для поддержания здоровья достаточно делать кардио.",
+    expert: {
+      name: "Валерия Васюкова",
+      role: "тренер школы Springle",
+      photo: "/images/ava.png",
+      answer:
+        "Нельзя однозначно выделить что-то одно: кардио и силовые нагрузки решают разные задачи. Кардио работает на выносливость и сердце, а силовые тренировки укрепляют опорно-двигательный аппарат, предотвращают травмы. Выбор активности зависит от ваших целей. Но важно соблюдать баланс. Если на ранних этапах не очевидно, что приносит больше пользы, надо комбинировать.",
+    },
+  },
+  {
+    id: "5",
+    title: "МИФ №5",
+    text: "Отсутствие регулярности тренировок можно восполнить высокой интенсивностью.",
+    expert: {
+      name: "Леонид Дивисенко",
+      role: "тренер школы Springle",
+      photo: "/images/ava.png",
+      answer:
+        "Регулярность и интенсивность для меня синонимы дисциплины и мотивации. Мотивация она сегодня есть, а завтра ее нет. Дисциплина равна регулярности. Лучше регулярно делать что-то по чуть чуть, чем один раз выжать себя и потом спустя какое-то время прийти и снова выжать себя. Это не действенная техника и дает мало результата.",
     },
   },
 ];
@@ -180,7 +202,9 @@ export const MythsDragSection: React.FC = () => {
           const zr = zone.getBoundingClientRect();
           const cx = cr.left + cr.width / 2;
           const cy = cr.top + cr.height / 2;
-          return cx >= zr.left && cx <= zr.right && cy >= zr.top && cy <= zr.bottom;
+          return (
+            cx >= zr.left && cx <= zr.right && cy >= zr.top && cy <= zr.bottom
+          );
         };
 
         const onDropSuccess = () => {
@@ -188,15 +212,30 @@ export const MythsDragSection: React.FC = () => {
           const ans = answerRef.current!;
 
           const tl = gsap.timeline();
-          tl.to(card, { opacity: 0, scale: 0.95, duration: 0.22, ease: "power2.out" })
+          tl.to(card, {
+            opacity: 0,
+            scale: 0.95,
+            duration: 0.22,
+            ease: "power2.out",
+          })
             .set(card, { x: 0, y: 0 })
             .call(() => setIndex((i) => Math.min(i + 1, myths.length - 1)))
-            .to(card, { opacity: 1, scale: 1, duration: 0.28, ease: "power2.out" });
+            .to(card, {
+              opacity: 1,
+              scale: 1,
+              duration: 0.28,
+              ease: "power2.out",
+            });
 
           gsap.killTweensOf(ans);
           gsap.fromTo(
             ans,
-            { rotateY: 90, opacity: 0, transformPerspective: 900, transformOrigin: "50% 50%" },
+            {
+              rotateY: 90,
+              opacity: 0,
+              transformPerspective: 900,
+              transformOrigin: "50% 50%",
+            },
             { rotateY: 0, opacity: 1, duration: 0.55, ease: "power2.out" }
           );
         };
@@ -212,11 +251,14 @@ export const MythsDragSection: React.FC = () => {
           onDragEnd() {
             zone.classList.remove(styles.active);
             if (isOverZone()) onDropSuccess();
-            else gsap.to(card, { x: 0, y: 0, duration: 0.25, ease: "power2.out" });
+            else
+              gsap.to(card, { x: 0, y: 0, duration: 0.25, ease: "power2.out" });
           },
         })[0];
 
-        const ro = new ResizeObserver(() => dr.applyBounds(sectionRef.current!));
+        const ro = new ResizeObserver(() =>
+          dr.applyBounds(sectionRef.current!)
+        );
         ro.observe(sectionRef.current!);
 
         return () => {
@@ -265,7 +307,8 @@ export const MythsDragSection: React.FC = () => {
         </h2>
         <div className={styles.subtitle_cont}>
           <p className={styles.subtitle}>
-            как Джефф Безос, однако между <br /> намерением и действием часто <br /> появляется надоедливое «но».
+            как Джефф Безос, однако между <br /> намерением и действием часто{" "}
+            <br /> появляется надоедливое «но».
           </p>
         </div>
         <p className={styles.lead}>
@@ -292,20 +335,34 @@ export const MythsDragSection: React.FC = () => {
               <div className={styles.answer} ref={answerRef}>
                 <div className={styles.expertHeader}>
                   {answered.expert.photo ? (
-                    <img className={styles.avatar} src={answered.expert.photo} alt={answered.expert.name} />
+                    <img
+                      className={styles.avatar}
+                      src={answered.expert.photo}
+                      alt={answered.expert.name}
+                    />
                   ) : (
                     <div className={styles.avatarPlaceholder} />
                   )}
                   <div>
-                    <div className={styles.expertName}>{answered.expert.name}</div>
-                    <div className={styles.expertRole}>{answered.expert.role}</div>
+                    <div className={styles.expertName}>
+                      {answered.expert.name}
+                    </div>
+                    <div className={styles.expertRole}>
+                      {answered.expert.role}
+                    </div>
                   </div>
                 </div>
-                <div className={styles.answerText}>{answered.expert.answer}</div>
+                <div className={styles.answerText}>
+                  {answered.expert.answer}
+                </div>
               </div>
             ) : (
               <div className={styles.dropHint}>
-                <img className={styles.cursor} src="/images/cursor.svg" alt="" />
+                <img
+                  className={styles.cursor}
+                  src="/images/cursor.svg"
+                  alt=""
+                />
                 Перетащите миф в экспертное поле, чтобы развеять его
               </div>
             )}
@@ -349,22 +406,42 @@ export const MythsDragSection: React.FC = () => {
               style={{ cursor: mobileRevealed ? "default" : "pointer" }}
             >
               {/* Передняя сторона: подсказка (как на десктопе) */}
-              <div className={styles.dropHint} ref={mobileHintRef} aria-hidden={mobileRevealed}>
-                <img className={styles.cursor} src="/images/cursor.svg" alt="" />
+              <div
+                className={styles.dropHint}
+                ref={mobileHintRef}
+                aria-hidden={mobileRevealed}
+              >
+                <img
+                  className={styles.cursor}
+                  src="/images/cursor.svg"
+                  alt=""
+                />
                 Нажмите, чтобы увидеть ответ эксперта
               </div>
 
               {/* Задняя сторона: ответ */}
-              <div className={styles.answer} ref={mobileAnswerRef} aria-hidden={!mobileRevealed}>
+              <div
+                className={styles.answer}
+                ref={mobileAnswerRef}
+                aria-hidden={!mobileRevealed}
+              >
                 <div className={styles.expertHeader}>
                   {current.expert.photo ? (
-                    <img className={styles.avatar} src={current.expert.photo} alt={current.expert.name} />
+                    <img
+                      className={styles.avatar}
+                      src={current.expert.photo}
+                      alt={current.expert.name}
+                    />
                   ) : (
                     <div className={styles.avatarPlaceholder} />
                   )}
                   <div>
-                    <div className={styles.expertName}>{current.expert.name}</div>
-                    <div className={styles.expertRole}>{current.expert.role}</div>
+                    <div className={styles.expertName}>
+                      {current.expert.name}
+                    </div>
+                    <div className={styles.expertRole}>
+                      {current.expert.role}
+                    </div>
                   </div>
                 </div>
                 <div className={styles.answerText}>{current.expert.answer}</div>
