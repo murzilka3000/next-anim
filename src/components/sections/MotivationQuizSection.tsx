@@ -22,6 +22,12 @@ const ICONS = {
   warn: "/images/red.svg",
 };
 
+// Глобальные настройки скорости/задержек анимаций
+const ANIM = {
+  speed: 0.85,            // 1 = как было; <1 — медленнее; >1 — быстрее
+  delayBeforeResults: 0.9 // пауза перед показом результатов
+};
+
 const questions: Question[] = [
   {
     id: "q1",
@@ -117,14 +123,21 @@ export const MotivationQuizSection: React.FC = () => {
   const introRef = useRef<HTMLDivElement | null>(null);
   const quizRef = useRef<HTMLDivElement | null>(null);
   const resultsRef = useRef<HTMLDivElement | null>(null);
+
+  // Раздельная анимация вопроса/ответов
   const cardRef = useRef<HTMLDivElement | null>(null);
+  const headerRef = useRef<HTMLDivElement | null>(null);
+  const optionsRef = useRef<HTMLUListElement | null>(null);
+  const explainElRef = useRef<HTMLDivElement | null>(null);
+
   const transitionTimeline = useRef<gsap.core.Timeline | null>(null);
+  const entryTlRef = useRef<gsap.core.Timeline | null>(null);
 
   const [idx, setIdx] = useState(0);
   const [selected, setSelected] = useState<string | null>(null);
   const [quizFinished, setQuizFinished] = useState(false);
+  const [isTransitioning, setIsTransitioning] = useState(false);
 
-  // Храним ответы: ключ = id вопроса
   const [answers, setAnswers] = useState<
     Record<string, { selectedId: string; correct: boolean }>
   >({});
@@ -156,6 +169,9 @@ export const MotivationQuizSection: React.FC = () => {
           "<"
         );
 
+      // применяем общий таймскейл
+      transitionTimeline.current.timeScale(ANIM.speed);
+
       const pin = ScrollTrigger.create({
         trigger: sectionRef.current,
         pin: true,
@@ -176,7 +192,7 @@ export const MotivationQuizSection: React.FC = () => {
   };
 
   const goToResults = () => {
-    gsap
+    const tl = gsap
       .timeline()
       .to(quizRef.current, {
         autoAlpha: 0,
@@ -192,12 +208,12 @@ export const MotivationQuizSection: React.FC = () => {
           duration: 0.4,
           ease: "power2.inOut",
           onComplete: () => {
-            // на случай изменения высоты — обновим ScrollTrigger
             ScrollTrigger.refresh();
           },
         },
         "<"
       );
+    tl.timeScale(ANIM.speed);
   };
 
   const restartQuiz = () => {
@@ -206,7 +222,7 @@ export const MotivationQuizSection: React.FC = () => {
     setQuizFinished(false);
     setAnswers({});
 
-    gsap
+    const tl = gsap
       .timeline()
       .to(resultsRef.current, {
         autoAlpha: 0,
@@ -224,54 +240,140 @@ export const MotivationQuizSection: React.FC = () => {
         },
         "<"
       );
+    tl.timeScale(ANIM.speed);
   };
 
   const selectOption = (opt: Option) => {
     if (selected) return;
     setSelected(opt.id);
 
-    // фиксируем ответ пользователя
     setAnswers((prev) => ({
       ...prev,
       [q.id]: { selectedId: opt.id, correct: opt.correct },
     }));
 
-    // Если это последний вопрос — отмечаем завершение и показываем результаты
     if (idx === total - 1) {
       setQuizFinished(true);
-      // маленькая пауза, чтобы пользователь увидел подсветку и объяснение
-      gsap.delayedCall(0.7, goToResults);
+      gsap.delayedCall(ANIM.delayBeforeResults, goToResults);
     }
   };
 
+  // Новый nextQuestion: раздельная анимация
   const nextQuestion = () => {
+    if (isTransitioning) return;
     const isLast = idx >= total - 1;
     if (isLast) return;
 
-    gsap.to(cardRef.current, {
-      y: -150,
-      rotate: 7,
-      autoAlpha: 0,
-      duration: 0.4,
-      ease: "power2.in",
+    const header = headerRef.current;
+    const optionsList = optionsRef.current;
+    const card = cardRef.current;
+    if (!header || !optionsList || !card) return;
+
+    setIsTransitioning(true);
+
+    const optionEls = Array.from(
+      optionsList.querySelectorAll(`.${styles.option}`)
+    ) as HTMLElement[];
+
+    const topCards = Array.from(
+      card.querySelectorAll(`.${styles.top_card}`)
+    ) as HTMLElement[];
+
+    const explainEl = explainElRef.current;
+
+    gsap.killTweensOf([header, ...optionEls, ...topCards, explainEl]);
+
+    const tl = gsap.timeline({
+      defaults: { ease: "power2.out" },
       onComplete: () => {
         setIdx((i) => i + 1);
         setSelected(null);
       },
     });
-  };
 
-  useEffect(() => {
-    if (idx > 0) {
-      gsap.fromTo(
-        cardRef.current,
-        { y: 150, rotate: -7, autoAlpha: 0 },
-        { y: 0, rotate: 0, autoAlpha: 1, duration: 0.4, ease: "power2.out" }
+    // 1) Ответы — fade down по очереди
+    if (optionEls.length) {
+      tl.to(
+        optionEls,
+        {
+          y: 12,
+          autoAlpha: 0,
+          duration: 0.3, // можно увеличить
+          stagger: 0.08, // можно увеличить
+        },
+        0
       );
     }
+    // 1a) Объяснение — мягко гасим
+    if (explainEl) {
+      tl.to(explainEl, { y: 8, autoAlpha: 0, duration: 0.28 }, 0);
+    }
+
+    // 2) Заголовок/карточка вопроса — перелистывание «колодой»
+    tl.to(
+      header,
+      { y: -20, rotate: 5, autoAlpha: 0, duration: 0.32, ease: "power2.in" },
+      0.05
+    );
+    if (topCards.length) {
+      tl.to(
+        topCards,
+        {
+          y: "-=10",
+          autoAlpha: 0,
+          duration: 0.3,
+          stagger: 0.06,
+          ease: "power2.in",
+        },
+        0.05
+      );
+    }
+
+    tl.timeScale(ANIM.speed);
+  };
+
+  // Анимация входа новой карточки и ответов
+  useEffect(() => {
+    if (!headerRef.current || !optionsRef.current || !cardRef.current) return;
+
+    const header = headerRef.current;
+    const optionsList = optionsRef.current;
+    const optionEls = Array.from(
+      optionsList.querySelectorAll(`.${styles.option}`)
+    ) as HTMLElement[];
+    const topCards = Array.from(
+      cardRef.current.querySelectorAll(`.${styles.top_card}`)
+    ) as HTMLElement[];
+
+    // стартовые состояния (вне кадра)
+    gsap.set(header, { y: 20, rotate: -3, autoAlpha: 0 });
+    if (topCards.length) gsap.set(topCards, { y: 15, autoAlpha: 0 });
+    if (optionEls.length) gsap.set(optionEls, { y: 12, autoAlpha: 0 });
+
+    entryTlRef.current?.kill();
+    const tl = gsap.timeline({
+      defaults: { ease: "power2.out" },
+      onComplete: () => setIsTransitioning(false),
+    });
+
+    if (topCards.length) {
+      tl.to(topCards, { y: 0, autoAlpha: 1, duration: 0.34, stagger: 0.06 }, 0);
+    }
+    tl.to(header, { y: 0, rotate: 0, autoAlpha: 1, duration: 0.45 }, 0.04);
+
+    if (optionEls.length) {
+      tl.to(
+        optionEls,
+        { y: 0, autoAlpha: 1, duration: 0.34, stagger: 0.08 },
+        "-=0.1"
+      );
+    }
+
+    tl.timeScale(ANIM.speed);
+    entryTlRef.current = tl;
   }, [idx]);
 
-  const nextDisabled = selected === null;
+  const nextDisabled = selected === null || isTransitioning;
 
   return (
     <section className={styles.section} ref={sectionRef}>
@@ -307,38 +409,26 @@ export const MotivationQuizSection: React.FC = () => {
         <div className={styles.quizInner}>
           <div className={styles.card} ref={cardRef}>
             <div className={styles.card_abs}>
-              <div className={styles.cardHeader}>
+              <div className={styles.cardHeader} ref={headerRef}>
                 <div className={styles.counter}>
                   {q.title ?? `ВОПРОС ${idx + 1}/${total}`}
                 </div>
                 <div className={styles.prompt}>{q.prompt}</div>
               </div>
-              <div
-                className={`${styles.top_card} ${styles.modifier_class_1}`}
-              ></div>
-              <div
-                className={`${styles.top_card} ${styles.modifier_class_2}`}
-              ></div>
-              <div
-                className={`${styles.top_card} ${styles.modifier_class_3}`}
-              ></div>
-              <div
-                className={`${styles.top_card} ${styles.modifier_class_4}`}
-              ></div>
+              <div className={`${styles.top_card} ${styles.modifier_class_1}`} />
+              <div className={`${styles.top_card} ${styles.modifier_class_2}`} />
+              <div className={`${styles.top_card} ${styles.modifier_class_3}`} />
+              <div className={`${styles.top_card} ${styles.modifier_class_4}`} />
             </div>
 
-            <ul className={styles.options}>
+            <ul className={styles.options} ref={optionsRef}>
               {q.options.map((opt) => {
                 const selectedThis = selected === opt.id;
 
-                // Подсветка состояний
                 let stateClass;
                 if (selected) {
-                  if (opt.correct) {
-                    stateClass = styles.correct; // правильный всегда зелёный
-                  } else if (selectedThis) {
-                    stateClass = styles.wrong; // выбранный неверный — красный
-                  }
+                  if (opt.correct) stateClass = styles.correct;
+                  else if (selectedThis) stateClass = styles.wrong;
                 }
 
                 return (
@@ -359,10 +449,14 @@ export const MotivationQuizSection: React.FC = () => {
               })}
             </ul>
 
-            {selected && <div className={styles.explain}>{q.explanation}</div>}
+            {selected && (
+              <div className={styles.explain} ref={explainElRef}>
+                {q.explanation}
+              </div>
+            )}
           </div>
 
-          {/* Кнопка "далее" прячется, когда тест завершён */}
+          {/* FAB "далее" */}
           {!quizFinished && (
             <button
               className={`${styles.nextFab} ${
