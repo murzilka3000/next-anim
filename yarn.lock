@@ -569,6 +569,11 @@ typescript@^5:
   resolved "https://registry.npmjs.org/typescript/-/typescript-5.9.3.tgz"
   integrity sha512-jl1vZzPDinLr9eUt3J/t7V6FgNEw9QjvBPdysz9KfQDD41fQrC2Y4vKQdiaUpFT4bXlb1RHhLpp8wtm6M5TgSw==
 
+typograf@^7.6.0:
+  version "7.6.0"
+  resolved "https://registry.yarnpkg.com/typograf/-/typograf-7.6.0.tgz#10fb010f7a2e392a671bc8d561f167ea1644f783"
+  integrity sha512-sqYx4X1L7EDNRuJpqg/V+GCWMOpzVD5Om9IW0udi294sQYPwGGeRpPwsLC3gPt2BTsLtLiWJKpkwiyuO5PK2lQ==
+
 undici-types@~6.21.0:
   version "6.21.0"
   resolved "https://registry.npmjs.org/undici-types/-/undici-types-6.21.0.tgz"

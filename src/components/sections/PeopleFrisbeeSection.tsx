@@ -8,6 +8,65 @@ import styles from "./PeopleFrisbeeSection.module.scss";
 
 gsap.registerPlugin(useGSAP, MotionPathPlugin);
 
+// ===== NBSP обработчик (висячие предлоги/союзы/частицы) =====
+const IGNORE_TAGS = new Set([
+  "SCRIPT",
+  "STYLE",
+  "CODE",
+  "PRE",
+  "KBD",
+  "SAMP",
+  "TEXTAREA",
+  "NOSCRIPT",
+]);
+
+// Список коротких слов: предлоги/союзы/частицы и т.п.
+const SHORT =
+  "(?:в|к|с|у|о|и|а|но|да|на|по|за|из|от|до|об|обо|во|со|ко|не|ни|же|ли|бы)";
+
+// NBSP после коротких предлогов/союзов/частиц
+const RX_AFTER_SHORT = new RegExp(
+  `(^|[\\s(«„"'])(${SHORT})\\s+(?=[\\p{L}\\d])`,
+  "giu"
+);
+
+// NBSP перед последним коротким словом в текстовом фрагменте
+const RX_BEFORE_LAST_SHORT = new RegExp(
+  `(\\S)\\s(${SHORT})([.!?:,…»"')\\]]*\\s*$)`,
+  "giu"
+);
+
+function fixText(s: string): string {
+  if (!s) return s;
+  let t = s.replace(RX_AFTER_SHORT, "$1$2\u00A0");
+  t = t.replace(RX_BEFORE_LAST_SHORT, "$1\u00A0$2$3");
+  return t;
+}
+
+function processTextNodes(root: Node) {
+  const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT, {
+    acceptNode(node) {
+      const parent = node.parentNode as HTMLElement | null;
+      if (!node.nodeValue || !node.nodeValue.trim()) return NodeFilter.FILTER_REJECT;
+      if (!parent) return NodeFilter.FILTER_REJECT;
+      if (IGNORE_TAGS.has(parent.nodeName)) return NodeFilter.FILTER_REJECT;
+      if (parent.isContentEditable || parent.closest?.("[contenteditable]"))
+        return NodeFilter.FILTER_REJECT;
+      if (parent.closest?.("[data-nbsp-skip]")) return NodeFilter.FILTER_REJECT;
+      return NodeFilter.FILTER_ACCEPT;
+    },
+  });
+
+  const nodes: Text[] = [];
+  while (walker.nextNode()) nodes.push(walker.currentNode as Text);
+
+  for (const n of nodes) {
+    const next = fixText(n.nodeValue || "");
+    if (next !== n.nodeValue) n.nodeValue = next;
+  }
+}
+// ===== конец NBSP блока =====
+
 type Person = {
   id: string;
   name: string;
@@ -46,11 +105,11 @@ const peopleData: Person[] = [
     name: "Спортивное соревнование",
     img: "/images/p2.svg",
     x: "45%",
-    y: "50%",
+    y: "60%",
     scale: 1.02,
     handX: "93%",
     handY: "11%",
-    tag: "Умение договариваться",
+    tag: "Стрессо-устойчивость",
     tagSide: "right",
     popup:
       "Выбирайте физическую нагрузку, в которой присутствует соревновательный элемент. В любом соревновании есть конфликт интересов, который важно урегулировать справедливо. Обычно это делают судьи. Но в алтимат фрисби эту роль на себя берут игроки: все спорные ситуации разрешаются командами прямо на поле, а по итогу команда с самой честной игрой получает награду «Дух игры».",
@@ -66,7 +125,7 @@ const peopleData: Person[] = [
     scale: 1,
     handX: "22%",
     handY: "4%",
-    tag: "Командная работа",
+    tag: "Умение договариваться",
     tagSide: "right",
     popup:
       "В командных видах спорта победа зависит не от одного игрока, а от взаимодействия всей команды. Например, в алтимат фрисби играют в командах от 3 до 7 человек. Чтобы забить гол, нужно сделать несколько точных пасов и не потерять диск. Поэтому важно точно считывать намерения сокомандников и помогать друг другу.",
@@ -82,7 +141,7 @@ const peopleData: Person[] = [
     scale: 1,
     handX: "95%",
     handY: "46%",
-    tag: "Стратегическое мышление",
+    tag: "Командная работа",
     tagSide: "right",
     popup:
       "Выбирайте физическую нагрузку, в которой есть игровая цель. Например, забить гол команде соперников – как в алтимат фрисби. В этой игре нет фиксированных ролей (как, например, в футболе): игрок может в один момент быть защитником, а в другой – атакующим. Это заставляет постоянно оценивать расстановку сил и принимать эффективные решения с учетом основной цели.",
@@ -98,7 +157,7 @@ const peopleData: Person[] = [
     scale: 1,
     handX: "8%",
     handY: "18%",
-    tag: "Стрессоустойчивость",
+    tag: "Стратегическое мышление",
     tagSide: "right",
     popup:
       "Выносливость хорошо развивают циклические виды физической нагрузки. Например, в алтимат фрисби игроки перемещаются по полю, чтобы поймать пас. Это может быть челночный бег для обхода игроков в защите или длинный забег, чтобы поймать диск в зоне противника.",
@@ -119,6 +178,38 @@ export const PeopleFrisbeeSection: React.FC = () => {
   const [activePopup, setActivePopup] = useState<number | null>(0);
   const [flying, setFlying] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
+
+  // NBSP: обработать все текстовые узлы внутри секции и отслеживать изменения
+  useEffect(() => {
+    const root = sectionRef.current;
+    if (!root) return;
+
+    // первичная обработка
+    processTextNodes(root);
+
+    // наблюдаем за динамическими изменениями (попапы, тексты и т.п.)
+    const mo = new MutationObserver((mutations) => {
+      for (const m of mutations) {
+        if (m.type === "characterData" && m.target.nodeType === Node.TEXT_NODE) {
+          const t = m.target as Text;
+          const next = fixText(t.nodeValue || "");
+          if (next !== t.nodeValue) t.nodeValue = next;
+        }
+        for (const n of m.addedNodes) {
+          if (n.nodeType === Node.TEXT_NODE) {
+            const t = n as Text;
+            const next = fixText(t.nodeValue || "");
+            if (next !== t.nodeValue) t.nodeValue = next;
+          } else if (n.nodeType === Node.ELEMENT_NODE) {
+            processTextNodes(n);
+          }
+        }
+      }
+    });
+
+    mo.observe(root, { childList: true, subtree: true, characterData: true });
+    return () => mo.disconnect();
+  }, []);
 
   useEffect(() => {
     const checkDevice = () => {
@@ -274,6 +365,7 @@ export const PeopleFrisbeeSection: React.FC = () => {
       <div className={styles.stage}>
         <div className={styles.header}>
           <p className={styles.headerText}>
+            {/* Текст обработается автоматически в эффекте */}
             Вы разобрались, какие гибкие навыки у вас уже развиты, а над чем
             можно <br /> ещё поработать. Давайте выясним, какие виды физической
             нагрузки вам <br /> в этом помогут. Нажимайте на гибкий навык,
@@ -309,11 +401,11 @@ export const PeopleFrisbeeSection: React.FC = () => {
               <img
                 className={styles.photo}
                 src={p.img}
-                alt={p.name}
+                alt={fixText(p.name)}
                 draggable={false}
-                onClick={() => flyTo(i)}                  // ← делаем человека кликабельным
+                onClick={() => flyTo(i)}
                 role="button"
-                aria-label={`Передать тарелку: ${p.name}`}
+                aria-label={fixText(`Передать тарелку: ${p.name}`)}
                 style={{ cursor: "pointer" }}
               />
 
@@ -338,7 +430,7 @@ export const PeopleFrisbeeSection: React.FC = () => {
               <button
                 className={styles.glow}
                 onClick={() => flyTo(i)}
-                aria-label={`Передать тарелку: ${p.name}`}
+                aria-label={fixText(`Передать тарелку: ${p.name}`)}
               />
             </div>
           ))}
@@ -357,7 +449,7 @@ export const PeopleFrisbeeSection: React.FC = () => {
                 <div className={styles.mobileImgCol}>
                   <img
                     src={p.img}
-                    alt={p.name}
+                    alt={fixText(p.name)}
                     className={styles.mobileImg}
                     ref={(el) => {
                       mImgRefs.current[i] = el;

@@ -5,157 +5,22 @@ import gsap from "gsap";
 import { useGSAP } from "@gsap/react";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import styles from "./MotivationQuizSection.module.scss";
+import { questions } from "@/data/questions";
+import { Option, Question } from "@/data/questions";
 
 gsap.registerPlugin(useGSAP, ScrollTrigger);
-
-type Option = { id: string; text: string; correct: boolean };
-type Question = {
-  id: string;
-  title?: string;
-  prompt: string;
-  options: Option[];
-  explanation: string;
-};
 
 const ICONS = {
   good: "/images/green.svg",
   warn: "/images/red.svg",
 };
 
-const UNLOCK_AFTER_RESULTS = 2.5;
+const UNLOCK_AFTER_RESULTS = 0;
 
 const ANIM = {
   speed: 0.85,
   delayBeforeResults: 0.9,
 };
-
-const questions: Question[] = [
-  {
-    id: "q1",
-    title: "Скорость принятия решений",
-    prompt:
-      "Компания, которая занимается производством автомобилей, готовит крупное обновление технологии автопилота. В финальных тестах инженеры обнаружили сбои при определённых городских сценариях. Вы – ведущий инженер, релиз намечен на завтра. Что будете делать?",
-    options: [
-      {
-        id: "a",
-        text: "Немедленно перенесу релиз, зафиксирую баги, объявлю пользователям о переносе и честно объясню причины.",
-        correct: true,
-      },
-      {
-        id: "b",
-        text: "Отложу решение такого уровня до совещания с руководством компании через неделю.",
-        correct: false,
-      },
-      {
-        id: "c",
-        text: "Возьму паузу на 2-3 дня, чтобы собрать больше информации о причинах ошибок: если что, поправим баги после релиза, зато точно будем знать, что исправлять.",
-        correct: false,
-      },
-    ],
-    explanation:
-      "Скорость принятия решений – это умение в условиях ограниченного времени находить решение, которое снижает риски. Tesla действовала именно так: мгновенно отложила релиз, устранила ошибки и позже выпустила обновление. Это позволило сохранить доверие клиентов и репутацию бренда.",
-  },
-  {
-    id: "q2",
-    title: "Работа в команде",
-    prompt:
-      "Сценаристы и аниматоры крупной киностудии не могут согласовать ключевую сцену полнометражного мультфильма. Не получается договориться, как правильно показать эмоциональный пик в переживаниях героя. Вы – продюсер проекта. Что будете делать?",
-    options: [
-      {
-        id: "a",
-        text: "Отдам окончательное решение сценаристам, потому что без хорошей драматургии не будет хорошего мультфильма.",
-        correct: false,
-      },
-      {
-        id: "b",
-        text: "Организую мозговой штурм всей команды, выслушаю все идеи и вместе выберем компромиссное решение.",
-        correct: true,
-      },
-      {
-        id: "c",
-        text: "Если команда никак не может договориться, придется принять решение самостоятельно.",
-        correct: false,
-      },
-    ],
-    explanation:
-      "Работа в команде – ключевой навык, потому что сложные проекты редко могут быть выполнены одним человеком. Если внутри команды сталкиваются разные точки зрения, важно не просто навязать свою позицию, а собрать мнения всех специалистов, учесть их опыт и найти компромисс. В Pixar, которая столкнулась с таким кейсом, работая над фильмом «Вверх», именно совместная работа позволила найти оптимальное решение и поддерживать высокий уровень качества этого и других фильмов.",
-  },
-  {
-    id: "q3",
-    title: "Стрессоустойчивость",
-    prompt:
-      "Пандемия резко обрушила бронирования жилья вашего сервиса по аренде: почти все запланированные зарубежные поездки отменены, сотрудники перегружены жалобами клиентов, инвесторы требуют отчётов, а СМИ активно критикуют компанию. Ваша команда в панике, некоторые сотрудники на грани увольнения. Вы – менеджер отдела маркетинга. Что будете делать?",
-    options: [
-      {
-        id: "a",
-        text: "Сосредоточусь на отчётах инвесторам. Мне важно создать у них ощущение, что всё под контролем и не перенапрягать лишний раз команду в условиях, когда всё «горит».",
-        correct: false,
-      },
-      {
-        id: "b",
-        text: "Запущу срочные рекламные акции и скидки на все поездки. В таких ситуациях важно предпринять хоть что-то, главное – быстро.",
-        correct: false,
-      },
-      {
-        id: "c",
-        text: "Проанализирую кейсы отмен и отзывы клиентов, прежде чем принимать важные решения по продукту и коммуникационной стратегии.",
-        correct: true,
-      },
-    ],
-    explanation:
-      "Стрессоустойчивость – это способность сохранять ясность мышления и действовать эффективно в условиях давления и неопределённости. В ситуации, с которой столкнулась компания Airbnb, важно не просто «делать что-то» быстро или показывать отчёты инвесторам, а анализировать данные и принимать продуманные решения. Благодаря последовательности компания смогла быстро адаптировать продукт и коммуникацию: внедрила гибкие условия отмен, сосредоточилась на локальных и краткосрочных поездках и оперативно информировала пользователей.",
-  },
-  {
-    id: "q4",
-    title: "Умение договариваться и вести переговоры",
-    prompt:
-      "Сеть кофеен хочет открыть новое кафе в престижном районе города. Владелец помещения, которое подходит идеально, требует высокую арендную плату, превышающую бюджет компании. Вы – менеджер по развитию. Что будете делать?",
-    options: [
-      {
-        id: "a",
-        text: "Предложу вариант поэтапной оплаты и процентов за продажи, чтобы снизить риск для владельца и уложиться в бюджет. ",
-        correct: true,
-      },
-      {
-        id: "b",
-        text: "Буду искать другой вариант, чтобы не тратить время на неподходящее по бюджету помещение.",
-        correct: false,
-      },
-      {
-        id: "c",
-        text: "Соглашусь на условия владельца сразу, чтобы не упустить такое хорошее место и не отдать его конкурентам.",
-        correct: false,
-      },
-    ],
-    explanation:
-      "Умение вести переговоры подразумевает поиск решений, выгодных обеим сторонам. Starbucks, кейс которого описан выше, часто использует гибкие условия аренды и бонусы, чтобы получить хорошие локации без превышения заложенного бюджета.",
-  },
-  {
-    id: "q5",
-    title: "Стратегическое мышление",
-    prompt:
-      "Вы руководитель в крупной компании, которая занимается производством мебели. В основе вашего позиционирования – стратегия производства мебели, стоимость которой доступна большинству. Однако компания регулярно подвергается широкой критике за то, что ваша продукция недолговечна и создаёт много отходов. Что бы вы сделали в такой ситуации?",
-    options: [
-      {
-        id: "a",
-        text: "Продолжим игнорировать критику: низкие цены важнее для большинства покупателей, чем экология.",
-        correct: false,
-      },
-      {
-        id: "b",
-        text: "Начнём инвестировать в переработку, устойчивые материалы и сервис обратного выкупа мебели у клиентов.",
-        correct: true,
-      },
-      {
-        id: "c",
-        text: "Запустим рекламу про «заботу об экологии», чтобы продвигать положительный образ компании у покупателей, но в производстве ничего серьёзно менять не будем.",
-        correct: false,
-      },
-    ],
-    explanation:
-      "Стратегическое мышление – это способность видеть за пределами сегодняшней выгоды и принимать решения, которые укрепят позиции компании в будущем. Так, в случае с IKEA ставка на устойчивые материалы и программы переработки требовала крупных инвестиций и не давала мгновенной отдачи. Но именно этот выбор превратил бренд в символ доступной, но при этом ответственной мебели и помог компании не просто отразить критику, а сделать её частью своей силы на рынке.",
-  },
-];
 
 type Skill = { id: string; title: React.ReactNode; qId?: Question["id"] };
 
@@ -193,38 +58,93 @@ export const MotivationQuizSection: React.FC = () => {
   // Гейт-скролла до клика
   const gateRef = useRef<ScrollTrigger | null>(null);
 
-  // Локер скролла
-  const scrollLockY = useRef<number | null>(null);
-  const lockScroll = () => {
-    if (scrollLockY.current !== null) return;
-    scrollLockY.current = window.scrollY || window.pageYOffset || 0;
-    const b = document.body as HTMLBodyElement;
-    b.style.position = "fixed";
-    b.style.top = `-${scrollLockY.current}px`;
-    b.style.left = "0";
-    b.style.right = "0";
-    b.style.width = "100%";
-    b.style.overflow = "hidden";
-  };
-  const unlockScroll = () => {
-    const y = scrollLockY.current ?? 0;
-    const b = document.body as HTMLBodyElement;
-    b.style.position = "";
-    b.style.top = "";
-    b.style.left = "";
-    b.style.right = "";
-    b.style.width = "";
-    b.style.overflow = "";
-    scrollLockY.current = null;
-    requestAnimationFrame(() => {
-      const sec = sectionRef.current;
-      if (sec) {
-        const top = sec.getBoundingClientRect().top + window.scrollY;
-        window.scrollTo({ top, behavior: "auto" });
-      } else {
-        window.scrollTo({ top: y, behavior: "auto" });
+  // "Мягкая" блокировка скролла без фиксации body
+  const freezeActive = useRef(false);
+  const savedYRef = useRef(0);
+  const prevHtmlScrollBehavior = useRef<string>("");
+  const onWheelRef = useRef<((e: WheelEvent) => void) | null>(null);
+  const onTouchMoveRef = useRef<((e: TouchEvent) => void) | null>(null);
+  const onKeyDownRef = useRef<((e: KeyboardEvent) => void) | null>(null);
+  const onScrollRef = useRef<(() => void) | null>(null);
+
+  const freezeScroll = () => {
+    if (freezeActive.current) return;
+    freezeActive.current = true;
+
+    savedYRef.current = window.scrollY || window.pageYOffset || 0;
+
+    const html = document.documentElement;
+    prevHtmlScrollBehavior.current = html.style.scrollBehavior;
+    html.style.scrollBehavior = "auto";
+
+    onWheelRef.current = (e: WheelEvent) => {
+      e.preventDefault();
+    };
+    onTouchMoveRef.current = (e: TouchEvent) => {
+      e.preventDefault();
+    };
+    onKeyDownRef.current = (e: KeyboardEvent) => {
+      const t = e.target as HTMLElement | null;
+      const tag = t?.tagName;
+      const isEditable = !!t?.isContentEditable;
+      if (
+        isEditable ||
+        tag === "INPUT" ||
+        tag === "TEXTAREA" ||
+        tag === "SELECT"
+      )
+        return;
+
+      // блокируем клавиши, которые скроллят страницу
+      const code = e.code || "";
+      const key = e.key || "";
+      const scrollKeys = new Set([
+        "Space",
+        "ArrowDown",
+        "ArrowUp",
+        "PageDown",
+        "PageUp",
+        "Home",
+        "End",
+      ]);
+      if (scrollKeys.has(code) || key === " ") {
+        e.preventDefault();
       }
+    };
+    onScrollRef.current = () => {
+      // удерживаем позицию, если что-то попытается прокрутить страницу
+      if (Math.abs((window.scrollY || 0) - savedYRef.current) > 0.5) {
+        window.scrollTo(0, savedYRef.current);
+      }
+    };
+
+    window.addEventListener("wheel", onWheelRef.current, { passive: false });
+    window.addEventListener("touchmove", onTouchMoveRef.current, {
+      passive: false,
     });
+    window.addEventListener("keydown", onKeyDownRef.current!, {
+      passive: false,
+    });
+    window.addEventListener("scroll", onScrollRef.current!, { passive: true });
+  };
+
+  const unfreezeScroll = () => {
+    if (!freezeActive.current) return;
+    freezeActive.current = false;
+
+    const html = document.documentElement;
+
+    if (onWheelRef.current)
+      window.removeEventListener("wheel", onWheelRef.current as any);
+    if (onTouchMoveRef.current)
+      window.removeEventListener("touchmove", onTouchMoveRef.current as any);
+    if (onKeyDownRef.current)
+      window.removeEventListener("keydown", onKeyDownRef.current as any);
+    if (onScrollRef.current)
+      window.removeEventListener("scroll", onScrollRef.current as any);
+
+    // возвращаем scroll-behavior
+    html.style.scrollBehavior = prevHtmlScrollBehavior.current;
   };
 
   const [idx, setIdx] = useState(0);
@@ -244,12 +164,12 @@ export const MotivationQuizSection: React.FC = () => {
       gsap.set(quizRef.current, { autoAlpha: 0, pointerEvents: "none" });
       gsap.set(resultsRef.current, { autoAlpha: 0, pointerEvents: "none" });
 
-      // Гейт: как только секция у верхнего края — блокируем скролл
+      // Как только секция доезжает до верхней кромки — "замораживаем" скролл
       gateRef.current = ScrollTrigger.create({
         trigger: sectionRef.current!,
         start: "top 9%",
-        onEnter: lockScroll,
-        onEnterBack: lockScroll,
+        onEnter: freezeScroll,
+        onEnterBack: freezeScroll,
       });
 
       transitionTimeline.current = gsap
@@ -274,7 +194,7 @@ export const MotivationQuizSection: React.FC = () => {
 
       return () => {
         gateRef.current?.kill();
-        unlockScroll();
+        unfreezeScroll();
       };
     },
     { scope: sectionRef }
@@ -282,8 +202,6 @@ export const MotivationQuizSection: React.FC = () => {
 
   const handleStart = (e: React.MouseEvent) => {
     e.preventDefault();
-    // ВАЖНО: скролл НЕ разблокируем здесь
-    // Просто запускаем переход интро -> квиз
     transitionTimeline.current?.play();
   };
 
@@ -307,12 +225,10 @@ export const MotivationQuizSection: React.FC = () => {
         "<"
       )
       .add(() => {
-        // Ждём стабилизацию результатов + доп. паузу 2.5с
+        // Дадим пользователю посмотреть результаты и потом вернём скролл
         gsap.delayedCall(UNLOCK_AFTER_RESULTS, () => {
-          // снимаем гейт и разблокируем скролл
           gateRef.current?.kill();
-          unlockScroll();
-          // небольшой отложенный refresh на случай изменения высоты
+          unfreezeScroll();
           gsap.delayedCall(0.05, () => ScrollTrigger.refresh());
         });
       });
@@ -321,8 +237,6 @@ export const MotivationQuizSection: React.FC = () => {
   };
 
   const restartQuiz = () => {
-    // Можно оставить скролл разблокированным, либо снова залочить — по желанию.
-    // Здесь НЕ лочим повторно — пользователь сам решит, прокручивать ли дальше.
     setIdx(0);
     setSelected(null);
     setQuizFinished(false);
