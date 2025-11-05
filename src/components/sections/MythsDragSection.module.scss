@@ -9,6 +9,7 @@
   background: #ffeacf;
   color: var(--text);
   padding: clamp(28px, 6vw, 72px) clamp(20px, 6vw, 72px);
+  position: relative;
 }
 
 /* Этап 1 */
@@ -19,6 +20,8 @@
   align-content: center;
   gap: clamp(8px, 1.6vw, 16px);
   max-width: 1440px;
+  position: sticky;
+  top: 0;
 }
 
 .subtitle_cont {
@@ -60,7 +63,7 @@
   grid-template-columns: 1fr 1fr;
   gap: clamp(16px, 4vw, 48px);
   align-items: center;
-  margin-top: clamp(24px, 6vw, 64px);
+  margin-top: 0;
   max-width: 1440px;
   margin-left: auto;
   margin-right: auto;
