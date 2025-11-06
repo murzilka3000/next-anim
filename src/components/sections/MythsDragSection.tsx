@@ -15,6 +15,66 @@ import "swiper/css/pagination";
 
 gsap.registerPlugin(useGSAP, ScrollTrigger, Draggable);
 
+// ===== NBSP обработчик (висячие предлоги/союзы/частицы) =====
+const IGNORE_TAGS = new Set([
+  "SCRIPT",
+  "STYLE",
+  "CODE",
+  "PRE",
+  "KBD",
+  "SAMP",
+  "TEXTAREA",
+  "NOSCRIPT",
+]);
+
+// Список коротких слов: предлоги/союзы/частицы и т.п.
+const SHORT =
+  "(?:в|к|с|у|о|и|а|но|да|на|по|за|из|от|до|об|обо|во|со|ко|не|ни|же|ли|бы)";
+
+// NBSP после коротких предлогов/союзов/частиц
+const RX_AFTER_SHORT = new RegExp(
+  `(^|[\\s(«„"'])(${SHORT})\\s+(?=[\\p{L}\\d])`,
+  "giu"
+);
+
+// NBSP перед последним коротким словом в текстовом фрагменте
+const RX_BEFORE_LAST_SHORT = new RegExp(
+  `(\\S)\\s(${SHORT})([.!?:,…»"')\\]]*\\s*$)`,
+  "giu"
+);
+
+function fixText(s: string): string {
+  if (!s) return s;
+  let t = s.replace(RX_AFTER_SHORT, "$1$2\u00A0");
+  t = t.replace(RX_BEFORE_LAST_SHORT, "$1\u00A0$2$3");
+  return t;
+}
+
+function processTextNodes(root: Node) {
+  const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT, {
+    acceptNode(node) {
+      const parent = node.parentNode as HTMLElement | null;
+      if (!node.nodeValue || !node.nodeValue.trim())
+        return NodeFilter.FILTER_REJECT;
+      if (!parent) return NodeFilter.FILTER_REJECT;
+      if (IGNORE_TAGS.has(parent.nodeName)) return NodeFilter.FILTER_REJECT;
+      if (parent.isContentEditable || parent.closest?.("[contenteditable]"))
+        return NodeFilter.FILTER_REJECT;
+      if (parent.closest?.("[data-nbsp-skip]")) return NodeFilter.FILTER_REJECT;
+      return NodeFilter.FILTER_ACCEPT;
+    },
+  });
+
+  const nodes: Text[] = [];
+  while (walker.nextNode()) nodes.push(walker.currentNode as Text);
+
+  for (const n of nodes) {
+    const next = fixText(n.nodeValue || "");
+    if (next !== n.nodeValue) n.nodeValue = next;
+  }
+}
+// ===== конец NBSP блока =====
+
 type Expert = {
   name: string;
   role: string;
@@ -177,7 +237,7 @@ const MobileAnswerSlide: React.FC<{ myth: Myth }> = ({ myth }) => {
             <img
               className={styles.avatar}
               src={myth.expert.photo}
-              alt={myth.expert.name}
+              alt={fixText(myth.expert.name)}
             />
           ) : (
             <div className={styles.avatarPlaceholder} />
@@ -205,6 +265,38 @@ export const MythsDragSection: React.FC = () => {
 
   // mobile
   const mobileRef = useRef<HTMLDivElement | null>(null);
+
+  // NBSP: обработать все текстовые узлы внутри секции и отслеживать изменения
+  useEffect(() => {
+    const root = sectionRef.current;
+    if (!root) return;
+
+    // первичная обработка
+    processTextNodes(root);
+
+    // наблюдаем за динамическими изменениями (слайды, тексты и т.п.)
+    const mo = new MutationObserver((mutations) => {
+      for (const m of mutations) {
+        if (m.type === "characterData" && m.target.nodeType === Node.TEXT_NODE) {
+          const t = m.target as Text;
+          const next = fixText(t.nodeValue || "");
+          if (next !== t.nodeValue) t.nodeValue = next;
+        }
+        for (const n of m.addedNodes) {
+          if (n.nodeType === Node.TEXT_NODE) {
+            const t = n as Text;
+            const next = fixText(t.nodeValue || "");
+            if (next !== t.nodeValue) t.nodeValue = next;
+          } else if (n.nodeType === Node.ELEMENT_NODE) {
+            processTextNodes(n);
+          }
+        }
+      }
+    });
+
+    mo.observe(root, { childList: true, subtree: true, characterData: true });
+    return () => mo.disconnect();
+  }, []);
 
   const [index, setIndex] = useState(0);
   const [answeredIdx, setAnsweredIdx] = useState<number | null>(null);
@@ -408,7 +500,7 @@ export const MythsDragSection: React.FC = () => {
                       <img
                         className={styles.avatar}
                         src={answered.expert.photo}
-                        alt={answered.expert.name}
+                        alt={fixText(answered.expert.name)}
                       />
                     ) : (
                       <div className={styles.avatarPlaceholder} />

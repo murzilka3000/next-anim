@@ -32,8 +32,27 @@ type Skill = { id: string; title: React.ReactNode; qId?: Question["id"] };
  * последние навыки (q4, q5) останутся «нейтральными» (без иконки и без красного предупреждения).
  */
 const skillsMap: Skill[] = [
-  { id: "decision_speed", title: "Скорость принятия решений", qId: "q1" },
-  { id: "teamwork", title: "Работа в команде", qId: "q2" },
+  {
+    id: "decision_speed",
+    title: (
+      <>
+        Скорость принятия
+        <br />
+        решений
+      </>
+    ),
+    qId: "q1",
+  },
+  {
+    id: "teamwork",
+    title: (
+      <>
+        Работа
+        <br />в команде
+      </>
+    ),
+    qId: "q2",
+  },
   {
     id: "stress",
     title: (
@@ -45,8 +64,28 @@ const skillsMap: Skill[] = [
     ),
     qId: "q3",
   },
-  { id: "negotiation", title: "Умение договариваться", qId: "q4" },
-  { id: "strategic", title: "Стратегическое мышление", qId: "q5" },
+  {
+    id: "negotiation",
+    title: (
+      <>
+        Умение
+        <br />
+        договариваться
+      </>
+    ),
+    qId: "q4",
+  },
+  {
+    id: "strategic",
+    title: (
+      <>
+        Стратегическое
+        <br />
+        мышление
+      </>
+    ),
+    qId: "q5",
+  },
 ];
 
 export const MotivationQuizSection: React.FC = () => {
