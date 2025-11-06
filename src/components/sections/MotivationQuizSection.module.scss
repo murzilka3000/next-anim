@@ -9,12 +9,18 @@
 
   position: relative;
   z-index: 0;
-  background: #FCE2C1;
+  background: var(--bg);
   color: var(--text);
   padding: 0 50px;
-  height: 100vh!important;
+  height: 100vh !important;
   display: grid;
   place-items: center;
+}
+
+@media screen and (max-width: 767px) {
+  .section {
+    background: #fce2c1;
+  }
 }
 
 .intro,
@@ -33,8 +39,6 @@
   top: 0;
 }
 
-
-
 .introInner,
 .quizInner {
   width: 100%;
@@ -42,7 +46,6 @@
   padding-left: 50px;
   padding-right: 50px;
 }
-
 
 .title {
   font-family: var(--second-family);
@@ -149,7 +152,6 @@
   letter-spacing: -0.01em;
   text-align: center;
   color: var(--title);
- 
 }
 
 .options {
@@ -493,7 +495,6 @@
   }
 }
 
-
 /* Аксессибилити: меньше движухи при prefers-reduced-motion */
 @media (prefers-reduced-motion: reduce) {
   .skill {
@@ -547,8 +548,8 @@
   }
 
   .skillTitle {
-    text-align: left!important;
-    font-size: 15px!important;
+    text-align: left !important;
+    font-size: 15px !important;
   }
 
   .skill {
@@ -564,14 +565,10 @@
     padding-right: 10px;
   }
 
-  .cta  {
+  .cta {
     width: 100%;
   }
 }
-
-
-
-
 
 .options:has(.wrong) .correct .dot {
   background: transparent;

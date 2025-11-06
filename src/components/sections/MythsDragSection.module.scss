@@ -6,10 +6,17 @@
   --border: rgba(111, 86, 71, 0.35);
   --shadow: 0 12px 30px rgba(0, 0, 0, 0.08);
 
-  background: #fce2c1;
+  background: var(--bg);
   color: var(--text);
   padding: clamp(28px, 6vw, 72px) clamp(20px, 6vw, 72px);
   position: relative;
+}
+
+
+@media screen and (max-width: 767px) {
+  .section {
+    background: #fce2c1;
+  }
 }
 
 /* Этап 1 */

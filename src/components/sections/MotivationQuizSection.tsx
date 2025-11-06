@@ -207,6 +207,10 @@ export const MotivationQuizSection: React.FC = () => {
   }, []);
 
   const freezeScroll = () => {
+    // Перестраховка: на мобилке не блокируем вообще
+    if (typeof window !== "undefined" && window.matchMedia("(max-width: 811px)").matches) {
+      return;
+    }
     if (freezeActive.current) return;
     freezeActive.current = true;
 
@@ -234,7 +238,6 @@ export const MotivationQuizSection: React.FC = () => {
       )
         return;
 
-      // блокируем клавиши, которые скроллят страницу
       const code = e.code || "";
       const key = e.key || "";
       const scrollKeys = new Set([
@@ -251,7 +254,6 @@ export const MotivationQuizSection: React.FC = () => {
       }
     };
     onScrollRef.current = () => {
-      // удерживаем позицию, если что-то попытается прокрутить страницу
       if (Math.abs((window.scrollY || 0) - savedYRef.current) > 0.5) {
         window.scrollTo(0, savedYRef.current);
       }
@@ -282,7 +284,6 @@ export const MotivationQuizSection: React.FC = () => {
     if (onScrollRef.current)
       window.removeEventListener("scroll", onScrollRef.current as any);
 
-    // возвращаем scroll-behavior
     html.style.scrollBehavior = prevHtmlScrollBehavior.current;
   };
 
@@ -303,14 +304,9 @@ export const MotivationQuizSection: React.FC = () => {
       gsap.set(quizRef.current, { autoAlpha: 0, pointerEvents: "none" });
       gsap.set(resultsRef.current, { autoAlpha: 0, pointerEvents: "none" });
 
-      // Как только секция доезжает до верхней кромки — "замораживаем" скролл
-      gateRef.current = ScrollTrigger.create({
-        trigger: sectionRef.current!,
-        start: "top 9%",
-        onEnter: freezeScroll,
-        onEnterBack: freezeScroll,
-      });
+      const mm = gsap.matchMedia();
 
+      // Таймлайн перехода интро → квиз (общий для всех брейкпоинтов)
       transitionTimeline.current = gsap
         .timeline({ paused: true })
         .to(introRef.current, {
@@ -328,12 +324,33 @@ export const MotivationQuizSection: React.FC = () => {
             ease: "power2.inOut",
           },
           "<"
-        );
-      transitionTimeline.current.timeScale(ANIM.speed);
+        )
+        .timeScale(ANIM.speed);
 
-      return () => {
+      // Десктоп: создаём ScrollTrigger, блокируем скролл до завершения
+      mm.add("(min-width: 812px)", () => {
+        gateRef.current = ScrollTrigger.create({
+          trigger: sectionRef.current!,
+          start: "top 9%",
+          onEnter: freezeScroll,
+          onEnterBack: freezeScroll,
+        });
+
+        return () => {
+          gateRef.current?.kill();
+          unfreezeScroll();
+        };
+      });
+
+      // Мобилка: не блокируем скролл
+      mm.add("(max-width: 811px)", () => {
         gateRef.current?.kill();
         unfreezeScroll();
+        return () => {};
+      });
+
+      return () => {
+        mm.revert();
       };
     },
     { scope: sectionRef }
@@ -364,7 +381,7 @@ export const MotivationQuizSection: React.FC = () => {
         "<"
       )
       .add(() => {
-        // Дадим пользователю посмотреть результаты и потом вернём скролл
+        // На десктопе — даём посмотреть, потом возвращаем скролл
         gsap.delayedCall(UNLOCK_AFTER_RESULTS, () => {
           gateRef.current?.kill();
           unfreezeScroll();
@@ -449,7 +466,6 @@ export const MotivationQuizSection: React.FC = () => {
       },
     });
 
-    // Ответы — fade down
     if (optionEls.length) {
       tl.to(
         optionEls,
@@ -466,7 +482,6 @@ export const MotivationQuizSection: React.FC = () => {
       tl.to(explainEl, { y: 8, autoAlpha: 0, duration: 0.28 }, 0);
     }
 
-    // Заголовок и стопка — перелистывание
     tl.to(
       header,
       { y: -20, rotate: 5, autoAlpha: 0, duration: 0.32, ease: "power2.in" },
@@ -653,7 +668,6 @@ export const MotivationQuizSection: React.FC = () => {
           <ul className={styles.skills}>
             {skillsMap.map((s) => {
               const raw = s.qId ? answers[s.qId] : undefined;
-              // null → навык не оценивался (нет связанного вопроса/ответа)
               const state: true | false | null =
                 s.qId && raw !== undefined ? raw.correct : null;
 
