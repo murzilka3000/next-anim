@@ -536,21 +536,7 @@ export const MythsDragSection: React.FC = () => {
       {/* Мобильный: послайдовый переход — интро как первый слайд, далее пары «миф/ответ» */}
       {isMobile && (
         <div ref={mobileRef} className={styles.mobileSlider}>
-          <Swiper
-            modules={[Pagination, Mousewheel, Keyboard]}
-            className={styles.swiper}
-            pagination={{
-              el: `.${styles.mobilePagination}`,
-              clickable: true,
-            }}
-            mousewheel={{ forceToAxis: true, releaseOnEdges: true }}
-            keyboard={{ enabled: true }}
-            slidesPerView={1}
-            speed={450}
-          >
-            {/* Интро — первый слайд */}
-            <SwiperSlide className={styles.mobileSlide} key="intro">
-              <div className={styles.intro}>
+          <div className={styles.intro}>
                 <h2 className={styles.title}>
                   Очень хочется делать <br /> силовые каждый день
                 </h2>
@@ -566,7 +552,18 @@ export const MythsDragSection: React.FC = () => {
                   лёгкой привычкой.
                 </p>
               </div>
-            </SwiperSlide>
+          <Swiper
+            modules={[Pagination, Mousewheel, Keyboard]}
+            className={styles.swiper}
+            pagination={{
+              el: `.${styles.mobilePagination}`,
+              clickable: true,
+            }}
+            mousewheel={{ forceToAxis: true, releaseOnEdges: true }}
+            keyboard={{ enabled: true }}
+            slidesPerView={1}
+            speed={450}
+          >
 
             {/* Далее — по два слайда на миф: «миф» и «ответ» */}
             {myths.map((m) => (

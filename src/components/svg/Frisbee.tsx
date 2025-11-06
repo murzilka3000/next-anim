@@ -18,11 +18,12 @@ export const Frisbee = React.forwardRef<
       const discTop = svg.querySelector("#discTop") as SVGPathElement | null;
       const track = svg.querySelector("#shine-track") as SVGPathElement | null;
       const container = svg.querySelector("#shines") as SVGGElement | null;
-      if (!discTop || !track || !container) return;
+      const content = svg.querySelector("#content") as SVGGElement | null;
+      if (!discTop || !track || !container || !content) return;
 
       // Настройки
-      const OFFSET_PCT = 0.2;                  // сужаем траекторию внутрь
-      const LENGTHS_PCT = [0.12, 0.1, 0.08];   // длины бликов (доля периметра)
+      const OFFSET_PCT = 0.2;                // сужаем траекторию внутрь
+      const LENGTHS_PCT = [0.12, 0.1, 0.08]; // длины бликов (доля периметра)
       const STROKE_W = 6;
       const SHINES_COUNT = LENGTHS_PCT.length;
       const STEP_COUNTS = [36, 42, 48];
@@ -32,9 +33,8 @@ export const Frisbee = React.forwardRef<
       const HIDE_AT_SCALE = 12;
       const SHOW_BACK_SCALE = HIDE_AT_SCALE * 0.8;
 
-      // Надежное чтение текущего масштаба SVG
+      // Надёжное чтение текущего масштаба SVG
       const readScale = (): number => {
-        // 1) пробуем через gsap.getProperty
         const sxRaw = gsap.getProperty(svg, "scaleX") as number | string;
         const syRaw = gsap.getProperty(svg, "scaleY") as number | string;
         let sx = Number(sxRaw);
@@ -44,20 +44,17 @@ export const Frisbee = React.forwardRef<
           return Math.max(sx || 1, sy || 1);
         }
 
-        // 2) fallback — парсим CSS transform matrix
         const cs = getComputedStyle(svg);
         const tr = cs.transform || (cs as any).webkitTransform || "none";
         if (tr !== "none") {
           if (tr.startsWith("matrix3d(")) {
             const v = tr.slice(9, -1).split(",").map(parseFloat);
-            // scaleX = √(m11^2 + m12^2 + m13^2), scaleY = √(m21^2 + m22^2 + m23^2)
             const sx3d = Math.hypot(v[0], v[1], v[2]);
             const sy3d = Math.hypot(v[4], v[5], v[6]);
             return Math.max(sx3d || 1, sy3d || 1);
           }
           if (tr.startsWith("matrix(")) {
             const v = tr.slice(7, -1).split(",").map(parseFloat);
-            // matrix(a, b, c, d, tx, ty)
             const a = v[0], b = v[1], c = v[2], d = v[3];
             const sx2d = Math.hypot(a, b);
             const sy2d = Math.hypot(c, d);
@@ -150,7 +147,7 @@ export const Frisbee = React.forwardRef<
           seg.setAttribute("stroke-linecap", "round");
           seg.setAttribute("stroke-linejoin", "round");
           seg.setAttribute("vector-effect", "non-scaling-stroke");
-          seg.setAttribute("data-glint", "seg"); // метка для Hero-селектора
+          seg.setAttribute("data-glint", "seg");
 
           container.appendChild(seg);
 
@@ -182,18 +179,20 @@ export const Frisbee = React.forwardRef<
           if (killShines) killShines();
           killShines = setupShines();
           container.style.display = "block";
-          container.style.visibility = ""; // чтобы не конфликтовать с autoAlpha
+          container.style.visibility = "";
           container.style.opacity = "";
         } else {
           if (killShines) killShines();
           killShines = null;
           container.innerHTML = "";
-          container.style.display = "none";
+          // лучше прятать visibility вместо display, чтобы не триггерить повторное растрирование
+          container.style.visibility = "hidden";
+          container.style.opacity = "0";
         }
       };
 
       // init
-      container.setAttribute("data-glint", "container"); // метка на группу
+      container.setAttribute("data-glint", "container");
       setTrack();
       setShinesActive(true);
 
@@ -224,7 +223,6 @@ export const Frisbee = React.forwardRef<
 
         if (!hiddenByScale && s >= HIDE_AT_SCALE) {
           hiddenByScale = true;
-          // плавно гасим и затем отключаем
           gsap.to(container, {
             opacity: 0,
             duration: 0.2,
@@ -236,7 +234,7 @@ export const Frisbee = React.forwardRef<
           setShinesActive(true);
           gsap.fromTo(
             container,
-            { opacity: 0, display: "block" },
+            { opacity: 0, visibility: "visible" },
             { opacity: 1, duration: 0.25, overwrite: "auto" }
           );
         }
@@ -244,12 +242,72 @@ export const Frisbee = React.forwardRef<
 
       gsap.ticker.add(checkScale);
 
+      // ---------- АНТИ‑ПОВОРОТ НА МОБИЛКЕ (SVG transform, не CSS) ----------
+      const readRotationRad = (): number => {
+        const tr = getComputedStyle(svg).transform || "none";
+        if (tr === "none") return 0;
+        if (tr.startsWith("matrix3d(")) {
+          const v = tr.slice(9, -1).split(",").map(parseFloat);
+          const a = v[0], b = v[1];
+          return Math.atan2(b, a);
+        }
+        if (tr.startsWith("matrix(")) {
+          const v = tr.slice(7, -1).split(",").map(parseFloat);
+          const a = v[0], b = v[1];
+          return Math.atan2(b, a);
+        }
+        return 0;
+      };
+
+      const vb = svg.viewBox.baseVal;
+      const cx = vb && vb.width ? vb.x + vb.width / 2 : 387;  // по viewBox 774x439
+      const cy = vb && vb.height ? vb.y + vb.height / 2 : 219.5;
+
+      let antiRotateTicker: gsap.TickerCallback | null = null;
+
+      const enableAntiRotate = () => {
+        if (!content) return;
+        if (!antiRotateTicker) {
+          antiRotateTicker = () => {
+            const ang = readRotationRad(); // рад
+            const deg = (-ang * 180) / Math.PI;
+            // ВАЖНО: атрибут transform, не CSS
+            content.setAttribute("transform", `rotate(${deg} ${cx} ${cy})`);
+          };
+          gsap.ticker.add(antiRotateTicker);
+        }
+      };
+
+      const disableAntiRotate = () => {
+        if (antiRotateTicker) {
+          gsap.ticker.remove(antiRotateTicker);
+          antiRotateTicker = null;
+        }
+        // снимаем атрибут, чтобы не оставалось «следов»
+        content.removeAttribute("transform");
+      };
+
+      const mq = window.matchMedia("(max-width: 811px)");
+      const onMQ = (e: MediaQueryListEvent | MediaQueryList) => {
+        const matches = "matches" in e ? e.matches : (e as MediaQueryList).matches;
+        if (matches) enableAntiRotate();
+        else disableAntiRotate();
+      };
+      onMQ(mq);
+      // @ts-ignore кроссбраузерность
+      mq.addEventListener ? mq.addEventListener("change", onMQ) : mq.addListener(onMQ as any);
+      // ---------- /АНТИ‑ПОВОРОТ НА МОБИЛКЕ ----------
+
       return () => {
         gsap.ticker.remove(checkScale);
         if (killShines) killShines();
         container.innerHTML = "";
         if (ro) ro.disconnect();
         if (offResize) offResize();
+
+        disableAntiRotate();
+        // @ts-ignore
+        mq.removeEventListener ? mq.removeEventListener("change", onMQ) : mq.removeListener(onMQ as any);
       };
     },
     { scope: svgRef }
@@ -271,7 +329,8 @@ export const Frisbee = React.forwardRef<
       xmlns="http://www.w3.org/2000/svg"
       {...props}
     >
-      <g clipPath="url(#clip0_2001_63)">
+      {/* ВАЖНО: у этой группы есть id="content" */}
+      <g id="content" clipPath="url(#clip0_2001_63)">
         {/* Верхняя «шапка» тарелки */}
         <path
           id="discTop"
@@ -292,7 +351,7 @@ export const Frisbee = React.forwardRef<
         {/* Путь-«трек» (d выставляется скриптом) */}
         <path id="shine-track" d="" fill="none" stroke="none" />
 
-        {/* Блики. Blur на группе, без blend-mode */}
+        {/* Блики (clip + blur) */}
         <g id="shines" data-glint clipPath="url(#discClip)" filter="url(#shineBlur)" />
       </g>
 
