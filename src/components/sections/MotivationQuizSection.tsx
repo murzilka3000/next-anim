@@ -24,11 +24,16 @@ const ANIM = {
 
 type Skill = { id: string; title: React.ReactNode; qId?: Question["id"] };
 
+/**
+ * Исправлено:
+ * - корректные названия навыков
+ * - корректные связи вопрос → навык
+ * Примечание: если в вашем наборе вопросов меньше 5 (например, только q1..q3),
+ * последние навыки (q4, q5) останутся «нейтральными» (без иконки и без красного предупреждения).
+ */
 const skillsMap: Skill[] = [
   { id: "decision_speed", title: "Скорость принятия решений", qId: "q1" },
   { id: "teamwork", title: "Работа в команде", qId: "q2" },
-  { id: "negotiation", title: "Умение договариваться", qId: "q3" },
-  { id: "strategic", title: "Стратегическое мышление" },
   {
     id: "stress",
     title: (
@@ -38,7 +43,10 @@ const skillsMap: Skill[] = [
         устойчивость
       </>
     ),
+    qId: "q3",
   },
+  { id: "negotiation", title: "Умение договариваться", qId: "q4" },
+  { id: "strategic", title: "Стратегическое мышление", qId: "q5" },
 ];
 
 export const MotivationQuizSection: React.FC = () => {
@@ -513,22 +521,35 @@ export const MotivationQuizSection: React.FC = () => {
 
           <ul className={styles.skills}>
             {skillsMap.map((s) => {
-              const correct = s.qId ? !!answers[s.qId]?.correct : false;
-              const cls = correct ? styles.skillGood : styles.skillWarn;
+              const raw = s.qId ? answers[s.qId] : undefined;
+              // null → навыок не оценивался (нет связанного вопроса/ответа)
+              const state: true | false | null =
+                s.qId && raw !== undefined ? raw.correct : null;
+
+              let cls = styles.skill;
+              if (state === true) cls += ` ${styles.skillGood}`;
+              if (state === false) cls += ` ${styles.skillWarn}`;
+
               return (
-                <li key={s.id} className={`${styles.skill} ${cls}`}>
+                <li key={s.id} className={cls}>
                   <span
                     className={`${styles.skillIcon} ${
-                      correct ? styles.iconGood : styles.iconWarn
+                      state === true
+                        ? styles.iconGood
+                        : state === false
+                        ? styles.iconWarn
+                        : ""
                     }`}
                     aria-hidden
                   >
-                    <img
-                      className={styles.skillGlyph}
-                      src={correct ? ICONS.good : ICONS.warn}
-                      alt=""
-                      loading="lazy"
-                    />
+                    {state !== null && (
+                      <img
+                        className={styles.skillGlyph}
+                        src={state ? ICONS.good : ICONS.warn}
+                        alt=""
+                        loading="lazy"
+                      />
+                    )}
                   </span>
                   <span className={styles.skillTitle}>{s.title}</span>
                 </li>
