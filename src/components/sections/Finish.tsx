@@ -23,11 +23,11 @@ const Finish = () => {
 
   // Состояние idle (поворот + горизонтальный сдвиг)
   const idleRef = useRef({
-    target: 0,      // целевой угол (deg)
-    current: 0,     // текущий угол (deg)
-    xTarget: 0,     // целевой dx (px)
-    xCurrent: 0,    // текущий dx (px)
-    lastMove: 0,    // время последнего движения курсора
+    target: 0,
+    current: 0,
+    xTarget: 0,
+    xCurrent: 0,
+    lastMove: 0,
   });
 
   // ——— Idle: плавное раскачивание и лёгкий сдвиг по X за курсором ———
@@ -43,29 +43,26 @@ const Finish = () => {
     disc.style.transform = "translateX(-50%) rotate(0deg)";
 
     let r = cont.getBoundingClientRect();
-    const ROT_MAX = 5;     // максимальный угол (deg)
-    const DX_MAX = 8;      // максимальный сдвиг по X (px)
-    const SMOOTH = 0.12;   // коэффициент сглаживания (0..1)
-    const IDLE_WOBBLE = 0.6; // автоколебания по вращению при простое (deg)
-    const IDLE_DELAY = 900;  // через сколько мс без движения включать автоколебания
+    const ROT_MAX = 5;
+    const DX_MAX = 8;
+    const SMOOTH = 0.12;
+    const IDLE_WOBBLE = 0.6;
+    const IDLE_DELAY = 900;
 
     const update = () => {
       const st = idleRef.current;
 
-      // если курсор не менялся давно и нет полёта — лёгкая автокачалка по вращению
       const idleNow =
         !busyRef.current && performance.now() - st.lastMove > IDLE_DELAY;
       const desiredRot = idleNow
         ? Math.sin((performance.now() / 1000) * 1.2) * IDLE_WOBBLE
         : st.target;
 
-      const desiredDx = idleNow ? 0 : st.xTarget; // по X без автоколебаний
+      const desiredDx = idleNow ? 0 : st.xTarget;
 
-      // сглаживание к целевым значениям
       st.current += (desiredRot - st.current) * SMOOTH;
       st.xCurrent += (desiredDx - st.xCurrent) * SMOOTH;
 
-      // не вмешиваемся в полёт — там GSAP управляет transform
       if (!busyRef.current) {
         disc.style.transform = `translateX(calc(-50% + ${st.xCurrent.toFixed(
           2
@@ -76,15 +73,12 @@ const Finish = () => {
     const onMove = (e: PointerEvent) => {
       idleRef.current.lastMove = performance.now();
       if (busyRef.current) {
-        // во время полёта целимся в 0
         idleRef.current.target = 0;
         idleRef.current.xTarget = 0;
         return;
       }
       const cx = r.left + r.width / 2;
-      // нормируем в интервал [-1..1]
       const nx = gsap.utils.clamp(-1, 1, (e.clientX - cx) / (r.width / 2));
-      // мягкая нелинейность, чтобы около центра движения были плавнее
       const eased = Math.sign(nx) * Math.pow(Math.abs(nx), 0.7);
       idleRef.current.target = -eased * ROT_MAX;
       idleRef.current.xTarget = eased * DX_MAX;
@@ -114,24 +108,25 @@ const Finish = () => {
   }, []);
   // ——— /Idle ———
 
-  // реальные размеры диска (учитывает CSS width: 325px)
-  const getDiscSize = () => {
+  // БАЗОВЫЕ (без поворота) размеры диска: по CSS width + соотношению сторон
+  const getDiscBaseSize = () => {
     const disc = discRef.current!;
     const rect = disc.getBoundingClientRect();
-    const compW = parseFloat(getComputedStyle(disc).width) || 325;
-    const w = rect.width || compW || 325;
+    const cssW = parseFloat(getComputedStyle(disc).width) || rect.width || 325;
     const ratio =
-      (disc.naturalWidth && disc.naturalHeight
+      disc.naturalWidth && disc.naturalHeight
         ? disc.naturalHeight / disc.naturalWidth
-        : rect.height && rect.width
+        : rect.width
         ? rect.height / rect.width
-        : 0.5) || 0.5;
-    const h = rect.height || w * ratio;
+        : 0.5;
+    const w = cssW;
+    const h = cssW * ratio;
     return { w, h };
   };
 
   // точка попадания по data-ax/ay (+ data-ox/oy), с учётом конечного масштаба
-  const getTargetPoint = (img: HTMLImageElement, scaleForEnd = 1) => {
+  // возвращает координаты ЛЕВОГО-ВЕРХНЕГО угла диска в системе контейнера (origin = 0 0)
+  const getTargetTopLeft = (img: HTMLImageElement, scaleForEnd = 1) => {
     const cont = containerRef.current!;
     const cr = cont.getBoundingClientRect();
     const ir = img.getBoundingClientRect();
@@ -141,7 +136,7 @@ const Finish = () => {
     const ox = Number(img.dataset.ox ?? 0); // px
     const oy = Number(img.dataset.oy ?? 0); // px
 
-    const { w: dw, h: dh } = getDiscSize();
+    const { w: dw, h: dh } = getDiscBaseSize();
 
     const px = ir.left + ir.width * ax - cr.left + ox;
     const py = ir.top + ir.height * ay - cr.top + oy;
@@ -149,17 +144,17 @@ const Finish = () => {
     return { x: px - (dw * scaleForEnd) / 2, y: py - (dh * scaleForEnd) / 2 };
   };
 
-  // позиция/масштаб диска под размеры modal__card
+  // позиция/масштаб диска под размеры modal__card (по центру карточки)
   const getModalTarget = () => {
     const cont = containerRef.current!;
     const modal = modalRef.current!;
     const card = modal.querySelector(`.${s.modal__card}`) as HTMLElement;
     const cr = cont.getBoundingClientRect();
     const rr = card.getBoundingClientRect();
-    const { w, h } = getDiscSize();
+    const { w, h } = getDiscBaseSize();
 
     const scale = rr.width / w;
-    const x = rr.left - cr.left + (rr.width - w * scale) / 2;
+    const x = rr.left - cr.left + (rr.width - w * scale) / 2; // = rr.left - cr.left (т.к. w*scale == rr.width), оставлено для ясности
     const y = rr.top - cr.top + (rr.height - h * scale) / 2;
 
     return { x, y, scale };
@@ -252,10 +247,9 @@ const Finish = () => {
     if (busyRef.current) return;
     busyRef.current = true;
 
-    // Сразу скрываем инфоблоки
     hideTexts();
 
-    // Свести idle к нулю (мягко) и зафиксировать
+    // Отключаем idle-влияние
     idleRef.current.target = 0;
     idleRef.current.xTarget = 0;
 
@@ -271,78 +265,87 @@ const Finish = () => {
     const cr = cont.getBoundingClientRect();
     const dr = disc.getBoundingClientRect();
 
-    // старт — фиксируем текущие координаты
-    const start = { x: dr.left - cr.left, y: dr.top - cr.top };
+    // 1) фиксируем видимую позицию диска относительно контейнера
+    const startLeft = dr.left - cr.left;
+    const startTop = dr.top - cr.top;
 
-    // целевая ширина у игрока (по умолчанию 91)
-    const { w: startW } = getDiscSize();
-    const endW = Number(img.dataset.endw ?? 91);
-    const scaleToEnd = endW / startW;
-
-    const end = getTargetPoint(img, scaleToEnd);
-
-    // На время анимации — управляем через x/y
+    // 2) Сбрасываем transform и «прибиваем» диск в ту же точку (origin = 0 0!)
     gsap.set(disc, {
-      top: 0,
-      left: 0,
-      bottom: "auto",
+      position: "absolute",
+      left: startLeft,
+      top: startTop,
       right: "auto",
+      bottom: "auto",
       transform: "none",
       transformOrigin: "0 0",
-      x: start.x,
-      y: start.y,
+      x: 0,
+      y: 0,
       scale: 1,
       autoAlpha: 1,
+      overwrite: true,
     });
 
-    // Контрольная точка дуги (плоская)
-    const ctrl = {
-      x: (start.x + end.x) / 2,
-      y: Math.min(start.y, end.y) - 120,
+    // 3) Первая дуга: к игроку
+    const { w: baseW } = getDiscBaseSize();
+    const endW = Number(img.dataset.endw ?? 91);
+    const scaleToEnd = endW / baseW;
+
+    const endAbs = getTargetTopLeft(img, scaleToEnd); // абсолютные коорд. ЛВ-угла диска
+    const ctrl1Abs = {
+      x: (startLeft + endAbs.x) / 2,
+      y: Math.min(startTop, endAbs.y) - 120,
     };
+
+    // относительные точки (старт — это 0,0)
+    const path1 = [
+      { x: 0, y: 0 },
+      { x: ctrl1Abs.x - startLeft, y: ctrl1Abs.y - startTop },
+      { x: endAbs.x - startLeft, y: endAbs.y - startTop },
+    ];
 
     const tl = gsap.timeline({ defaults: { ease: "power2.out" } });
 
-    // 1) к игроку — уменьшаемся до endW
     tl.to(disc, {
       duration: 0.8,
       scale: scaleToEnd,
       motionPath: {
-        path: [
-          { x: start.x, y: start.y },
-          { x: ctrl.x, y: ctrl.y },
-          { x: end.x, y: end.y },
-        ],
+        path: path1,
         curviness: 0.55,
+        autoRotate: false,
       },
     });
 
-    // 2) к модалке — увеличиваемся до её размеров
-    const modalTarget = getModalTarget();
+    // 4) Вторая дуга: к модалке (центр карточки по вертикали)
+    const modalTarget = getModalTarget(); // абсолютные
+    const ctrl2Abs = {
+      x: (endAbs.x + modalTarget.x) / 2,
+      y: Math.min(endAbs.y, modalTarget.y) - 100,
+    };
+
+    const path2 = [
+      { x: endAbs.x - startLeft, y: endAbs.y - startTop },
+      { x: ctrl2Abs.x - startLeft, y: ctrl2Abs.y - startTop },
+      { x: modalTarget.x - startLeft, y: modalTarget.y - startTop },
+    ];
+
     tl.to(
       disc,
       {
         duration: 0.8,
         scale: modalTarget.scale,
         motionPath: {
-          path: [
-            { x: end.x, y: end.y },
-            {
-              x: (end.x + modalTarget.x) / 2,
-              y: Math.min(end.y, modalTarget.y) - 100,
-            },
-            { x: modalTarget.x, y: modalTarget.y },
-          ],
+          path: path2,
           curviness: 0.55,
+          autoRotate: false,
         },
       },
       ">-0.1"
     );
 
-    // 3) исчезновение диска поверх фона модалки
+    // 5) исчезновение диска поверх фона модалки
     tl.to(disc, { autoAlpha: 0, duration: 0.35, ease: "power1.inOut" });
 
-    // 4) показать модалку
+    // 6) показать модалку
     tl.add(showModal);
   };
 
@@ -477,7 +480,7 @@ const Finish = () => {
 
           <div className={s.finish__footer}>
             <div className={s.finish__legal}>
-              <p>erid:</p>
+              <p>ерид:</p>
               <p>Реклама 18+</p>
               <p>Рекламодатель ООО «СПРИНГЛ». ИНН 7714482000</p>
               <p>
