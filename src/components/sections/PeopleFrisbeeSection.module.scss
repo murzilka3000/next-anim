@@ -353,11 +353,17 @@
 
   .mobileSkill {
     margin-top: 8px;
-    color: #fff;
-    font-weight: 800;
-    font-size: 12px;
     text-shadow: 0 2px 6px rgba(0, 0, 0, 0.35);
-    text-align: center;
+    font-weight: 700;
+    font-size: 14px;
+    line-height: 121%;
+    text-transform: uppercase;
+    color: var(--text-light);
+  }
+
+  .mobileGrid > :nth-child(2) .mobileSkill,
+  .mobileGrid > :nth-child(4) .mobileSkill {
+    text-align: right;
   }
 
   .mobileCard {
@@ -409,7 +415,7 @@
   }
 
   .disc {
-    width: 40px;
+    width: 30px;
   }
 }
 

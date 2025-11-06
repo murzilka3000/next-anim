@@ -373,7 +373,7 @@
 
 @media screen and (max-width: 821px) {
   .prompt {
-    font-size: 20px;
+    font-size: 16px;
     text-align: center;
   }
 
@@ -404,7 +404,7 @@
   }
 
   .option {
-    gap: 15px;
+    gap: 5px;
   }
 
   .cardHeader {
@@ -416,6 +416,7 @@
   .explain {
     text-align: left;
     margin-top: 0;
+    font-size: 12px;
   }
 }
 
