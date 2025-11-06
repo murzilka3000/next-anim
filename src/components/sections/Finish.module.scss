@@ -119,8 +119,6 @@
   text-decoration-skip-ink: none;
 }
 
-
-
 .tarelka {
   position: absolute;
   left: 50%;
@@ -315,7 +313,15 @@
     grid-template-columns: 1fr;
   }
 
-  .finish__grid > :last-child {
+  .finish__grid > :nth-child(1) {
+    order: 2;
+  }
+
+  .finish__grid > :nth-child(2) {
+    order: 1;
+  }
+
+  .finish__grid > :first-child {
     margin-top: -300px;
   }
 
@@ -340,16 +346,15 @@
   }
 
   .isClickable {
-    max-width: 140px!important;
+    max-width: 140px !important;
   }
 
   .finish__grid > :last-child > :last-child {
-    display: flex!important;
+    display: flex !important;
     justify-content: flex-end;
   }
 
   .finish__grid > :first-child img {
-    max-width: 120px!important;
+    max-width: 120px !important;
   }
 }
-
