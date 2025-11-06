@@ -412,3 +412,20 @@
     width: 40px;
   }
 }
+
+.board > :first-child .tag_right {
+  right: 68px !important;
+}
+
+.board > :nth-child(2) .tag_right {
+  right: 28px !important;
+}
+
+.board > :nth-child(4) .tag_right {
+  right: 48px !important;
+}
+
+.board > :nth-child(3) .tag_right,
+.board > :last-child .tag_right {
+  right: -20px !important;
+}
