@@ -9,7 +9,7 @@ import styles from "./MythsDragSection.module.scss";
 
 // Swiper (мобильный режим)
 import { Swiper, SwiperSlide } from "swiper/react";
-import { Pagination } from "swiper/modules";
+import { Pagination, Mousewheel, Keyboard } from "swiper/modules";
 import "swiper/css";
 import "swiper/css/pagination";
 
@@ -209,8 +209,23 @@ export const MythsDragSection: React.FC = () => {
   const [index, setIndex] = useState(0);
   const [answeredIdx, setAnsweredIdx] = useState<number | null>(null);
 
-  // NEW: скрыть карточку на десктопе после последнего дропа (оставить пустое место)
+  // скрыть карточку на десктопе после последнего дропа (оставить пустое место)
   const [desktopCardHidden, setDesktopCardHidden] = useState(false);
+
+  // Определяем мобильный брейкпоинт (для условного рендера)
+  const [isMobile, setIsMobile] = useState(false);
+  useEffect(() => {
+    const mq = window.matchMedia("(max-width: 811px)");
+    const handler = (e: MediaQueryListEvent | MediaQueryList) =>
+      setIsMobile("matches" in e ? e.matches : (e as MediaQueryList).matches);
+    setIsMobile(mq.matches);
+    // @ts-ignore кроссбраузерная подписка
+    mq.addEventListener ? mq.addEventListener("change", handler) : mq.addListener(handler as any);
+    return () => {
+      // @ts-ignore кроссбраузерная отписка
+      mq.removeEventListener ? mq.removeEventListener("change", handler) : mq.removeListener(handler as any);
+    };
+  }, []);
 
   const myths = useMemo(() => mythsData, []);
   const current = myths[index];
@@ -220,12 +235,12 @@ export const MythsDragSection: React.FC = () => {
     () => {
       const intro = introRef.current!;
       const play = playgroundRef.current!;
-      const mobile = mobileRef.current!;
       const mm = gsap.matchMedia();
 
-      // Десктоп (>= 812px) — drag & drop
+      // Десктоп (>= 812px) — drag & drop + по-слайдовое переключение интро → playground (snap)
       mm.add("(min-width: 812px)", () => {
         gsap.set(play, { opacity: 0, y: 24 });
+
         // при входе в десктопный брейкпоинт не скрываем карточку по умолчанию
         setDesktopCardHidden(false);
 
@@ -234,8 +249,14 @@ export const MythsDragSection: React.FC = () => {
             scrollTrigger: {
               trigger: intro,
               start: "center center",
-              end: "+=300",
+              end: "+=550",
               scrub: true,
+              // включаем «снап» в начало/конец — ощущение «слайда»
+              snap: {
+                snapTo: [0, 1],
+                duration: { min: 0.12, max: 0.3 },
+                ease: "power1.inOut",
+              },
               refreshPriority: -1,
             },
           })
@@ -328,28 +349,6 @@ export const MythsDragSection: React.FC = () => {
         };
       });
 
-      // Мобилка (<= 811px) — двуслайдовый слайдер (миф/ответ) для каждого мифа
-      mm.add("(max-width: 811px)", () => {
-        gsap.set(mobile, { opacity: 0, y: 24 });
-        const tlIntro = gsap
-          .timeline({
-            scrollTrigger: {
-              trigger: intro,
-              start: "center center",
-              end: "+=300",
-              scrub: true,
-              refreshPriority: -1,
-            },
-          })
-          .to(intro, { opacity: 0, y: -10, ease: "none" })
-          .to(mobile, { opacity: 1, y: 0, ease: "none" }, "<");
-
-        return () => {
-          tlIntro.scrollTrigger?.kill();
-          tlIntro.kill();
-        };
-      });
-
       return () => {
         mm.revert();
       };
@@ -359,118 +358,149 @@ export const MythsDragSection: React.FC = () => {
 
   return (
     <section ref={sectionRef} className={styles.section}>
-      {/* Этап 1: интро-текст */}
-      <div ref={introRef} className={styles.intro}>
-        <h2 className={styles.title}>
-          Очень хочется делать <br /> силовые каждый день
-        </h2>
-        <div className={styles.subtitle_cont}>
-          <p className={styles.subtitle}>
-            как Джефф Безос, однако между <br /> намерением и действием часто{" "}
-            <br /> появляется надоедливое «но».
+      {/* Этап 1: интро-текст (рендерим только на десктопе) */}
+      {!isMobile && (
+        <div ref={introRef} className={styles.intro}>
+          <h2 className={styles.title}>
+            Очень хочется делать <br /> силовые каждый день
+          </h2>
+          <div className={styles.subtitle_cont}>
+            <p className={styles.subtitle}>
+              как Джефф Безос, однако между <br /> намерением и действием часто{" "}
+              <br /> появляется надоедливое «но».
+            </p>
+          </div>
+          <p className={styles.lead}>
+            Давайте вместе с тренерами школы Springle разберём <br />
+            мифы, которые мешают вам сделать занятия спортом <br />
+            лёгкой привычкой.
           </p>
         </div>
-        <p className={styles.lead}>
-          Давайте вместе с тренерами школы Springle разберём <br />
-          мифы, которые мешают вам сделать занятия спортом <br />
-          лёгкой привычкой.
-        </p>
-      </div>
+      )}
 
       {/* Этап 2: playground (десктоп) */}
-      <div ref={playgroundRef} className={styles.playground}>
-        <div className={styles.left}>
-          <div
-            className={styles.card}
-            ref={dragCardRef}
-            style={
-              desktopCardHidden
-                ? { opacity: 0, pointerEvents: "none" }
-                : undefined
-            }
-            aria-hidden={desktopCardHidden}
-          >
-            <div className={styles.cardInner}>
-              <div className={styles.cardLabel}>{current.title}</div>
-              <div className={styles.cardText}>{current.text}</div>
+      {!isMobile && (
+        <div ref={playgroundRef} className={styles.playground}>
+          <div className={styles.left}>
+            <div
+              className={styles.card}
+              ref={dragCardRef}
+              style={
+                desktopCardHidden
+                  ? { opacity: 0, pointerEvents: "none" }
+                  : undefined
+              }
+              aria-hidden={desktopCardHidden}
+            >
+              <div className={styles.cardInner}>
+                <div className={styles.cardLabel}>{current.title}</div>
+                <div className={styles.cardText}>{current.text}</div>
+              </div>
+            </div>
+          </div>
+
+          <div className={styles.right}>
+            <div className={styles.dropZone} ref={dropZoneRef}>
+              {answered ? (
+                <div className={styles.answer} ref={answerRef}>
+                  <div className={styles.expertHeader}>
+                    {answered.expert.photo ? (
+                      <img
+                        className={styles.avatar}
+                        src={answered.expert.photo}
+                        alt={answered.expert.name}
+                      />
+                    ) : (
+                      <div className={styles.avatarPlaceholder} />
+                    )}
+                    <div>
+                      <div className={styles.expertName}>
+                        {answered.expert.name}
+                      </div>
+                      <div className={styles.expertRole}>
+                        {answered.expert.role}
+                      </div>
+                    </div>
+                  </div>
+                  <div className={styles.answerText}>
+                    {answered.expert.answer}
+                  </div>
+                </div>
+              ) : (
+                <div className={styles.dropHint}>
+                  <img
+                    className={styles.cursor}
+                    src="/images/cursor.svg"
+                    alt=""
+                  />
+                  Перетащите миф в экспертное поле, чтобы развеять его
+                </div>
+              )}
             </div>
           </div>
         </div>
+      )}
 
-        <div className={styles.right}>
-          <div className={styles.dropZone} ref={dropZoneRef}>
-            {answered ? (
-              <div className={styles.answer} ref={answerRef}>
-                <div className={styles.expertHeader}>
-                  {answered.expert.photo ? (
-                    <img
-                      className={styles.avatar}
-                      src={answered.expert.photo}
-                      alt={answered.expert.name}
-                    />
-                  ) : (
-                    <div className={styles.avatarPlaceholder} />
-                  )}
-                  <div>
-                    <div className={styles.expertName}>
-                      {answered.expert.name}
-                    </div>
-                    <div className={styles.expertRole}>
-                      {answered.expert.role}
+      {/* Мобильный: послайдовый переход — интро как первый слайд, далее пары «миф/ответ» */}
+      {isMobile && (
+        <div ref={mobileRef} className={styles.mobileSlider}>
+          <Swiper
+            modules={[Pagination, Mousewheel, Keyboard]}
+            className={styles.swiper}
+            pagination={{
+              el: `.${styles.mobilePagination}`,
+              clickable: true,
+            }}
+            mousewheel={{ forceToAxis: true, releaseOnEdges: true }}
+            keyboard={{ enabled: true }}
+            slidesPerView={1}
+            speed={450}
+          >
+            {/* Интро — первый слайд */}
+            <SwiperSlide className={styles.mobileSlide} key="intro">
+              <div className={styles.intro}>
+                <h2 className={styles.title}>
+                  Очень хочется делать <br /> силовые каждый день
+                </h2>
+                <div className={styles.subtitle_cont}>
+                  <p className={styles.subtitle}>
+                    как Джефф Безос, однако между <br /> намерением и действием
+                    часто <br /> появляется надоедливое «но».
+                  </p>
+                </div>
+                <p className={styles.lead}>
+                  Давайте вместе с тренерами школы Springle разберём <br />
+                  мифы, которые мешают вам сделать занятия спортом <br />
+                  лёгкой привычкой.
+                </p>
+              </div>
+            </SwiperSlide>
+
+            {/* Далее — по два слайда на миф: «миф» и «ответ» */}
+            {myths.map((m) => (
+              <React.Fragment key={`pair-${m.id}`}>
+                {/* Слайд мифа */}
+                <SwiperSlide className={styles.mobileSlide} key={`myth-${m.id}`}>
+                  <div className={`${styles.card} ${styles.cardMobile}`}>
+                    <div className={styles.cardInner}>
+                      <div className={styles.cardLabel}>{m.title}</div>
+                      <div className={styles.cardText}>{m.text}</div>
                     </div>
                   </div>
-                </div>
-                <div className={styles.answerText}>
-                  {answered.expert.answer}
-                </div>
-              </div>
-            ) : (
-              <div className={styles.dropHint}>
-                <img
-                  className={styles.cursor}
-                  src="/images/cursor.svg"
-                  alt=""
-                />
-                Перетащите миф в экспертное поле, чтобы развеять его
-              </div>
-            )}
-          </div>
+                </SwiperSlide>
+
+                {/* Слайд ответа с переворотом */}
+                <SwiperSlide className={styles.mobileSlide} key={`ans-${m.id}`}>
+                  <MobileAnswerSlide myth={m} />
+                </SwiperSlide>
+              </React.Fragment>
+            ))}
+          </Swiper>
+
+          {/* ВНЕШНЯЯ пагинация (под слайдером) */}
+          <div className={styles.mobilePagination} />
         </div>
-      </div>
-
-      {/* Этап 2: мобильный слайдер (миф/ответ) — данные из массива */}
-      <div ref={mobileRef} className={styles.mobileSlider}>
-        <Swiper
-          modules={[Pagination]}
-          className={styles.swiper}
-          pagination={{
-            el: `.${styles.mobilePagination}`,
-            clickable: true,
-          }}
-        >
-          {myths.map((m) => (
-            <React.Fragment key={`pair-${m.id}`}>
-              {/* Слайд мифа */}
-              <SwiperSlide className={styles.mobileSlide} key={`myth-${m.id}`}>
-                <div className={`${styles.card} ${styles.cardMobile}`}>
-                  <div className={styles.cardInner}>
-                    <div className={styles.cardLabel}>{m.title}</div>
-                    <div className={styles.cardText}>{m.text}</div>
-                  </div>
-                </div>
-              </SwiperSlide>
-
-              {/* Слайд ответа с переворотом */}
-              <SwiperSlide className={styles.mobileSlide} key={`ans-${m.id}`}>
-                <MobileAnswerSlide myth={m} />
-              </SwiperSlide>
-            </React.Fragment>
-          ))}
-        </Swiper>
-
-        {/* ВНЕШНЯЯ пагинация (под слайдером) */}
-        <div className={styles.mobilePagination} />
-      </div>
+      )}
     </section>
   );
 };
