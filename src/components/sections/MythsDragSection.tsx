@@ -152,23 +152,23 @@ const mythsData: Myth[] = [
   },
 ];
 
-// Внутренний компонент для мобильного “ответного” слайда с переворотом
+// Мобильная флип‑карта: фронт (миф) → клик → оборот (ответ)
 const MobileAnswerSlide: React.FC<{ myth: Myth }> = ({ myth }) => {
-  const hintRef = useRef<HTMLDivElement | null>(null);
-  const ansRef = useRef<HTMLDivElement | null>(null);
+  const frontRef = useRef<HTMLDivElement | null>(null);
+  const backRef = useRef<HTMLDivElement | null>(null);
   const [revealed, setRevealed] = useState(false);
 
   useEffect(() => {
-    const hint = hintRef.current;
-    const ans = ansRef.current;
-    if (hint && ans) {
-      gsap.set(hint, {
+    const front = frontRef.current;
+    const back = backRef.current;
+    if (front && back) {
+      gsap.set(front, {
         autoAlpha: 1,
         rotateY: 0,
         transformPerspective: 900,
         transformOrigin: "50% 50%",
       });
-      gsap.set(ans, {
+      gsap.set(back, {
         autoAlpha: 0,
         rotateY: 90,
         transformPerspective: 900,
@@ -181,11 +181,11 @@ const MobileAnswerSlide: React.FC<{ myth: Myth }> = ({ myth }) => {
     if (revealed) return;
     setRevealed(true);
 
-    const hint = hintRef.current!;
-    const ans = ansRef.current!;
+    const front = frontRef.current!;
+    const back = backRef.current!;
 
     const tl = gsap.timeline();
-    tl.to(hint, {
+    tl.to(front, {
       rotateY: -90,
       autoAlpha: 0,
       duration: 0.25,
@@ -193,7 +193,7 @@ const MobileAnswerSlide: React.FC<{ myth: Myth }> = ({ myth }) => {
       transformPerspective: 900,
       transformOrigin: "50% 50%",
     }).fromTo(
-      ans,
+      back,
       {
         rotateY: 90,
         autoAlpha: 0,
@@ -212,7 +212,7 @@ const MobileAnswerSlide: React.FC<{ myth: Myth }> = ({ myth }) => {
 
   return (
     <div
-      className={`${styles.dropZone} ${styles.cardMobile}`}
+      className={`${styles.card} ${styles.cardMobile}`}
       onClick={reveal}
       role="button"
       tabIndex={0}
@@ -224,14 +224,14 @@ const MobileAnswerSlide: React.FC<{ myth: Myth }> = ({ myth }) => {
       }}
       style={{ cursor: revealed ? "default" : "pointer" }}
     >
-      {/* Передняя сторона: подсказка (как на десктопе) */}
-      <div className={styles.dropHint} ref={hintRef} aria-hidden={revealed}>
-        <img className={styles.cursor} src="/images/cursor.svg" alt="" />
-        Нажмите, чтобы увидеть ответ эксперта
+      {/* Передняя сторона: миф */}
+      <div className={styles.cardInner} ref={frontRef} aria-hidden={revealed}>
+        <div className={styles.cardLabel}>{myth.title}</div>
+        <div className={styles.cardText}>{myth.text}</div>
       </div>
 
       {/* Задняя сторона: ответ */}
-      <div className={styles.answer} ref={ansRef} aria-hidden={!revealed}>
+      <div className={styles.answer} ref={backRef} aria-hidden={!revealed}>
         <div className={styles.expertHeader}>
           {myth.expert.photo ? (
             <img
@@ -383,12 +383,10 @@ export const MythsDragSection: React.FC = () => {
           }).set(card, { x: 0, y: 0 });
 
           if (isLast) {
-            // Последняя карточка: оставляем её на месте, но полностью прозрачной и неактивной
             tl.call(() => {
               setDesktopCardHidden(true);
             });
           } else {
-            // Промежуточные карточки: продолжаем как раньше
             tl.call(() =>
               setIndex((i) => Math.min(i + 1, myths.length - 1))
             ).to(card, {
@@ -533,25 +531,26 @@ export const MythsDragSection: React.FC = () => {
         </div>
       )}
 
-      {/* Мобильный: послайдовый переход — интро как первый слайд, далее пары «миф/ответ» */}
+      {/* Мобильный: один слайд на миф — клик по карточке переворачивает на ответ */}
       {isMobile && (
         <div ref={mobileRef} className={styles.mobileSlider}>
           <div className={styles.intro}>
-                <h2 className={styles.title}>
-                  Очень хочется делать <br /> силовые каждый день
-                </h2>
-                <div className={styles.subtitle_cont}>
-                  <p className={styles.subtitle}>
-                    как Джефф Безос, однако между <br /> намерением и действием
-                    часто <br /> появляется надоедливое «но».
-                  </p>
-                </div>
-                <p className={styles.lead}>
-                  Давайте вместе с тренерами школы Springle разберём <br />
-                  мифы, которые мешают вам сделать занятия спортом <br />
-                  лёгкой привычкой.
-                </p>
-              </div>
+            <h2 className={styles.title}>
+              Очень хочется делать <br /> силовые каждый день
+            </h2>
+            <div className={styles.subtitle_cont}>
+              <p className={styles.subtitle}>
+                как Джефф Безос, однако между <br /> намерением и действием
+                часто <br /> появляется надоедливое «но».
+              </p>
+            </div>
+            <p className={styles.lead}>
+              Давайте вместе с тренерами школы Springle разберём <br />
+              мифы, которые мешают вам сделать занятия спортом <br />
+              лёгкой привычкой.
+            </p>
+          </div>
+
           <Swiper
             modules={[Pagination, Mousewheel, Keyboard]}
             className={styles.swiper}
@@ -563,26 +562,12 @@ export const MythsDragSection: React.FC = () => {
             keyboard={{ enabled: true }}
             slidesPerView={1}
             speed={450}
+            spaceBetween={24} 
           >
-
-            {/* Далее — по два слайда на миф: «миф» и «ответ» */}
             {myths.map((m) => (
-              <React.Fragment key={`pair-${m.id}`}>
-                {/* Слайд мифа */}
-                <SwiperSlide className={styles.mobileSlide} key={`myth-${m.id}`}>
-                  <div className={`${styles.card} ${styles.cardMobile}`}>
-                    <div className={styles.cardInner}>
-                      <div className={styles.cardLabel}>{m.title}</div>
-                      <div className={styles.cardText}>{m.text}</div>
-                    </div>
-                  </div>
-                </SwiperSlide>
-
-                {/* Слайд ответа с переворотом */}
-                <SwiperSlide className={styles.mobileSlide} key={`ans-${m.id}`}>
-                  <MobileAnswerSlide myth={m} />
-                </SwiperSlide>
-              </React.Fragment>
+              <SwiperSlide className={styles.mobileSlide} key={`myth-${m.id}`}>
+                <MobileAnswerSlide myth={m} />
+              </SwiperSlide>
             ))}
           </Swiper>
 
