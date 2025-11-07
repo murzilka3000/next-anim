@@ -16,10 +16,11 @@ const Finish = () => {
   const modalRef = useRef<HTMLDivElement | null>(null);
   const busyRef = useRef(false);
 
-  // для отката спрайта игрока
-  const swappedRef = useRef<{ el: HTMLImageElement; original: string } | null>(
-    null
-  );
+  // для отката спрайта игрока (только для десктопа)
+  const swappedRef = useRef<{ el: HTMLImageElement; original: string } | null>(null);
+
+  // флаг мобилки
+  const isMobileRef = useRef(false);
 
   // Состояние idle (поворот + горизонтальный сдвиг)
   const idleRef = useRef({
@@ -29,6 +30,44 @@ const Finish = () => {
     xCurrent: 0,
     lastMove: 0,
   });
+
+  // На мобилке сразу показываем «вторые» спрайты людей (data-alt). На десктопе — оригиналы.
+  useEffect(() => {
+    const root = containerRef.current;
+    if (!root) return;
+
+    const mq = window.matchMedia("(max-width: 811px)");
+
+    const applySprites = () => {
+      isMobileRef.current = mq.matches;
+      const imgs = Array.from(root.querySelectorAll("img[data-alt]")) as HTMLImageElement[];
+
+      if (mq.matches) {
+        // Mobile: подставляем alt и запоминаем original в data-orig один раз
+        imgs.forEach((img) => {
+          if (!img.getAttribute("data-orig")) img.setAttribute("data-orig", img.src);
+          let alt = img.dataset.alt as string | undefined;
+          if (!alt) alt = img.src.replace(/(\.\w+)$/, "-up$1");
+          if (img.src !== alt) img.src = alt;
+        });
+      } else {
+        // Desktop: возвращаем оригиналы, если есть сохранённые
+        imgs.forEach((img) => {
+          const orig = img.getAttribute("data-orig");
+          if (orig && img.src !== orig) img.src = orig;
+          img.removeAttribute("data-orig");
+        });
+      }
+    };
+
+    applySprites();
+    // @ts-ignore кроссбраузерная подписка
+    mq.addEventListener ? mq.addEventListener("change", applySprites) : mq.addListener(applySprites as any);
+    return () => {
+      // @ts-ignore кроссбраузерная отписка
+      mq.removeEventListener ? mq.removeEventListener("change", applySprites) : mq.removeListener(applySprites as any);
+    };
+  }, []);
 
   // ——— Idle: плавное раскачивание и лёгкий сдвиг по X за курсором ———
   useEffect(() => {
@@ -52,21 +91,15 @@ const Finish = () => {
     const update = () => {
       const st = idleRef.current;
 
-      const idleNow =
-        !busyRef.current && performance.now() - st.lastMove > IDLE_DELAY;
-      const desiredRot = idleNow
-        ? Math.sin((performance.now() / 1000) * 1.2) * IDLE_WOBBLE
-        : st.target;
-
+      const idleNow = !busyRef.current && performance.now() - st.lastMove > IDLE_DELAY;
+      const desiredRot = idleNow ? Math.sin((performance.now() / 1000) * 1.2) * IDLE_WOBBLE : st.target;
       const desiredDx = idleNow ? 0 : st.xTarget;
 
       st.current += (desiredRot - st.current) * SMOOTH;
       st.xCurrent += (desiredDx - st.xCurrent) * SMOOTH;
 
       if (!busyRef.current) {
-        disc.style.transform = `translateX(calc(-50% + ${st.xCurrent.toFixed(
-          2
-        )}px)) rotate(${st.current.toFixed(3)}deg)`;
+        disc.style.transform = `translateX(calc(-50% + ${st.xCurrent.toFixed(2)}px)) rotate(${st.current.toFixed(3)}deg)`;
       }
     };
 
@@ -124,17 +157,16 @@ const Finish = () => {
     return { w, h };
   };
 
-  // точка попадания по data-ax/ay (+ data-ox/oy), с учётом конечного масштаба
-  // возвращает координаты ЛЕВОГО-ВЕРХНЕГО угла диска в системе контейнера (origin = 0 0)
+  // точка попадания по data-ax/ay (+ data-ox/oy), с учётом конечного масштаба (origin = 0 0)
   const getTargetTopLeft = (img: HTMLImageElement, scaleForEnd = 1) => {
     const cont = containerRef.current!;
     const cr = cont.getBoundingClientRect();
     const ir = img.getBoundingClientRect();
 
-    const ax = Number(img.dataset.ax ?? 0.5); // 0..1
-    const ay = Number(img.dataset.ay ?? 0.5); // 0..1
-    const ox = Number(img.dataset.ox ?? 0); // px
-    const oy = Number(img.dataset.oy ?? 0); // px
+    const ax = Number(img.dataset.ax ?? 0.5);
+    const ay = Number(img.dataset.ay ?? 0.5);
+    const ox = Number(img.dataset.ox ?? 0);
+    const oy = Number(img.dataset.oy ?? 0);
 
     const { w: dw, h: dh } = getDiscBaseSize();
 
@@ -154,79 +186,44 @@ const Finish = () => {
     const { w, h } = getDiscBaseSize();
 
     const scale = rr.width / w;
-    const x = rr.left - cr.left + (rr.width - w * scale) / 2; // = rr.left - cr.left (т.к. w*scale == rr.width), оставлено для ясности
+    const x = rr.left - cr.left + (rr.width - w * scale) / 2;
     const y = rr.top - cr.top + (rr.height - h * scale) / 2;
 
     return { x, y, scale };
   };
 
-  // скрыть оба .finish__content (и текст, и картинку)
   const hideTexts = () => {
-    const c1 = text1Ref.current!.closest(
-      `.${s.finish__content}`
-    ) as HTMLDivElement;
-    const c2 = text2Ref.current!.closest(
-      `.${s.finish__content}`
-    ) as HTMLDivElement;
-    return gsap.to([c1, c2], {
-      autoAlpha: 0,
-      y: 10,
-      duration: 0.35,
-      ease: "power1.out",
-    });
+    const c1 = text1Ref.current!.closest(`.${s.finish__content}`) as HTMLDivElement;
+    const c2 = text2Ref.current!.closest(`.${s.finish__content}`) as HTMLDivElement;
+    return gsap.to([c1, c2], { autoAlpha: 0, y: 10, duration: 0.35, ease: "power1.out" });
   };
 
-  // показать .finish__content
   const showTexts = () => {
-    const c1 = text1Ref.current!.closest(
-      `.${s.finish__content}`
-    ) as HTMLDivElement;
-    const c2 = text2Ref.current!.closest(
-      `.${s.finish__content}`
-    ) as HTMLDivElement;
+    const c1 = text1Ref.current!.closest(`.${s.finish__content}`) as HTMLDivElement;
+    const c2 = text2Ref.current!.closest(`.${s.finish__content}`) as HTMLDivElement;
     gsap.set([c1, c2], { clearProps: "all" });
-    gsap.fromTo(
-      [c1, c2],
-      { autoAlpha: 0, y: 8 },
-      { autoAlpha: 1, y: 0, duration: 0.35, ease: "power1.out" }
-    );
+    gsap.fromTo([c1, c2], { autoAlpha: 0, y: 8 }, { autoAlpha: 1, y: 0, duration: 0.35, ease: "power1.out" });
   };
 
   const showModal = () => {
     const m = modalRef.current!;
-    gsap.fromTo(
-      m,
-      { autoAlpha: 0, y: 20 },
-      {
-        autoAlpha: 1,
-        y: 0,
-        duration: 0.4,
-        ease: "power2.out",
-        onStart: () => {
-          m.style.pointerEvents = "auto";
-        },
-      }
-    );
+    gsap.fromTo(m, { autoAlpha: 0, y: 20 }, {
+      autoAlpha: 1, y: 0, duration: 0.4, ease: "power2.out",
+      onStart: () => { m.style.pointerEvents = "auto"; },
+    });
   };
 
   const hideModal = (onComplete?: () => void) => {
     const m = modalRef.current!;
     gsap.to(m, {
-      autoAlpha: 0,
-      y: 10,
-      duration: 0.25,
-      ease: "power1.in",
-      onComplete: () => {
-        m.style.pointerEvents = "none";
-        onComplete?.();
-      },
+      autoAlpha: 0, y: 10, duration: 0.25, ease: "power1.in",
+      onComplete: () => { m.style.pointerEvents = "none"; onComplete?.(); },
     });
   };
 
   const resetAll = () => {
     const disc = discRef.current;
     if (disc) {
-      // вернуть в версточное состояние
       gsap.set(disc, { clearProps: "all", autoAlpha: 1, scale: 1 });
       disc.style.transform = "translateX(-50%) rotate(0deg)";
       idleRef.current.current = 0;
@@ -234,6 +231,7 @@ const Finish = () => {
       idleRef.current.xCurrent = 0;
       idleRef.current.xTarget = 0;
     }
+    // Возвращаем спрайт только если был swap (т.е. на десктопе)
     if (swappedRef.current) {
       const { el, original } = swappedRef.current;
       el.src = original;
@@ -249,16 +247,20 @@ const Finish = () => {
 
     hideTexts();
 
-    // Отключаем idle-влияние
+    // Свести idle к нулю
     idleRef.current.target = 0;
     idleRef.current.xTarget = 0;
 
-    // смена спрайта игрока на поднятую руку
-    const originalSrc = img.src;
-    let altSrc = img.dataset.alt;
-    if (!altSrc) altSrc = img.src.replace(/(\.\w+)$/, "-up$1");
-    img.src = altSrc!;
-    swappedRef.current = { el: img, original: originalSrc };
+    // Десктоп: меняем спрайт на «поднятая рука». Мобилка: уже «up», пропускаем.
+    if (!isMobileRef.current) {
+      const originalSrc = img.src;
+      let altSrc = img.dataset.alt;
+      if (!altSrc) altSrc = img.src.replace(/(\.\w+)$/, "-up$1");
+      img.src = altSrc!;
+      swappedRef.current = { el: img, original: originalSrc };
+    } else {
+      swappedRef.current = null;
+    }
 
     const cont = containerRef.current!;
     const disc = discRef.current!;
@@ -290,13 +292,12 @@ const Finish = () => {
     const endW = Number(img.dataset.endw ?? 91);
     const scaleToEnd = endW / baseW;
 
-    const endAbs = getTargetTopLeft(img, scaleToEnd); // абсолютные коорд. ЛВ-угла диска
+    const endAbs = getTargetTopLeft(img, scaleToEnd);
     const ctrl1Abs = {
       x: (startLeft + endAbs.x) / 2,
       y: Math.min(startTop, endAbs.y) - 120,
     };
 
-    // относительные точки (старт — это 0,0)
     const path1 = [
       { x: 0, y: 0 },
       { x: ctrl1Abs.x - startLeft, y: ctrl1Abs.y - startTop },
@@ -316,7 +317,7 @@ const Finish = () => {
     });
 
     // 4) Вторая дуга: к модалке (центр карточки по вертикали)
-    const modalTarget = getModalTarget(); // абсолютные
+    const modalTarget = getModalTarget();
     const ctrl2Abs = {
       x: (endAbs.x + modalTarget.x) / 2,
       y: Math.min(endAbs.y, modalTarget.y) - 100,
@@ -364,10 +365,7 @@ const Finish = () => {
           <div className={s.finish__grid}>
             <div className={s.finish__column}>
               {/* Игрок №1 (с тенью) */}
-              <div
-                className={s.finish__imageWrapper}
-                style={{ position: "relative", display: "inline-block" }}
-              >
+              <div className={s.finish__imageWrapper} style={{ position: "relative", display: "inline-block" }}>
                 <span
                   aria-hidden
                   style={{
@@ -379,8 +377,7 @@ const Finish = () => {
                     height: "26px",
                     transform: "translateX(-50%) scale(1, 0.35)",
                     borderRadius: "50%",
-                    background:
-                      "radial-gradient(50% 50% at 50% 50%, rgba(0,0,0,0.7) 0%, rgba(0,0,0,1) 100%)",
+                    background: "radial-gradient(50% 50% at 50% 50%, rgba(0,0,0,0.7) 0%, rgba(0,0,0,1) 100%)",
                     filter: "blur(33px)",
                     opacity: 0.45,
                     pointerEvents: "none",
@@ -411,11 +408,7 @@ const Finish = () => {
                       пас!
                     </p>
                   </div>
-                  <img
-                    className={s.finish__image}
-                    src="/images/f-2.svg"
-                    alt=""
-                  />
+                  <img className={s.finish__image} src="/images/f-2.svg" alt="" />
                 </div>
               </div>
             </div>
@@ -430,19 +423,12 @@ const Finish = () => {
                       самые дальние дистанции. Ей можно дать длинный пас!
                     </p>
                   </div>
-                  <img
-                    className={s.finish__image}
-                    src="/images/f-4.svg"
-                    alt=""
-                  />
+                  <img className={s.finish__image} src="/images/f-4.svg" alt="" />
                 </div>
               </div>
 
               {/* Игрок №2 (с тенью) */}
-              <div
-                className={s.finish__imageWrapper}
-                style={{ position: "relative", display: "inline-block" }}
-              >
+              <div className={s.finish__imageWrapper} style={{ position: "relative", display: "inline-block" }}>
                 <span
                   aria-hidden
                   style={{
@@ -454,8 +440,7 @@ const Finish = () => {
                     height: "36px",
                     transform: "translateX(-50%) scale(1, 0.35)",
                     borderRadius: "50%",
-                    background:
-                      "radial-gradient(50% 50% at 50% 50%, rgba(0,0,0,1) 0%, rgba(0,0,0,1) 100%)",
+                    background: "radial-gradient(50% 50% at 50% 50%, rgba(0,0,0,1) 0%, rgba(0,0,0,1) 100%)",
                     filter: "blur(33px)",
                     opacity: 0.45,
                     pointerEvents: "none",
@@ -484,12 +469,7 @@ const Finish = () => {
               <p>Реклама 18+</p>
               <p>Рекламодатель ООО «СПРИНГЛ». ИНН 7714482000</p>
               <p>
-                <a
-                  className={s.finish__link}
-                  href="/privacy"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                >
+                <a className={s.finish__link} href="/privacy" target="_blank" rel="noopener noreferrer">
                   Политика конфиденциальности
                 </a>
               </p>
@@ -510,22 +490,14 @@ const Finish = () => {
         </div>
 
         {/* Тарелка */}
-        <img
-          ref={discRef}
-          className={s.tarelka}
-          src="/images/footer.svg"
-          alt=""
-        />
+        <img ref={discRef} className={s.tarelka} src="/images/footer.svg" alt="" />
 
         {/* Модалка */}
         <div className={s.modal} ref={modalRef} aria-hidden>
           <div className={s.modal__card}>
             <h3 className={s.modal__title}>Бесплатное занятие</h3>
             <p className={s.modal__text}>по алтимат фрисби — ваше.</p>
-            <button
-              className={s.modal__btn}
-              onClick={() => hideModal(resetAll)}
-            >
+            <button className={s.modal__btn} onClick={() => hideModal(resetAll)}>
               Записать в календарь
             </button>
           </div>
