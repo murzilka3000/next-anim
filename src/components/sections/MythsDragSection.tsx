@@ -198,7 +198,10 @@ export const MythsDragSection: React.FC = () => {
 
     const mo = new MutationObserver((mutations) => {
       for (const m of mutations) {
-        if (m.type === "characterData" && m.target.nodeType === Node.TEXT_NODE) {
+        if (
+          m.type === "characterData" &&
+          m.target.nodeType === Node.TEXT_NODE
+        ) {
           const t = m.target as Text;
           const next = fixText(t.nodeValue || "");
           if (next !== t.nodeValue) t.nodeValue = next;
@@ -236,10 +239,14 @@ export const MythsDragSection: React.FC = () => {
       setIsMobile("matches" in e ? e.matches : (e as MediaQueryList).matches);
     setIsMobile(mq.matches);
     // @ts-ignore
-    mq.addEventListener ? mq.addEventListener("change", handler) : mq.addListener(handler as any);
+    mq.addEventListener
+      ? mq.addEventListener("change", handler)
+      : mq.addListener(handler as any);
     return () => {
       // @ts-ignore
-      mq.removeEventListener ? mq.removeEventListener("change", handler) : mq.removeListener(handler as any);
+      mq.removeEventListener
+        ? mq.removeEventListener("change", handler)
+        : mq.removeListener(handler as any);
     };
   }, []);
 
@@ -326,20 +333,35 @@ export const MythsDragSection: React.FC = () => {
           const isLast = index >= myths.length - 1;
 
           const tl = gsap.timeline();
-          tl.to(card, { opacity: 0, scale: 0.95, duration: 0.22, ease: "power2.out" })
-            .set(card, { x: 0, y: 0 });
+          tl.to(card, {
+            opacity: 0,
+            scale: 0.95,
+            duration: 0.22,
+            ease: "power2.out",
+          }).set(card, { x: 0, y: 0 });
 
           if (isLast) {
             tl.call(() => setDesktopCardHidden(true));
           } else {
-            tl.call(() => setIndex((i) => Math.min(i + 1, myths.length - 1)))
-              .to(card, { opacity: 1, scale: 1, duration: 0.28, ease: "power2.out" });
+            tl.call(() =>
+              setIndex((i) => Math.min(i + 1, myths.length - 1))
+            ).to(card, {
+              opacity: 1,
+              scale: 1,
+              duration: 0.28,
+              ease: "power2.out",
+            });
           }
 
           gsap.killTweensOf(ans);
           gsap.fromTo(
             ans,
-            { rotateY: 90, opacity: 0, transformPerspective: 900, transformOrigin: "50% 50%" },
+            {
+              rotateY: 90,
+              opacity: 0,
+              transformPerspective: 900,
+              transformOrigin: "50% 50%",
+            },
             { rotateY: 0, opacity: 1, duration: 0.55, ease: "power2.out" }
           );
         };
@@ -355,11 +377,14 @@ export const MythsDragSection: React.FC = () => {
           onDragEnd() {
             zone.classList.remove(styles.active);
             if (isOverZone()) onDropSuccess();
-            else gsap.to(card, { x: 0, y: 0, duration: 0.25, ease: "power2.out" });
+            else
+              gsap.to(card, { x: 0, y: 0, duration: 0.25, ease: "power2.out" });
           },
         })[0];
 
-        const ro = new ResizeObserver(() => dr.applyBounds(sectionRef.current!));
+        const ro = new ResizeObserver(() =>
+          dr.applyBounds(sectionRef.current!)
+        );
         ro.observe(sectionRef.current!);
 
         return () => {
@@ -387,8 +412,8 @@ export const MythsDragSection: React.FC = () => {
           </h2>
           <div className={styles.subtitle_cont}>
             <p className={styles.subtitle}>
-              как Джефф Безос, однако между <br /> намерением и действием часто <br /> появляется
-              надоедливое «но».
+              как Джефф Безос, однако между <br /> намерением и действием часто{" "}
+              <br /> появляется надоедливое «но».
             </p>
           </div>
           <p className={styles.lead}>
@@ -408,7 +433,11 @@ export const MythsDragSection: React.FC = () => {
               <div
                 className={styles.card}
                 ref={dragCardRef}
-                style={desktopCardHidden ? { opacity: 0, pointerEvents: "none" } : undefined}
+                style={
+                  desktopCardHidden
+                    ? { opacity: 0, pointerEvents: "none" }
+                    : undefined
+                }
                 aria-hidden={desktopCardHidden}
               >
                 <div className={styles.cardInner}>
@@ -431,9 +460,25 @@ export const MythsDragSection: React.FC = () => {
                     zIndex: 1,
                   }}
                 >
-                  <div className={styles.dropHint} style={{ textAlign: "center" }}>
-                    <img className={styles.cursor} src="/images/stack.svg" alt="" />
-                    Ура! Вы развеяли все мифы <br /> — переходите к блоку ниже
+                  <div
+                    className={styles.dropHint}
+                    style={{ textAlign: "center" }}
+                  >
+                    <img
+                      className={styles.cursor}
+                      src="/images/stack.svg"
+                      alt=""
+                    />
+                    <p style={{ textAlign: "center" }}>
+                      {" "}
+                      <span style={{ whiteSpace: "nowrap" }}>
+                        Ура! Вы развеяли все мифы&nbsp;—
+                      </span>
+                      <br />{" "}
+                      <span style={{ whiteSpace: "nowrap" }}>
+                        переходите к блоку ниже
+                      </span>{" "}
+                    </p>
                   </div>
                 </div>
               )}
@@ -446,20 +491,34 @@ export const MythsDragSection: React.FC = () => {
                 <div className={styles.answer} ref={answerRef}>
                   <div className={styles.expertHeader}>
                     {answered.expert.photo ? (
-                      <img className={styles.avatar} src={answered.expert.photo} alt={fixText(answered.expert.name)} />
+                      <img
+                        className={styles.avatar}
+                        src={answered.expert.photo}
+                        alt={fixText(answered.expert.name)}
+                      />
                     ) : (
                       <div className={styles.avatarPlaceholder} />
                     )}
                     <div>
-                      <div className={styles.expertName}>{answered.expert.name}</div>
-                      <div className={styles.expertRole}>{answered.expert.role}</div>
+                      <div className={styles.expertName}>
+                        {answered.expert.name}
+                      </div>
+                      <div className={styles.expertRole}>
+                        {answered.expert.role}
+                      </div>
                     </div>
                   </div>
-                  <div className={styles.answerText}>{answered.expert.answer}</div>
+                  <div className={styles.answerText}>
+                    {answered.expert.answer}
+                  </div>
                 </div>
               ) : (
                 <div className={styles.dropHint}>
-                  <img className={styles.cursor} src="/images/cursor.svg" alt="" />
+                  <img
+                    className={styles.cursor}
+                    src="/images/cursor.svg"
+                    alt=""
+                  />
                   Перетащите миф в экспертное поле, чтобы развеять его
                 </div>
               )}
@@ -477,8 +536,8 @@ export const MythsDragSection: React.FC = () => {
             </h2>
             <div className={styles.subtitle_cont}>
               <p className={styles.subtitle}>
-                как Джефф Безос, однако между <br /> намерением и действием часто <br /> появляется
-                надоедливое «но».
+                как Джефф Безос, однако между <br /> намерением и действием
+                часто <br /> появляется надоедливое «но».
               </p>
             </div>
             <p className={styles.lead}>
