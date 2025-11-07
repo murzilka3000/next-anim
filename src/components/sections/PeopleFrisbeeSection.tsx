@@ -5,6 +5,7 @@ import gsap from "gsap";
 import { MotionPathPlugin } from "gsap/MotionPathPlugin";
 import { useGSAP } from "@gsap/react";
 import styles from "./PeopleFrisbeeSection.module.scss";
+import { peopleData } from "@/data/questions";
 
 gsap.registerPlugin(useGSAP, MotionPathPlugin);
 
@@ -47,7 +48,8 @@ function processTextNodes(root: Node) {
   const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT, {
     acceptNode(node) {
       const parent = node.parentNode as HTMLElement | null;
-      if (!node.nodeValue || !node.nodeValue.trim()) return NodeFilter.FILTER_REJECT;
+      if (!node.nodeValue || !node.nodeValue.trim())
+        return NodeFilter.FILTER_REJECT;
       if (!parent) return NodeFilter.FILTER_REJECT;
       if (IGNORE_TAGS.has(parent.nodeName)) return NodeFilter.FILTER_REJECT;
       if (parent.isContentEditable || parent.closest?.("[contenteditable]"))
@@ -66,113 +68,6 @@ function processTextNodes(root: Node) {
   }
 }
 // ===== конец NBSP блока =====
-
-type Person = {
-  id: string;
-  name: string;
-  img: string;
-  x: string;
-  y: string;
-  scale?: number;
-  handX: string;
-  handY: string;
-  tag?: string;
-  tagSide?: "left" | "right" | "bottom";
-  popup: string;
-  popupX?: string;
-  popupY?: string;
-
-  // Новое поле: ширина блока .person в пикселях (индивидуально)
-  widthPx?: number;
-};
-
-const peopleData: Person[] = [
-  {
-    id: "p1",
-    name: "Спонтанная физическая активность",
-    img: "/images/p1.svg",
-    x: "17%",
-    y: "50%",
-    scale: 1,
-    handX: "93%",
-    handY: "3%",
-    tag: "Скорость принятия решений",
-    tagSide: "right",
-    popup:
-      "Вам подойдёт активность, которая тренирует тело быстро реагировать на сигналы извне. В алтимат фрисби игрок может держать диск в руках только 10 секунд (соперник считает их вслух). За это время нужно быстро оценить ситуацию, выбрать адресата и сделать пас. Иначе диск переходит команде соперников.",
-    popupX: "95%",
-    popupY: "-40%",
-    widthPx: 180, // ← можно менять под конкретный блок
-  },
-  {
-    id: "p2",
-    name: "Спортивное соревнование",
-    img: "/images/p2.svg",
-    x: "45%",
-    y: "60%",
-    scale: 1.02,
-    handX: "93%",
-    handY: "11%",
-    tag: "Стрессо-устойчивость",
-    tagSide: "right",
-    popup:
-      "Выбирайте физическую нагрузку, в которой присутствует соревновательный элемент. В любом соревновании есть конфликт интересов, который важно урегулировать справедливо. Обычно это делают судьи. Но в алтимат фрисби эту роль на себя берут игроки: все спорные ситуации разрешаются командами прямо на поле, а по итогу команда с самой честной игрой получает награду «Дух игры».",
-    popupX: "75%",
-    popupY: "0%",
-    widthPx: 210,
-  },
-  {
-    id: "p3",
-    name: "Командный спорт",
-    img: "/images/p3.svg",
-    x: "77%",
-    y: "44%",
-    scale: 1,
-    handX: "22%",
-    handY: "4%",
-    tag: "Умение договариваться",
-    tagSide: "right",
-    popup:
-      "В командных видах спорта победа зависит не от одного игрока, а от взаимодействия всей команды. Например, в алтимат фрисби играют в командах от 3 до 7 человек. Чтобы забить гол, нужно сделать несколько точных пасов и не потерять диск. Поэтому важно точно считывать намерения сокомандников и помогать друг другу.",
-    popupX: "-80%",
-    popupY: "60%",
-    widthPx: 210,
-  },
-  {
-    id: "p4",
-    name: "Игра",
-    img: "/images/p4.svg",
-    x: "26%",
-    y: "90%",
-    scale: 1,
-    handX: "95%",
-    handY: "46%",
-    tag: "Командная работа",
-    tagSide: "right",
-    popup:
-      "Выбирайте физическую нагрузку, в которой есть игровая цель. Например, забить гол команде соперников – как в алтимат фрисби. В этой игре нет фиксированных ролей (как, например, в футболе): игрок может в один момент быть защитником, а в другой – атакующим. Это заставляет постоянно оценивать расстановку сил и принимать эффективные решения с учетом основной цели.",
-    popupX: "100%",
-    popupY: "-20%",
-    widthPx: 250,
-  },
-  {
-    id: "p5",
-    name: "Бег",
-    img: "/images/p5.svg",
-    x: "70%",
-    y: "90%",
-    scale: 1,
-    handX: "8%",
-    handY: "18%",
-    tag: "Стратегическое мышление",
-    tagSide: "right",
-    popup:
-      "Выносливость хорошо развивают циклические виды физической нагрузки. Например, в алтимат фрисби игроки перемещаются по полю, чтобы поймать пас. Это может быть челночный бег для обхода игроков в защите или длинный забег, чтобы поймать диск в зоне противника.",
-    popupX: "-100%",
-    popupY: "00%",
-    widthPx: 210,
-  },
-];
 
 export const PeopleFrisbeeSection: React.FC = () => {
   const sectionRef = useRef<HTMLElement | null>(null);
@@ -198,7 +93,10 @@ export const PeopleFrisbeeSection: React.FC = () => {
     // наблюдаем за динамическими изменениями (попапы, тексты и т.п.)
     const mo = new MutationObserver((mutations) => {
       for (const m of mutations) {
-        if (m.type === "characterData" && m.target.nodeType === Node.TEXT_NODE) {
+        if (
+          m.type === "characterData" &&
+          m.target.nodeType === Node.TEXT_NODE
+        ) {
           const t = m.target as Text;
           const next = fixText(t.nodeValue || "");
           if (next !== t.nodeValue) t.nodeValue = next;
@@ -403,7 +301,6 @@ export const PeopleFrisbeeSection: React.FC = () => {
                   ["--scale" as any]: p.scale ?? 1,
                   ["--ax" as any]: p.handX,
                   ["--ay" as any]: p.handY,
-                  // Новое: индивидуальная ширина .person в пикселях
                   width: p.widthPx ? `${p.widthPx}px` : undefined,
                 } as React.CSSProperties
               }
@@ -428,13 +325,37 @@ export const PeopleFrisbeeSection: React.FC = () => {
               />
 
               {p.tag && (
-                <div
-                  className={`${styles.tag} ${
-                    p.tagSide ? styles[`tag_${p.tagSide}`] : styles.tag_right
-                  }`}
-                >
-                  {p.tag}
-                </div>
+                (() => {
+                  const isRight = !p.tagSide || p.tagSide === "right";
+                  return (
+                    <div
+                      className={`${styles.tag} ${
+                        p.tagSide ? styles[`tag_${p.tagSide}`] : styles.tag_right
+                      }`}
+                      onClick={isRight ? () => flyTo(i) : undefined}
+                      onKeyDown={
+                        isRight
+                          ? (e) => {
+                              if (e.key === "Enter" || e.key === " ") {
+                                e.preventDefault();
+                                flyTo(i);
+                              }
+                            }
+                          : undefined
+                      }
+                      role={isRight ? "button" : undefined}
+                      tabIndex={isRight ? 0 : undefined}
+                      aria-label={
+                        isRight
+                          ? fixText(`Передать тарелку: ${p.name}`)
+                          : undefined
+                      }
+                      style={isRight ? { cursor: "pointer" } : undefined}
+                    >
+                      {p.tag}
+                    </div>
+                  );
+                })()
               )}
 
               <button

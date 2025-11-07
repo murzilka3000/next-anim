@@ -14,7 +14,7 @@
 .header {
   display: grid;
   place-items: center;
-  padding: clamp(16px, 3vw, 24px) clamp(12px, 3vw, 24px);
+  padding: 50px;
 }
 
 .headerText {
@@ -108,14 +108,14 @@
   left: var(--ax, 50%);
   top: var(--ay, 50%);
   transform: translate(-50%, -50%);
-  width: clamp(24px, 3vw, 36px);
-  height: clamp(24px, 3vw, 36px);
+  width: clamp(30px, 3vw, 36px);
+  height: clamp(30px, 3vw, 36px);
   border-radius: 50%;
   border: none;
   cursor: pointer;
   background: radial-gradient(
     50% 50% at 50% 50%,
-    #ff6903 0%,
+    #ff6903 30%,
     rgba(255, 105, 3, 0) 100%
   );
   animation: pulse 1.3s ease-in-out infinite;
