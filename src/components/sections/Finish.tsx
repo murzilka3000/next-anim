@@ -569,12 +569,12 @@ const Finish = () => {
           <div className={s.modal__card}>
             <h3 className={s.modal__title}>Бесплатное занятие</h3>
             <p className={s.modal__text}>по алтимат фрисби — ваше.</p>
-            <button
+            <a
               className={s.modal__btn}
-              onClick={() => hideModal(resetAll)}
+              href="https://springle.timepad.ru/event/3608707/"
             >
               Записать в календарь
-            </button>
+            </a>
           </div>
         </div>
       </div>

@@ -67,13 +67,21 @@ export const HeroSection = () => {
 
   return (
     <section className={styles.heroSection} ref={container}>
-      <img className={styles.abs_img} src="/images/4.svg" alt="" />
+      <a className={styles.abs_img} href="https://www.rfdf.ru/">
+        <img src="/images/4.svg" alt="" />
+      </a>
       <div className={styles.wrapper}>
         <div className={`${styles.contentWrapper} text-content`}>
           <div className={styles.logos}>
-            <img src="/images/3.svg" alt="" />
-            <img src="/images/2.svg" alt="" />
-            <img src="/images/1.svg" alt="" />
+            <a href="https://www.rfdf.ru/ ">
+              <img src="/images/3.svg" alt="" />
+            </a>
+            <a href="">
+              <img src="/images/2.svg" alt="" />
+            </a>
+            <a href="https://www.rfdf.ru/ ">
+              <img src="/images/1.svg" alt="" />
+            </a>
           </div>
 
           <div className={styles.sec_cont}>

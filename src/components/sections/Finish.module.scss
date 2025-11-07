@@ -194,6 +194,8 @@
   border-radius: 15px;
   background: var(--orange);
   padding: 14px 30px;
+  text-decoration: none;
+  display: inline-block;
 }
 .modal__btn:active {
   transform: translateY(0);
