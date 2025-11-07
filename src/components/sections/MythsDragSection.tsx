@@ -424,7 +424,7 @@ export const MythsDragSection: React.FC = () => {
                 >
                   <div className={styles.dropHint} style={{ textAlign: "center" }}>
                     <img className={styles.cursor} src="/images/stack.svg" alt="" />
-                    Ура! Вы развеяли все мифы — переходите к блоку ниже
+                    Ура! Вы развеяли все мифы <br /> — переходите к блоку ниже
                   </div>
                 </div>
               )}
