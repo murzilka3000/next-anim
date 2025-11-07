@@ -1,7 +1,8 @@
 import type { Metadata } from "next";
 import localFont from "next/font/local";
 import "./globals.css";
-import YandexMetrika from '@/components/YandexMetrika';
+import YandexMetrika from "@/components/YandexMetrika";
+import { Suspense } from "react";
 
 const inter = localFont({
   src: "../../public/fonts/inter-v20-cyrillic_cyrillic-ext_latin-regular.woff2",
@@ -66,7 +67,9 @@ export default function RootLayout({
         className={`${inter.variable} ${manrope.variable} ${circe.variable} ${cofoRobert.variable}`}
       >
         {children}
-        <YandexMetrika />
+        <Suspense fallback={null}>
+          <YandexMetrika />
+        </Suspense>
       </body>
     </html>
   );
