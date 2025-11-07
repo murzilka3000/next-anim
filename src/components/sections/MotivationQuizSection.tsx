@@ -88,8 +88,6 @@ function processTextNodes(root: Node) {
  * Исправлено:
  * - корректные названия навыков
  * - корректные связи вопрос → навык
- * Примечание: если в вашем наборе вопросов меньше 5 (например, только q1..q3),
- * последние навыки (q4, q5) останутся «нейтральными» (без иконки и без красного предупреждения).
  */
 const skillsMap: Skill[] = [
   {
@@ -179,10 +177,8 @@ export const MotivationQuizSection: React.FC = () => {
     const root = sectionRef.current;
     if (!root) return;
 
-    // первичная обработка
     processTextNodes(root);
 
-    // динамические изменения (переходы intro/quiz/results, тексты вопросов/ответов)
     const mo = new MutationObserver((mutations) => {
       for (const m of mutations) {
         if (m.type === "characterData" && m.target.nodeType === Node.TEXT_NODE) {
@@ -206,9 +202,9 @@ export const MotivationQuizSection: React.FC = () => {
     return () => mo.disconnect();
   }, []);
 
+  // ВНИМАНИЕ: блокировку экрана закомментировали (оставлено для возможного возврата)
   const freezeScroll = () => {
-    // Перестраховка: на мобилке не блокируем вообще
-    if (typeof window !== "undefined" && window.matchMedia("(max-width: 811px)").matches) {
+    /* if (typeof window !== "undefined" && window.matchMedia("(max-width: 811px)").matches) {
       return;
     }
     if (freezeActive.current) return;
@@ -230,25 +226,11 @@ export const MotivationQuizSection: React.FC = () => {
       const t = e.target as HTMLElement | null;
       const tag = t?.tagName;
       const isEditable = !!t?.isContentEditable;
-      if (
-        isEditable ||
-        tag === "INPUT" ||
-        tag === "TEXTAREA" ||
-        tag === "SELECT"
-      )
-        return;
+      if (isEditable || tag === "INPUT" || tag === "TEXTAREA" || tag === "SELECT") return;
 
       const code = e.code || "";
       const key = e.key || "";
-      const scrollKeys = new Set([
-        "Space",
-        "ArrowDown",
-        "ArrowUp",
-        "PageDown",
-        "PageUp",
-        "Home",
-        "End",
-      ]);
+      const scrollKeys = new Set(["Space", "ArrowDown", "ArrowUp", "PageDown", "PageUp", "Home", "End"]);
       if (scrollKeys.has(code) || key === " ") {
         e.preventDefault();
       }
@@ -260,31 +242,23 @@ export const MotivationQuizSection: React.FC = () => {
     };
 
     window.addEventListener("wheel", onWheelRef.current, { passive: false });
-    window.addEventListener("touchmove", onTouchMoveRef.current, {
-      passive: false,
-    });
-    window.addEventListener("keydown", onKeyDownRef.current!, {
-      passive: false,
-    });
-    window.addEventListener("scroll", onScrollRef.current!, { passive: true });
+    window.addEventListener("touchmove", onTouchMoveRef.current, { passive: false });
+    window.addEventListener("keydown", onKeyDownRef.current!, { passive: false });
+    window.addEventListener("scroll", onScrollRef.current!, { passive: true }); */
   };
 
   const unfreezeScroll = () => {
-    if (!freezeActive.current) return;
+    /* if (!freezeActive.current) return;
     freezeActive.current = false;
 
     const html = document.documentElement;
 
-    if (onWheelRef.current)
-      window.removeEventListener("wheel", onWheelRef.current as any);
-    if (onTouchMoveRef.current)
-      window.removeEventListener("touchmove", onTouchMoveRef.current as any);
-    if (onKeyDownRef.current)
-      window.removeEventListener("keydown", onKeyDownRef.current as any);
-    if (onScrollRef.current)
-      window.removeEventListener("scroll", onScrollRef.current as any);
+    if (onWheelRef.current) window.removeEventListener("wheel", onWheelRef.current as any);
+    if (onTouchMoveRef.current) window.removeEventListener("touchmove", onTouchMoveRef.current as any);
+    if (onKeyDownRef.current) window.removeEventListener("keydown", onKeyDownRef.current as any);
+    if (onScrollRef.current) window.removeEventListener("scroll", onScrollRef.current as any);
 
-    html.style.scrollBehavior = prevHtmlScrollBehavior.current;
+    html.style.scrollBehavior = prevHtmlScrollBehavior.current; */
   };
 
   const [idx, setIdx] = useState(0);
@@ -306,7 +280,7 @@ export const MotivationQuizSection: React.FC = () => {
 
       const mm = gsap.matchMedia();
 
-      // Таймлайн перехода интро → квиз (общий для всех брейкпоинтов)
+      // Таймлайн перехода интро → квиз (общий)
       transitionTimeline.current = gsap
         .timeline({ paused: true })
         .to(introRef.current, {
@@ -327,25 +301,25 @@ export const MotivationQuizSection: React.FC = () => {
         )
         .timeScale(ANIM.speed);
 
-      // Десктоп: создаём ScrollTrigger, блокируем скролл до завершения
+      // Десктоп: РАНЬШЕ тут создавался ScrollTrigger с freezeScroll — сейчас закомментировано
       mm.add("(min-width: 812px)", () => {
-        gateRef.current = ScrollTrigger.create({
+        /* gateRef.current = ScrollTrigger.create({
           trigger: sectionRef.current!,
           start: "top 9%",
           onEnter: freezeScroll,
           onEnterBack: freezeScroll,
-        });
+        }); */
 
         return () => {
-          gateRef.current?.kill();
-          unfreezeScroll();
+          // gateRef.current?.kill();
+          // unfreezeScroll();
         };
       });
 
-      // Мобилка: не блокируем скролл
+      // Мобилка: не блокируем скролл (и на десктопе тоже сняли блокировку)
       mm.add("(max-width: 811px)", () => {
-        gateRef.current?.kill();
-        unfreezeScroll();
+        // gateRef.current?.kill();
+        // unfreezeScroll();
         return () => {};
       });
 
@@ -381,12 +355,12 @@ export const MotivationQuizSection: React.FC = () => {
         "<"
       )
       .add(() => {
-        // На десктопе — даём посмотреть, потом возвращаем скролл
-        gsap.delayedCall(UNLOCK_AFTER_RESULTS, () => {
+        // РАНЬШЕ тут размораживали скролл — сейчас закомментировано
+        /* gsap.delayedCall(UNLOCK_AFTER_RESULTS, () => {
           gateRef.current?.kill();
           unfreezeScroll();
           gsap.delayedCall(0.05, () => ScrollTrigger.refresh());
-        });
+        }); */
       });
 
     tl.timeScale(ANIM.speed);

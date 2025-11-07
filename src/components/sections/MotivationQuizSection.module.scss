@@ -232,9 +232,10 @@
 }
 
 .nextFab {
-  position: fixed;
+  position: absolute;
   right: 50px;
-  bottom: 50px;
+  bottom: 45%;
+  transform: translateY(-50%);
   width: 56px;
   height: 56px;
   border-radius: 50%;
@@ -248,9 +249,15 @@
   transition: transform 0.15s ease, opacity 0.15s ease, box-shadow 0.15s ease;
   z-index: 12;
 }
-.nextFab:hover {
-  transform: translateY(-2px);
+
+@media screen and (max-width: 767px) {
+  .nextFab {
+    bottom: 50px;
+    transform: translateY(0);
+  }
 }
+
+
 .nextFab:active {
   transform: translateY(0);
 }
