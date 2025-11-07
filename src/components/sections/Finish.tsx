@@ -17,7 +17,9 @@ const Finish = () => {
   const busyRef = useRef(false);
 
   // для отката спрайта игрока (только для десктопа)
-  const swappedRef = useRef<{ el: HTMLImageElement; original: string } | null>(null);
+  const swappedRef = useRef<{ el: HTMLImageElement; original: string } | null>(
+    null
+  );
 
   // флаг мобилки
   const isMobileRef = useRef(false);
@@ -40,12 +42,15 @@ const Finish = () => {
 
     const applySprites = () => {
       isMobileRef.current = mq.matches;
-      const imgs = Array.from(root.querySelectorAll("img[data-alt]")) as HTMLImageElement[];
+      const imgs = Array.from(
+        root.querySelectorAll("img[data-alt]")
+      ) as HTMLImageElement[];
 
       if (mq.matches) {
         // Mobile: подставляем alt и запоминаем original в data-orig один раз
         imgs.forEach((img) => {
-          if (!img.getAttribute("data-orig")) img.setAttribute("data-orig", img.src);
+          if (!img.getAttribute("data-orig"))
+            img.setAttribute("data-orig", img.src);
           let alt = img.dataset.alt as string | undefined;
           if (!alt) alt = img.src.replace(/(\.\w+)$/, "-up$1");
           if (img.src !== alt) img.src = alt;
@@ -62,10 +67,14 @@ const Finish = () => {
 
     applySprites();
     // @ts-ignore кроссбраузерная подписка
-    mq.addEventListener ? mq.addEventListener("change", applySprites) : mq.addListener(applySprites as any);
+    mq.addEventListener
+      ? mq.addEventListener("change", applySprites)
+      : mq.addListener(applySprites as any);
     return () => {
       // @ts-ignore кроссбраузерная отписка
-      mq.removeEventListener ? mq.removeEventListener("change", applySprites) : mq.removeListener(applySprites as any);
+      mq.removeEventListener
+        ? mq.removeEventListener("change", applySprites)
+        : mq.removeListener(applySprites as any);
     };
   }, []);
 
@@ -91,15 +100,20 @@ const Finish = () => {
     const update = () => {
       const st = idleRef.current;
 
-      const idleNow = !busyRef.current && performance.now() - st.lastMove > IDLE_DELAY;
-      const desiredRot = idleNow ? Math.sin((performance.now() / 1000) * 1.2) * IDLE_WOBBLE : st.target;
+      const idleNow =
+        !busyRef.current && performance.now() - st.lastMove > IDLE_DELAY;
+      const desiredRot = idleNow
+        ? Math.sin((performance.now() / 1000) * 1.2) * IDLE_WOBBLE
+        : st.target;
       const desiredDx = idleNow ? 0 : st.xTarget;
 
       st.current += (desiredRot - st.current) * SMOOTH;
       st.xCurrent += (desiredDx - st.xCurrent) * SMOOTH;
 
       if (!busyRef.current) {
-        disc.style.transform = `translateX(calc(-50% + ${st.xCurrent.toFixed(2)}px)) rotate(${st.current.toFixed(3)}deg)`;
+        disc.style.transform = `translateX(calc(-50% + ${st.xCurrent.toFixed(
+          2
+        )}px)) rotate(${st.current.toFixed(3)}deg)`;
       }
     };
 
@@ -193,31 +207,63 @@ const Finish = () => {
   };
 
   const hideTexts = () => {
-    const c1 = text1Ref.current!.closest(`.${s.finish__content}`) as HTMLDivElement;
-    const c2 = text2Ref.current!.closest(`.${s.finish__content}`) as HTMLDivElement;
-    return gsap.to([c1, c2], { autoAlpha: 0, y: 10, duration: 0.35, ease: "power1.out" });
+    const c1 = text1Ref.current!.closest(
+      `.${s.finish__content}`
+    ) as HTMLDivElement;
+    const c2 = text2Ref.current!.closest(
+      `.${s.finish__content}`
+    ) as HTMLDivElement;
+    return gsap.to([c1, c2], {
+      autoAlpha: 0,
+      y: 10,
+      duration: 0.35,
+      ease: "power1.out",
+    });
   };
 
   const showTexts = () => {
-    const c1 = text1Ref.current!.closest(`.${s.finish__content}`) as HTMLDivElement;
-    const c2 = text2Ref.current!.closest(`.${s.finish__content}`) as HTMLDivElement;
+    const c1 = text1Ref.current!.closest(
+      `.${s.finish__content}`
+    ) as HTMLDivElement;
+    const c2 = text2Ref.current!.closest(
+      `.${s.finish__content}`
+    ) as HTMLDivElement;
     gsap.set([c1, c2], { clearProps: "all" });
-    gsap.fromTo([c1, c2], { autoAlpha: 0, y: 8 }, { autoAlpha: 1, y: 0, duration: 0.35, ease: "power1.out" });
+    gsap.fromTo(
+      [c1, c2],
+      { autoAlpha: 0, y: 8 },
+      { autoAlpha: 1, y: 0, duration: 0.35, ease: "power1.out" }
+    );
   };
 
   const showModal = () => {
     const m = modalRef.current!;
-    gsap.fromTo(m, { autoAlpha: 0, y: 20 }, {
-      autoAlpha: 1, y: 0, duration: 0.4, ease: "power2.out",
-      onStart: () => { m.style.pointerEvents = "auto"; },
-    });
+    gsap.fromTo(
+      m,
+      { autoAlpha: 0, y: 20 },
+      {
+        autoAlpha: 1,
+        y: 0,
+        duration: 0.4,
+        ease: "power2.out",
+        onStart: () => {
+          m.style.pointerEvents = "auto";
+        },
+      }
+    );
   };
 
   const hideModal = (onComplete?: () => void) => {
     const m = modalRef.current!;
     gsap.to(m, {
-      autoAlpha: 0, y: 10, duration: 0.25, ease: "power1.in",
-      onComplete: () => { m.style.pointerEvents = "none"; onComplete?.(); },
+      autoAlpha: 0,
+      y: 10,
+      duration: 0.25,
+      ease: "power1.in",
+      onComplete: () => {
+        m.style.pointerEvents = "none";
+        onComplete?.();
+      },
     });
   };
 
@@ -365,7 +411,10 @@ const Finish = () => {
           <div className={s.finish__grid}>
             <div className={s.finish__column}>
               {/* Игрок №1 (с тенью) */}
-              <div className={s.finish__imageWrapper} style={{ position: "relative", display: "inline-block" }}>
+              <div
+                className={s.finish__imageWrapper}
+                style={{ position: "relative", display: "inline-block" }}
+              >
                 <span
                   aria-hidden
                   style={{
@@ -377,7 +426,8 @@ const Finish = () => {
                     height: "26px",
                     transform: "translateX(-50%) scale(1, 0.35)",
                     borderRadius: "50%",
-                    background: "radial-gradient(50% 50% at 50% 50%, rgba(0,0,0,0.7) 0%, rgba(0,0,0,1) 100%)",
+                    background:
+                      "radial-gradient(50% 50% at 50% 50%, rgba(0,0,0,0.7) 0%, rgba(0,0,0,1) 100%)",
                     filter: "blur(33px)",
                     opacity: 0.45,
                     pointerEvents: "none",
@@ -408,7 +458,11 @@ const Finish = () => {
                       пас!
                     </p>
                   </div>
-                  <img className={s.finish__image} src="/images/f-2.svg" alt="" />
+                  <img
+                    className={s.finish__image}
+                    src="/images/f-2.svg"
+                    alt=""
+                  />
                 </div>
               </div>
             </div>
@@ -423,12 +477,19 @@ const Finish = () => {
                       самые дальние дистанции. Ей можно дать длинный пас!
                     </p>
                   </div>
-                  <img className={s.finish__image} src="/images/f-4.svg" alt="" />
+                  <img
+                    className={s.finish__image}
+                    src="/images/f-4.svg"
+                    alt=""
+                  />
                 </div>
               </div>
 
               {/* Игрок №2 (с тенью) */}
-              <div className={s.finish__imageWrapper} style={{ position: "relative", display: "inline-block" }}>
+              <div
+                className={s.finish__imageWrapper}
+                style={{ position: "relative", display: "inline-block" }}
+              >
                 <span
                   aria-hidden
                   style={{
@@ -440,7 +501,8 @@ const Finish = () => {
                     height: "36px",
                     transform: "translateX(-50%) scale(1, 0.35)",
                     borderRadius: "50%",
-                    background: "radial-gradient(50% 50% at 50% 50%, rgba(0,0,0,1) 0%, rgba(0,0,0,1) 100%)",
+                    background:
+                      "radial-gradient(50% 50% at 50% 50%, rgba(0,0,0,1) 0%, rgba(0,0,0,1) 100%)",
                     filter: "blur(33px)",
                     opacity: 0.45,
                     pointerEvents: "none",
@@ -465,11 +527,16 @@ const Finish = () => {
 
           <div className={s.finish__footer}>
             <div className={s.finish__legal}>
-              <p>ерид:</p>
+              <p>erid: 2SDnjeVK1nf</p>
               <p>Реклама 18+</p>
               <p>Рекламодатель ООО «СПРИНГЛ». ИНН 7714482000</p>
               <p>
-                <a className={s.finish__link} href="/privacy" target="_blank" rel="noopener noreferrer">
+                <a
+                  className={s.finish__link}
+                  href="https://frankmedia.ru/privacy-policy "
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
                   Политика конфиденциальности
                 </a>
               </p>
@@ -477,11 +544,11 @@ const Finish = () => {
             <div className={s.finish__credits}>
               <p>
                 Сделано в{" "}
-                <a className={s.finish__link} href="">
+                <a className={s.finish__link} href="https://www.anderteam.ru">
                   Ander
                 </a>{" "}
                 x{" "}
-                <a className={s.finish__link} href="">
+                <a className={s.finish__link} href="https://loimi.ru/ ">
                   Loimi
                 </a>
               </p>
@@ -490,14 +557,22 @@ const Finish = () => {
         </div>
 
         {/* Тарелка */}
-        <img ref={discRef} className={s.tarelka} src="/images/footer.svg" alt="" />
+        <img
+          ref={discRef}
+          className={s.tarelka}
+          src="/images/footer.svg"
+          alt=""
+        />
 
         {/* Модалка */}
         <div className={s.modal} ref={modalRef} aria-hidden>
           <div className={s.modal__card}>
             <h3 className={s.modal__title}>Бесплатное занятие</h3>
             <p className={s.modal__text}>по алтимат фрисби — ваше.</p>
-            <button className={s.modal__btn} onClick={() => hideModal(resetAll)}>
+            <button
+              className={s.modal__btn}
+              onClick={() => hideModal(resetAll)}
+            >
               Записать в календарь
             </button>
           </div>
