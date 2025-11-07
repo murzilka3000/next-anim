@@ -390,7 +390,7 @@ const Finish = () => {
                   alt=""
                   data-ax="0.99"
                   data-ay="0.33"
-                  data-ox="50"
+                  data-ox="20"
                   data-oy="10"
                   data-alt="/images/f-1-up.svg"
                   onClick={(e) => handleThrow(e.currentTarget)}
