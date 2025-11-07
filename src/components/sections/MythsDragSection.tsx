@@ -224,6 +224,10 @@ export const MythsDragSection: React.FC = () => {
   // скрыть карточку на десктопе после последнего дропа
   const [desktopCardHidden, setDesktopCardHidden] = useState(false);
 
+  // показывать подсказку только ПОСЛЕ первого успешного дропа и пока есть что перетаскивать
+  const [hasDroppedOnce, setHasDroppedOnce] = useState(false);
+  const hintVisible = hasDroppedOnce && !desktopCardHidden;
+
   // Определяем мобильный брейкпоинт
   const [isMobile, setIsMobile] = useState(false);
   useEffect(() => {
@@ -239,7 +243,7 @@ export const MythsDragSection: React.FC = () => {
     };
   }, []);
 
-  // Включаем/выключаем анимацию хинта (desktop)
+  // Включаем/выключаем анимацию хинта (desktop) — только когда hintVisible
   useEffect(() => {
     if (isMobile) {
       hintTweenRef.current?.kill();
@@ -247,7 +251,7 @@ export const MythsDragSection: React.FC = () => {
       if (hintImgRef.current) gsap.set(hintImgRef.current, { x: 0 });
       return;
     }
-    if (!desktopCardHidden && hintImgRef.current) {
+    if (hintVisible && hintImgRef.current) {
       hintTweenRef.current?.kill();
       hintTweenRef.current = gsap.to(hintImgRef.current, {
         x: 14,
@@ -265,7 +269,7 @@ export const MythsDragSection: React.FC = () => {
       hintTweenRef.current?.kill();
       hintTweenRef.current = null;
     };
-  }, [isMobile, desktopCardHidden]);
+  }, [isMobile, hintVisible]);
 
   const myths = useMemo(() => mythsData, []);
   const current = myths[index];
@@ -308,10 +312,15 @@ export const MythsDragSection: React.FC = () => {
           const zr = zone.getBoundingClientRect();
           const cx = cr.left + cr.width / 2;
           const cy = cr.top + cr.height / 2;
-          return cx >= zr.left && cx <= zr.right && cy >= zr.top && cy <= zr.bottom;
+          return (
+            cx >= zr.left && cx <= zr.right && cy >= zr.top && cy <= zr.bottom
+          );
         };
 
         const onDropSuccess = () => {
+          // помечаем, что был первый успешный дроп
+          setHasDroppedOnce(true);
+
           setAnsweredIdx(index);
           const ans = answerRef.current!;
           const isLast = index >= myths.length - 1;
@@ -499,12 +508,12 @@ export const MythsDragSection: React.FC = () => {
         </div>
       )}
 
-      {/* Подсказка: только десктоп, видна пока есть что перетаскивать; картинка «ездит» по X */}
+      {/* Подсказка: только десктоп; видна ПОСЛЕ первого дропа и пропадает, когда карточки закончились */}
       {!isMobile && (
         <div
           className={styles.abs_434}
           style={{
-            opacity: desktopCardHidden ? 0 : 1,
+            opacity: hintVisible ? 1 : 0,
             transition: "opacity 0.25s ease",
             pointerEvents: "none",
           }}
