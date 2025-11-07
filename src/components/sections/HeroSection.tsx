@@ -73,13 +73,13 @@ export const HeroSection = () => {
       <div className={styles.wrapper}>
         <div className={`${styles.contentWrapper} text-content`}>
           <div className={styles.logos}>
-            <a href="https://www.rfdf.ru/ ">
+            <a href="https://frankmedia.ru/ ">
               <img src="/images/3.svg" alt="" />
             </a>
             <a href="">
               <img src="/images/2.svg" alt="" />
             </a>
-            <a href="https://www.rfdf.ru/ ">
+            <a href="https://springle.ru/?erid=2SDnjeVK1nf">
               <img src="/images/1.svg" alt="" />
             </a>
           </div>

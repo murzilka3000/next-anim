@@ -386,3 +386,9 @@
   right: 0;
 }
 
+
+
+.card:has(.dropHint) {
+  border: 1px dashed #8E705F66;
+  border-radius: 20px;
+}
