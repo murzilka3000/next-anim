@@ -65,7 +65,7 @@
 
 /* Этап 2 — desktop playground */
 .playground {
-  min-height: 80vh;
+
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: clamp(16px, 4vw, 48px);
@@ -391,4 +391,15 @@
 .card:has(.dropHint) {
   border: 1px dashed #8E705F66;
   border-radius: 20px;
+}
+
+
+.abs_434 {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  gap: 10px;
+  text-align: center;
+  margin-top: 5px;
 }

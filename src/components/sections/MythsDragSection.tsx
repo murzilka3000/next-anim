@@ -73,8 +73,6 @@ function processTextNodes(root: Node) {
 }
 // ===== конец NBSP блока =====
 
-
-
 // Мобильная флип‑карта: фронт (миф) → клик → оборот (ответ)
 const MobileAnswerSlide: React.FC<{ myth: Myth }> = ({ myth }) => {
   const frontRef = useRef<HTMLDivElement | null>(null);
@@ -187,6 +185,10 @@ export const MythsDragSection: React.FC = () => {
   // mobile
   const mobileRef = useRef<HTMLDivElement | null>(null);
 
+  // hint (desktop)
+  const hintImgRef = useRef<HTMLImageElement | null>(null);
+  const hintTweenRef = useRef<gsap.core.Tween | null>(null);
+
   // NBSP
   useEffect(() => {
     const root = sectionRef.current;
@@ -237,6 +239,34 @@ export const MythsDragSection: React.FC = () => {
     };
   }, []);
 
+  // Включаем/выключаем анимацию хинта (desktop)
+  useEffect(() => {
+    if (isMobile) {
+      hintTweenRef.current?.kill();
+      hintTweenRef.current = null;
+      if (hintImgRef.current) gsap.set(hintImgRef.current, { x: 0 });
+      return;
+    }
+    if (!desktopCardHidden && hintImgRef.current) {
+      hintTweenRef.current?.kill();
+      hintTweenRef.current = gsap.to(hintImgRef.current, {
+        x: 14,
+        duration: 0.9,
+        ease: "sine.inOut",
+        yoyo: true,
+        repeat: -1,
+      });
+    } else {
+      hintTweenRef.current?.kill();
+      hintTweenRef.current = null;
+      if (hintImgRef.current) gsap.set(hintImgRef.current, { x: 0 });
+    }
+    return () => {
+      hintTweenRef.current?.kill();
+      hintTweenRef.current = null;
+    };
+  }, [isMobile, desktopCardHidden]);
+
   const myths = useMemo(() => mythsData, []);
   const current = myths[index];
   const answered = answeredIdx !== null ? myths[answeredIdx] : null;
@@ -259,7 +289,11 @@ export const MythsDragSection: React.FC = () => {
               start: "center center",
               end: "+=550",
               scrub: true,
-              snap: { snapTo: [0, 1], duration: { min: 0.12, max: 0.3 }, ease: "power1.inOut" },
+              snap: {
+                snapTo: [0, 1],
+                duration: { min: 0.12, max: 0.3 },
+                ease: "power1.inOut",
+              },
               refreshPriority: -1,
             },
           })
@@ -390,8 +424,7 @@ export const MythsDragSection: React.FC = () => {
                 >
                   <div className={styles.dropHint} style={{ textAlign: "center" }}>
                     <img className={styles.cursor} src="/images/stack.svg" alt="" />
-                    Ура! Вы резвеяли все мифы –
-                    переходите к блоку ниже
+                    Ура! Вы развеяли все мифы — переходите к блоку ниже
                   </div>
                 </div>
               )}
@@ -463,6 +496,30 @@ export const MythsDragSection: React.FC = () => {
           </Swiper>
 
           <div className={styles.mobilePagination} />
+        </div>
+      )}
+
+      {/* Подсказка: только десктоп, видна пока есть что перетаскивать; картинка «ездит» по X */}
+      {!isMobile && (
+        <div
+          className={styles.abs_434}
+          style={{
+            opacity: desktopCardHidden ? 0 : 1,
+            transition: "opacity 0.25s ease",
+            pointerEvents: "none",
+          }}
+        >
+          <img
+            ref={hintImgRef}
+            className={styles.abs_434_img}
+            src="/images/abs-4334.svg"
+            alt=""
+            draggable={false}
+          />
+          <p>
+            Перетащите миф в экспертное <br />
+            поле, чтобы развеять его
+          </p>
         </div>
       )}
     </section>
