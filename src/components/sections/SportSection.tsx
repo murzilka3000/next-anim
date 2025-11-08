@@ -99,7 +99,7 @@ export const SportSection: React.FC = () => {
             ease: "none",
             scrollTrigger: {
               trigger: section,
-              start: "top 8%",
+              start: "top 15%",
               end: () => `+=${delta + 200}`,
               pin: true,
               pinSpacing: true,
