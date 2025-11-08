@@ -5,14 +5,18 @@ import { MythsDragSection } from "@/components/sections/MythsDragSection";
 import { MotivationQuizSection } from "@/components/sections/MotivationQuizSection";
 import { PeopleFrisbeeSection } from "@/components/sections/PeopleFrisbeeSection";
 import Finish from "@/components/sections/Finish";
+import { SlideGate } from "@/components/SlideGate";
 
 export default function HomePage() {
   return (
     <main className={styles.main}>
       <HeroSection />
       <SportSection />
-      <MythsDragSection />
-      <MotivationQuizSection />
+
+      <SlideGate thresholdPx={24} durationMs={1000}>
+        <MythsDragSection />
+        <MotivationQuizSection />
+      </SlideGate>
       <PeopleFrisbeeSection />
       <Finish />
     </main>
