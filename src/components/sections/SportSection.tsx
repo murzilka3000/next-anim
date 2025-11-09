@@ -1,19 +1,19 @@
-"use client";
+"use client"
 
-import React, { useRef } from "react";
-import gsap from "gsap";
-import { useGSAP } from "@gsap/react";
-import { ScrollTrigger } from "gsap/ScrollTrigger";
-import styles from "./SportSection.module.scss";
+import React, { forwardRef, useRef } from "react"
+import gsap from "gsap"
+import { useGSAP } from "@gsap/react"
+import { ScrollTrigger } from "gsap/ScrollTrigger"
+import styles from "./SportSection.module.scss"
 
-gsap.registerPlugin(useGSAP, ScrollTrigger);
+gsap.registerPlugin(useGSAP, ScrollTrigger)
 
 type Card = {
-  id: string;
-  name: string;
-  subtitle: string;
-  image?: string;
-};
+  id: string
+  name: string
+  subtitle: string
+  image?: string
+}
 
 const cards: Card[] = [
   {
@@ -46,52 +46,52 @@ const cards: Card[] = [
     subtitle: "Силовые тренировки",
     image: "/images/mark-5.svg",
   },
-];
+]
 
-export const SportSection: React.FC = () => {
-  const sectionRef = useRef<HTMLElement | null>(null);
-  const innerRef = useRef<HTMLDivElement | null>(null);
-  const viewportRef = useRef<HTMLDivElement | null>(null);
-  const trackRef = useRef<HTMLUListElement | null>(null);
+export const SportSection = forwardRef<HTMLElement>((props, ref) => {
+  const sectionRef = useRef<HTMLElement | null>(null)
+  const innerRef = useRef<HTMLDivElement | null>(null)
+  const viewportRef = useRef<HTMLDivElement | null>(null)
+  const trackRef = useRef<HTMLUListElement | null>(null)
 
   useGSAP(
     () => {
-      const section = sectionRef.current!;
-      const inner = innerRef.current!;
-      const viewport = viewportRef.current!;
-      const track = trackRef.current!;
+      const section = sectionRef.current!
+      const inner = innerRef.current!
+      const viewport = viewportRef.current!
+      const track = trackRef.current!
 
       // считаем, сколько нужно сдвинуть всю секцию влево, чтобы правый край трека
       // пришёл к правому краю окна + небольшой запас справа (30px)
       const computeDelta = () => {
-        const TRAILING_PAD = 30; // пустое место справа
-        gsap.set(inner, { x: 0 });
-        const tr = track.getBoundingClientRect();
-        const rightEdge = tr.left + track.scrollWidth;
-        const winW = window.innerWidth;
-        const delta = Math.max(0, rightEdge - winW + TRAILING_PAD);
-        return delta;
-      };
+        const TRAILING_PAD = 30 // пустое место справа
+        gsap.set(inner, { x: 0 })
+        const tr = track.getBoundingClientRect()
+        const rightEdge = tr.left + track.scrollWidth
+        const winW = window.innerWidth
+        const delta = Math.max(0, rightEdge - winW + TRAILING_PAD)
+        return delta
+      }
 
-      const mm = gsap.matchMedia();
-      let tween: gsap.core.Tween | null = null;
-      let ro: ResizeObserver | null = null;
+      const mm = gsap.matchMedia()
+      let tween: gsap.core.Tween | null = null
+      let ro: ResizeObserver | null = null
 
       // Десктоп: пинним и двигаем всю .inner
       mm.add("(min-width: 1112px)", () => {
         const init = () => {
           if (tween) {
-            tween.scrollTrigger?.kill();
-            tween.kill();
-            tween = null;
+            tween.scrollTrigger?.kill()
+            tween.kill()
+            tween = null
           }
 
-          gsap.set(inner, { x: 0 });
+          gsap.set(inner, { x: 0 })
 
-          const delta = computeDelta();
+          const delta = computeDelta()
           if (delta <= 0) {
-            ScrollTrigger.refresh();
-            return;
+            ScrollTrigger.refresh()
+            return
           }
 
           tween = gsap.to(inner, {
@@ -107,61 +107,68 @@ export const SportSection: React.FC = () => {
               anticipatePin: 1,
               pinType: "fixed",
               onToggle: (self) => {
-                section.classList.toggle(styles.isPinned, self.isActive);
+                section.classList.toggle(styles.isPinned, self.isActive)
               },
             },
-          });
+          })
 
           // чтобы всё пересчиталось после инициализации
-          gsap.delayedCall(0, () => ScrollTrigger.refresh());
-        };
+          gsap.delayedCall(0, () => ScrollTrigger.refresh())
+        }
 
-        init();
+        init()
 
         ro = new ResizeObserver(() => {
-          init();
-          ScrollTrigger.refresh();
-        });
-        ro.observe(viewport);
-        ro.observe(track);
-        ro.observe(document.documentElement);
+          init()
+          ScrollTrigger.refresh()
+        })
+        ro.observe(viewport)
+        ro.observe(track)
+        ro.observe(document.documentElement)
 
         return () => {
           if (ro) {
-            ro.disconnect();
-            ro = null;
+            ro.disconnect()
+            ro = null
           }
           if (tween) {
-            tween.scrollTrigger?.kill();
-            tween.kill();
-            tween = null;
+            tween.scrollTrigger?.kill()
+            tween.kill()
+            tween = null
           }
-          gsap.set(inner, { clearProps: "transform" });
-          section.classList.remove(styles.isPinned);
-        };
-      });
+          gsap.set(inner, { clearProps: "transform" })
+          section.classList.remove(styles.isPinned)
+        }
+      })
 
       // Мобилка/узкий: нативный горизонтальный скролл трека
       mm.add("(max-width: 1111px)", () => {
         if (tween) {
-          tween.scrollTrigger?.kill();
-          tween.kill();
-          tween = null;
+          tween.scrollTrigger?.kill()
+          tween.kill()
+          tween = null
         }
-        gsap.set(inner, { x: 0, clearProps: "transform" });
-        section.classList.remove(styles.isPinned);
-        return () => {};
-      });
+        gsap.set(inner, { x: 0, clearProps: "transform" })
+        section.classList.remove(styles.isPinned)
+        return () => {}
+      })
 
       return () => {
-        mm.revert();
-      };
+        mm.revert()
+      }
     },
     { scope: sectionRef }
-  );
+  )
 
   return (
-    <section className={styles.section} ref={sectionRef}>
+    <section
+      className={styles.section}
+      ref={(el) => {
+        sectionRef.current = el
+        if (typeof ref === "function") ref(el)
+        else if (ref) ref.current = el
+      }}
+    >
       <div className={styles.inner} ref={innerRef}>
         <div className={styles.left}>
           <div>
@@ -170,13 +177,11 @@ export const SportSection: React.FC = () => {
               — это не только про <br /> физическую форму.
             </p>
             <p className={styles.lead}>
-              Он повышает качество жизни и даёт <br /> силы для самореализации в
-              бизнесе.
+              Он повышает качество жизни и даёт <br /> силы для самореализации в бизнесе.
             </p>
           </div>
           <p className={styles.note}>
-            Листайте профайлы известных предпринимателей, чтобы <br /> узнать,
-            из какой физической нагрузки они черпают энергию.
+            Листайте профайлы известных предпринимателей, чтобы <br /> узнать, из какой физической нагрузки они черпают энергию.
           </p>
         </div>
 
@@ -186,14 +191,7 @@ export const SportSection: React.FC = () => {
               {cards.map((c) => (
                 <li key={c.id} className={styles.card}>
                   <div className={styles.cardInner}>
-                    <div
-                      className={styles.portrait}
-                      style={
-                        c.image
-                          ? { backgroundImage: `url(${c.image})` }
-                          : undefined
-                      }
-                    >
+                    <div className={styles.portrait} style={c.image ? { backgroundImage: `url(${c.image})` } : undefined}>
                       <div className={styles.caption}>
                         <div className={styles.name}>{c.name}</div>
                         <div className={styles.subtitle}>{c.subtitle}</div>
@@ -207,10 +205,9 @@ export const SportSection: React.FC = () => {
         </div>
 
         <p className={`${styles.note} ${styles.note_mob}`}>
-          Листайте профайлы известных предпринимателей, чтобы <br /> узнать, из
-          какой физической нагрузки они черпают энергию.
+          Листайте профайлы известных предпринимателей, чтобы <br /> узнать, из какой физической нагрузки они черпают энергию.
         </p>
       </div>
     </section>
-  );
-};
+  )
+})

@@ -21,9 +21,9 @@
     "@babel/helper-validator-identifier" "^7.28.5"
 
 "@emnapi/runtime@^1.5.0":
-  version "1.6.0"
-  resolved "https://registry.yarnpkg.com/@emnapi/runtime/-/runtime-1.6.0.tgz#8fe297e0090f6e89a57a1f31f1c440bdbc3c01d8"
-  integrity sha512-obtUmAHTMjll499P+D9A3axeJFlhdjOWdKUNs/U6QIGT7V5RjcUW1xToAzjvmgTSQhDbYn/NwfTRoJcQ2rNBxA==
+  version "1.7.0"
+  resolved "https://registry.yarnpkg.com/@emnapi/runtime/-/runtime-1.7.0.tgz#d7ef3832df8564fe5903bf0567aedbd19538ecbe"
+  integrity sha512-oAYoQnCYaQZKVS53Fq23ceWMRxq5EhQsE0x0RdQ55jT7wagMu5k+fS39v1fiSLrtrLQlXwVINenqhLMtTrV/1Q==
   dependencies:
     tslib "^2.4.0"
 
@@ -549,7 +549,7 @@ styled-jsx@5.1.6:
 
 swiper@^12.0.3:
   version "12.0.3"
-  resolved "https://registry.yarnpkg.com/swiper/-/swiper-12.0.3.tgz#c7804fd39955189d3ec652d9832896bd3d04733e"
+  resolved "https://registry.npmjs.org/swiper/-/swiper-12.0.3.tgz"
   integrity sha512-BHd6U1VPEIksrXlyXjMmRWO0onmdNPaTAFduzqR3pgjvi7KfmUCAm/0cj49u2D7B0zNjMw02TSeXfinC1hDCXg==
 
 to-regex-range@^5.0.1:
@@ -571,7 +571,7 @@ typescript@^5:
 
 typograf@^7.6.0:
   version "7.6.0"
-  resolved "https://registry.yarnpkg.com/typograf/-/typograf-7.6.0.tgz#10fb010f7a2e392a671bc8d561f167ea1644f783"
+  resolved "https://registry.npmjs.org/typograf/-/typograf-7.6.0.tgz"
   integrity sha512-sqYx4X1L7EDNRuJpqg/V+GCWMOpzVD5Om9IW0udi294sQYPwGGeRpPwsLC3gPt2BTsLtLiWJKpkwiyuO5PK2lQ==
 
 undici-types@~6.21.0:
