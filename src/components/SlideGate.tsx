@@ -53,11 +53,8 @@ function animateScrollTo(targetY: number, duration: number, onDone: () => void):
     const eased = easeInOutSine(t);
     const y = startY + delta * eased;
     window.scrollTo(0, y);
-    if (t < 1) {
-      rafId = requestAnimationFrame(tick);
-    } else {
-      onDone();
-    }
+    if (t < 1) rafId = requestAnimationFrame(tick);
+    else onDone();
   };
 
   rafId = requestAnimationFrame(tick);
@@ -77,16 +74,10 @@ export function SlideGate({
   const lockUntilRef = useRef(0);      // пока активен — гасим wheel внутри SlideGate
   const TAIL_MS = 350;                 // хвост после анимации (съесть инерцию)
 
-  // Исключение для SportSection (первый слайд): игнорим 3 «флика» вниз у конца секции
+  // Только для SportSection (первый слайд): 2 игнора вниз у конца секции, на 3-й — переход
   const SPORT_SLIDE_INDEX = 0;
-  const SPORT_HOLD_STEPS = 3;           // <- можно увеличить/уменьшить задержку
-  const SPORT_END_THRESHOLD = 0.985;    // с какого прогресса считаем «конец»
-  const GESTURE_GAP_MS = 240;           // антидребезг (минимум между фликами)
+  const SPORT_HOLD_STEPS = 2;
   const sportHoldCountRef = useRef(0);
-  const sportLastGestureTsRef = useRef(0);
-
-  // Фейд для слайда при первом входе
-  const markFadedOnceRef = useRef<Set<number>>(new Set());
 
   const setSlideRef = (el: HTMLDivElement | null, i: number) => {
     slideRefs.current[i] = el || (null as unknown as HTMLDivElement);
@@ -114,48 +105,22 @@ export function SlideGate({
       return idx;
     };
 
-    // Геометрия и прогресс слайда (устойчиво для pin/spacer)
-    const slideRect = (i: number) => slides[i].getBoundingClientRect();
-    const slideHeight = (i: number) => slideRect(i).height;
-    const isTall = (i: number) => slideHeight(i) > window.innerHeight + 2;
-    const slideProgress = (i: number) => {
-      const h = slideHeight(i);
-      if (h <= window.innerHeight + 1) return 1;
-      const topAbs = getTopAbs(slides[i]);
-      const scrolled = window.scrollY - topAbs;
-      const denom = h - window.innerHeight;
-      const p = denom > 0 ? scrolled / denom : 1;
-      return Math.max(0, Math.min(1, p));
+    // «Длинный» слайд (например, с GSAP pin/spacer): есть свой вертикальный ход внутри
+    const getRect = (i: number) => slides[i].getBoundingClientRect();
+    const isTall = (i: number) => {
+      const r = getRect(i);
+      return r.height > window.innerHeight + 2;
     };
-    const hasInSlideScrollDown = (i: number) => isTall(i) && slideProgress(i) < 1 - 1e-3;
-    const hasInSlideScrollUp = (i: number) => isTall(i) && slideProgress(i) > 1e-3;
-
-    // Фейд: подготовка и запуск (однократно для каждого слайда)
-    const prepareFade = (i: number) => {
-      if (markFadedOnceRef.current.has(i)) return;
-      const s = slides[i];
-      if (!s) return;
-      s.style.opacity = '0';
-      s.style.transform = 'translateY(8px)';
-      s.style.willChange = 'opacity, transform';
+    const hasInSlideScrollDown = (i: number) => {
+      if (!isTall(i)) return false;
+      const r = getRect(i);
+      return r.bottom > window.innerHeight + 1; // ещё есть «вниз» внутри слайда
     };
-    const runFade = (i: number) => {
-      if (markFadedOnceRef.current.has(i)) return;
-      const s = slides[i];
-      if (!s) return;
-      requestAnimationFrame(() => {
-        s.style.transition = 'opacity 520ms ease-out, transform 520ms ease-out';
-        s.style.opacity = '1';
-        s.style.transform = 'translateY(0)';
-        window.setTimeout(() => {
-          s.style.transition = '';
-          s.style.willChange = '';
-          markFadedOnceRef.current.add(i);
-        }, 560);
-      });
+    const hasInSlideScrollUp = (i: number) => {
+      if (!isTall(i)) return false;
+      const r = getRect(i);
+      return r.top < -1; // ещё есть «вверх» внутри слайда
     };
-    // Не даём первому слайду мигнуть при инициализации
-    markFadedOnceRef.current.add(getCurrentIndex());
 
     const stepToIndex = (nextIndex: number) => {
       const idx = Math.max(0, Math.min(nextIndex, slides.length - 1));
@@ -164,12 +129,8 @@ export function SlideGate({
       // мягкость по расстоянию: 650–1400 мс
       const ms = Math.max(650, Math.min(1400, 600 + dist * 0.5));
 
-      // готовим фейд для целевого слайда (если ещё не показывали)
-      prepareFade(idx);
-
       // сбрасываем спорт-холд при самом переходе
       sportHoldCountRef.current = 0;
-      sportLastGestureTsRef.current = 0;
 
       if (animStopRef.current) {
         animStopRef.current();
@@ -181,7 +142,7 @@ export function SlideGate({
       animStopRef.current = animateScrollTo(destY, ms, () => {
         animating.current = false;
         animStopRef.current = null;
-        runFade(idx);
+        // хвост уже заложен в lockUntilRef
       });
     };
 
@@ -191,7 +152,7 @@ export function SlideGate({
 
       const dir: 'down' | 'up' = e.deltaY > 0 ? 'down' : 'up';
 
-      // 1) Выход из контейнера — нативно
+      // 1) Выход из SlideGate — нативно
       if ((dir === 'up' && nearContainerTop()) || (dir === 'down' && nearContainerBottom())) {
         if (animStopRef.current) {
           animStopRef.current();
@@ -199,8 +160,7 @@ export function SlideGate({
         }
         animating.current = false;
         lockUntilRef.current = 0;
-        sportHoldCountRef.current = 0;
-        sportLastGestureTsRef.current = 0;
+        sportHoldCountRef.current = 0; // сброс
         return;
       }
 
@@ -227,31 +187,26 @@ export function SlideGate({
       if (dir === 'down' && hasInSlideScrollDown(currentIndex)) return;
       if (dir === 'up' && hasInSlideScrollUp(currentIndex)) return;
 
-      // 5) Спец-правило для SportSection (индекс 0): у самого низа — игнорим SPORT_HOLD_STEPS фликов вниз
-      if (currentIndex === SPORT_SLIDE_INDEX && dir === 'down' && isTall(currentIndex)) {
-        const p = slideProgress(currentIndex);
-        if (p >= SPORT_END_THRESHOLD) {
-          const since = now - sportLastGestureTsRef.current;
-          if (since > GESTURE_GAP_MS) {
-            sportHoldCountRef.current += 1;
-            sportLastGestureTsRef.current = now;
+      // 5) Спец-правило только для SportSection (индекс 0) и только на десктопе/pin-сценарии (isTall)
+      if (currentIndex === SPORT_SLIDE_INDEX && isTall(currentIndex)) {
+        if (dir === 'down') {
+          const atInSlideEndDown = !hasInSlideScrollDown(currentIndex); // у самого низа секции
+          if (atInSlideEndDown) {
+            if (sportHoldCountRef.current < SPORT_HOLD_STEPS) {
+              sportHoldCountRef.current += 1; // копим 2 «рыбка»
+              e.preventDefault();            // съедаем жест
+              return;
+            }
+            // на 3-й жест — сбрасываем и идём дальше
+            sportHoldCountRef.current = 0;
           }
-          if (sportHoldCountRef.current <= SPORT_HOLD_STEPS) {
-            e.preventDefault(); // держим
-            return;
-          }
-          // на следующий — сбросим счётчик и пойдём дальше
-          sportHoldCountRef.current = 0;
-          sportLastGestureTsRef.current = 0;
         } else {
-          // ушли от конца — сброс
+          // любое движение вверх — сбрасывает накопленные игноры
           sportHoldCountRef.current = 0;
-          sportLastGestureTsRef.current = 0;
         }
-      } else if (dir === 'up') {
-        // любое движение вверх — сброс «держалки»
+      } else {
+        // на других слайдах — не копим холд
         sportHoldCountRef.current = 0;
-        sportLastGestureTsRef.current = 0;
       }
 
       // 6) Ровно один шаг к соседнему слайду (если есть)
@@ -266,7 +221,7 @@ export function SlideGate({
       stepToIndex(currentIndex + (dir === 'down' ? 1 : -1));
     };
 
-    // Тач: аналогично — игнорим SPORT_HOLD_STEPS свайпов вниз у конца SportSection
+    // Тач: аналогично — 2 игнора вниз у конца только на первом слайде
     let touchStartY = 0;
     const onTouchStart = (e: TouchEvent) => {
       touchStartY = e.touches[0].clientY;
@@ -289,15 +244,16 @@ export function SlideGate({
 
       const dir: 'down' | 'up' = dy < 0 ? 'down' : 'up';
 
+      // выход наружу — нативно
       if ((dir === 'up' && nearContainerTop()) || (dir === 'down' && nearContainerBottom())) {
         sportHoldCountRef.current = 0;
-        sportLastGestureTsRef.current = 0;
         return;
       }
 
       const currentIndex = getCurrentIndex();
       const currentSlide = slides[currentIndex];
 
+      // если внутри скроллимого — не перехватываем
       const scrollable = findScrollable(target, currentSlide);
       if (scrollable) {
         const atBottom = Math.ceil(scrollable.scrollTop + scrollable.clientHeight) >= scrollable.scrollHeight;
@@ -306,21 +262,25 @@ export function SlideGate({
         if (dy > 0 && !atTop) return;
       }
 
+      // длинный слайд — сначала доскроллить
       if (dir === 'down' && hasInSlideScrollDown(currentIndex)) return;
       if (dir === 'up' && hasInSlideScrollUp(currentIndex)) return;
 
-      if (currentIndex === SPORT_SLIDE_INDEX && dir === 'down' && isTall(currentIndex)) {
-        const p = slideProgress(currentIndex);
-        if (p >= SPORT_END_THRESHOLD) {
-          sportHoldCountRef.current += 1;
-          if (sportHoldCountRef.current <= SPORT_HOLD_STEPS) {
-            return; // держим N раз
+      // 2 игнора вниз у конца только для первого слайда
+      if (currentIndex === SPORT_SLIDE_INDEX && isTall(currentIndex)) {
+        if (dir === 'down') {
+          const atInSlideEndDown = !hasInSlideScrollDown(currentIndex);
+          if (atInSlideEndDown) {
+            if (sportHoldCountRef.current < SPORT_HOLD_STEPS) {
+              sportHoldCountRef.current += 1;
+              return; // держим, остаёмся на месте
+            }
+            sportHoldCountRef.current = 0;
           }
-          sportHoldCountRef.current = 0;
         } else {
           sportHoldCountRef.current = 0;
         }
-      } else if (dir === 'up') {
+      } else {
         sportHoldCountRef.current = 0;
       }
 
@@ -346,7 +306,6 @@ export function SlideGate({
       animating.current = false;
       lockUntilRef.current = 0;
       sportHoldCountRef.current = 0;
-      sportLastGestureTsRef.current = 0;
     };
   }, [durationMs]);
 

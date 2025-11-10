@@ -64,7 +64,7 @@ export const SportSection: React.FC = () => {
       // считаем, сколько нужно сдвинуть всю секцию влево, чтобы правый край трека
       // пришёл к правому краю окна + небольшой запас справа (30px)
       const computeDelta = () => {
-        const TRAILING_PAD = 30; // пустое место справа
+        const TRAILING_PAD = 330; // пустое место справа
         gsap.set(inner, { x: 0 });
         const tr = track.getBoundingClientRect();
         const rightEdge = tr.left + track.scrollWidth;
