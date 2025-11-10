@@ -147,6 +147,7 @@ export const MotivationQuizSection: React.FC = () => {
   const headerRef = useRef<HTMLDivElement | null>(null);
   const optionsRef = useRef<HTMLUListElement | null>(null);
   const explainElRef = useRef<HTMLDivElement | null>(null);
+  const explainWrapRef = useRef<HTMLDivElement | null>(null);
 
   const transitionTimeline = useRef<gsap.core.Timeline | null>(null);
   const entryTlRef = useRef<gsap.core.Timeline | null>(null);
@@ -405,6 +406,7 @@ export const MotivationQuizSection: React.FC = () => {
     setIdx(0);
     setSelected(null);
     setAnswers({});
+    gsap.set(explainWrapRef.current, { height: 0 });
 
     const tl = gsap
       .timeline()
@@ -435,15 +437,37 @@ export const MotivationQuizSection: React.FC = () => {
       ...prev,
       [q.id]: { selectedId: opt.id, correct: opt.correct },
     }));
-    // Больше не переключаемся на результаты автоматически на последнем вопросе.
+    // Переход на результаты теперь только по кнопке (см. nextQuestion).
   };
+
+  // Плавный показ объяснения: анимируем высоту обёртки и появление контента
+  useEffect(() => {
+    if (!selected) return;
+    const raf = requestAnimationFrame(() => {
+      const wrap = explainWrapRef.current;
+      const el = explainElRef.current;
+      if (!wrap || !el) return;
+
+      gsap.killTweensOf([wrap, el]);
+      const h = el.offsetHeight;
+
+      gsap.set(el, { y: -6, autoAlpha: 0, transformOrigin: "top center" });
+      gsap
+        .timeline()
+        .to(wrap, { height: h, duration: 0.32, ease: "power2.out" }, 0)
+        .to(el, { y: 0, autoAlpha: 1, duration: 0.28, ease: "power2.out" }, 0.02)
+        // Важно: используем .set на таймлайне, а не .add(() => gsap.set(...)),
+        // чтобы не возвращать Tween из коллбэка и не ловить TS-ошибку.
+        .set(wrap, { height: "auto" });
+    });
+    return () => cancelAnimationFrame(raf);
+  }, [selected, idx]);
 
   const nextQuestion = () => {
     if (isTransitioning) return;
 
     const isLast = idx >= total - 1;
     if (isLast) {
-      // На последнем вопросе — переходим к результатам по клику на кнопку
       goToResults();
       return;
     }
@@ -451,6 +475,9 @@ export const MotivationQuizSection: React.FC = () => {
     const header = headerRef.current;
     const optionsList = optionsRef.current;
     const card = cardRef.current;
+    const explainEl = explainElRef.current;
+    const explainWrap = explainWrapRef.current;
+
     if (!header || !optionsList || !card) return;
 
     setIsTransitioning(true);
@@ -463,9 +490,7 @@ export const MotivationQuizSection: React.FC = () => {
       card.querySelectorAll(`.${styles.top_card}`)
     ) as HTMLElement[];
 
-    const explainEl = explainElRef.current;
-
-    gsap.killTweensOf([header, ...optionEls, ...topCards, explainEl]);
+    gsap.killTweensOf([header, ...optionEls, ...topCards, explainEl, explainWrap]);
 
     const tl = gsap.timeline({
       defaults: { ease: "power2.out" },
@@ -487,8 +512,12 @@ export const MotivationQuizSection: React.FC = () => {
         0
       );
     }
+
     if (explainEl) {
-      tl.to(explainEl, { y: 8, autoAlpha: 0, duration: 0.28 }, 0);
+      tl.to(explainEl, { y: 8, autoAlpha: 0, duration: 0.24, ease: "power2.in" }, 0);
+    }
+    if (explainWrap) {
+      tl.to(explainWrap, { height: 0, duration: 0.28, ease: "power2.inOut" }, 0);
     }
 
     tl.to(
@@ -526,6 +555,9 @@ export const MotivationQuizSection: React.FC = () => {
     const topCards = Array.from(
       cardRef.current.querySelectorAll(`.${styles.top_card}`)
     ) as HTMLElement[];
+
+    // Сбрасываем обёртку объяснения (чтобы не дёргалось при смене вопроса)
+    if (explainWrapRef.current) gsap.set(explainWrapRef.current, { height: 0 });
 
     gsap.set(header, { y: 20, rotate: -3, autoAlpha: 0 });
     if (topCards.length) gsap.set(topCards, { y: 15, autoAlpha: 0 });
@@ -637,11 +669,14 @@ export const MotivationQuizSection: React.FC = () => {
               })}
             </ul>
 
-            {selected && (
-              <div className={styles.explain} ref={explainElRef}>
-                {q.explanation}
-              </div>
-            )}
+            {/* Обёртка для плавного появления объяснения */}
+            <div ref={explainWrapRef} style={{ overflow: "hidden" }}>
+              {selected && (
+                <div className={styles.explain} ref={explainElRef}>
+                  {q.explanation}
+                </div>
+              )}
+            </div>
           </div>
 
           <button
