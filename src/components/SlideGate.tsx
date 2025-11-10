@@ -53,8 +53,11 @@ function animateScrollTo(targetY: number, duration: number, onDone: () => void):
     const eased = easeInOutSine(t);
     const y = startY + delta * eased;
     window.scrollTo(0, y);
-    if (t < 1) rafId = requestAnimationFrame(tick);
-    else onDone();
+    if (t < 1) {
+      rafId = requestAnimationFrame(tick);
+    } else {
+      onDone();
+    }
   };
 
   rafId = requestAnimationFrame(tick);
@@ -74,13 +77,16 @@ export function SlideGate({
   const lockUntilRef = useRef(0);      // пока активен — гасим wheel внутри SlideGate
   const TAIL_MS = 350;                 // хвост после анимации (съесть инерцию)
 
-  // Исключение для SportSection (первый слайд): игнорим 2 «флика» вниз у конца секции
+  // Исключение для SportSection (первый слайд): игнорим 3 «флика» вниз у конца секции
   const SPORT_SLIDE_INDEX = 0;
-  const SPORT_HOLD_STEPS = 2;           // сколько «фликов» игнорим
-  const SPORT_END_THRESHOLD = 0.985;    // прогресс слайда, с которого считаем «конец»
-  const GESTURE_GAP_MS = 240;           // антидребезг: один флик в N мс
+  const SPORT_HOLD_STEPS = 3;           // <- можно увеличить/уменьшить задержку
+  const SPORT_END_THRESHOLD = 0.985;    // с какого прогресса считаем «конец»
+  const GESTURE_GAP_MS = 240;           // антидребезг (минимум между фликами)
   const sportHoldCountRef = useRef(0);
   const sportLastGestureTsRef = useRef(0);
+
+  // Фейд для слайда при первом входе
+  const markFadedOnceRef = useRef<Set<number>>(new Set());
 
   const setSlideRef = (el: HTMLDivElement | null, i: number) => {
     slideRefs.current[i] = el || (null as unknown as HTMLDivElement);
@@ -108,12 +114,10 @@ export function SlideGate({
       return idx;
     };
 
-    // Геометрия слайда
-    const getRect = (i: number) => slides[i].getBoundingClientRect();
-    const slideHeight = (i: number) => slides[i].getBoundingClientRect().height; // надёжно для pin/spacer
+    // Геометрия и прогресс слайда (устойчиво для pin/spacer)
+    const slideRect = (i: number) => slides[i].getBoundingClientRect();
+    const slideHeight = (i: number) => slideRect(i).height;
     const isTall = (i: number) => slideHeight(i) > window.innerHeight + 2;
-
-    // Прогресс прокрутки слайда (0..1), работает и для pin/spacer
     const slideProgress = (i: number) => {
       const h = slideHeight(i);
       if (h <= window.innerHeight + 1) return 1;
@@ -123,17 +127,35 @@ export function SlideGate({
       const p = denom > 0 ? scrolled / denom : 1;
       return Math.max(0, Math.min(1, p));
     };
+    const hasInSlideScrollDown = (i: number) => isTall(i) && slideProgress(i) < 1 - 1e-3;
+    const hasInSlideScrollUp = (i: number) => isTall(i) && slideProgress(i) > 1e-3;
 
-    const hasInSlideScrollDown = (i: number) => {
-      if (!isTall(i)) return false;
-      // есть ещё место вниз, если прогресс меньше 1
-      return slideProgress(i) < 1 - 1e-3;
+    // Фейд: подготовка и запуск (однократно для каждого слайда)
+    const prepareFade = (i: number) => {
+      if (markFadedOnceRef.current.has(i)) return;
+      const s = slides[i];
+      if (!s) return;
+      s.style.opacity = '0';
+      s.style.transform = 'translateY(8px)';
+      s.style.willChange = 'opacity, transform';
     };
-    const hasInSlideScrollUp = (i: number) => {
-      if (!isTall(i)) return false;
-      // есть место вверх, если прогресс больше 0
-      return slideProgress(i) > 1e-3;
+    const runFade = (i: number) => {
+      if (markFadedOnceRef.current.has(i)) return;
+      const s = slides[i];
+      if (!s) return;
+      requestAnimationFrame(() => {
+        s.style.transition = 'opacity 520ms ease-out, transform 520ms ease-out';
+        s.style.opacity = '1';
+        s.style.transform = 'translateY(0)';
+        window.setTimeout(() => {
+          s.style.transition = '';
+          s.style.willChange = '';
+          markFadedOnceRef.current.add(i);
+        }, 560);
+      });
     };
+    // Не даём первому слайду мигнуть при инициализации
+    markFadedOnceRef.current.add(getCurrentIndex());
 
     const stepToIndex = (nextIndex: number) => {
       const idx = Math.max(0, Math.min(nextIndex, slides.length - 1));
@@ -141,6 +163,9 @@ export function SlideGate({
       const dist = Math.abs(destY - window.scrollY);
       // мягкость по расстоянию: 650–1400 мс
       const ms = Math.max(650, Math.min(1400, 600 + dist * 0.5));
+
+      // готовим фейд для целевого слайда (если ещё не показывали)
+      prepareFade(idx);
 
       // сбрасываем спорт-холд при самом переходе
       sportHoldCountRef.current = 0;
@@ -156,6 +181,7 @@ export function SlideGate({
       animStopRef.current = animateScrollTo(destY, ms, () => {
         animating.current = false;
         animStopRef.current = null;
+        runFade(idx);
       });
     };
 
@@ -201,8 +227,7 @@ export function SlideGate({
       if (dir === 'down' && hasInSlideScrollDown(currentIndex)) return;
       if (dir === 'up' && hasInSlideScrollUp(currentIndex)) return;
 
-      // 5) Спец-правило только для SportSection (индекс 0):
-      // у самого конца секции (по прогрессу) первые 2 «флика» вниз — игнорируем
+      // 5) Спец-правило для SportSection (индекс 0): у самого низа — игнорим SPORT_HOLD_STEPS фликов вниз
       if (currentIndex === SPORT_SLIDE_INDEX && dir === 'down' && isTall(currentIndex)) {
         const p = slideProgress(currentIndex);
         if (p >= SPORT_END_THRESHOLD) {
@@ -212,19 +237,19 @@ export function SlideGate({
             sportLastGestureTsRef.current = now;
           }
           if (sportHoldCountRef.current <= SPORT_HOLD_STEPS) {
-            e.preventDefault(); // съедаем первый/второй флик
+            e.preventDefault(); // держим
             return;
           }
-          // На третий — идём дальше и сбрасываем
+          // на следующий — сбросим счётчик и пойдём дальше
           sportHoldCountRef.current = 0;
           sportLastGestureTsRef.current = 0;
         } else {
-          // если ушли от конца — сброс
+          // ушли от конца — сброс
           sportHoldCountRef.current = 0;
           sportLastGestureTsRef.current = 0;
         }
       } else if (dir === 'up') {
-        // любое движение вверх — сброс игнора
+        // любое движение вверх — сброс «держалки»
         sportHoldCountRef.current = 0;
         sportLastGestureTsRef.current = 0;
       }
@@ -241,7 +266,7 @@ export function SlideGate({
       stepToIndex(currentIndex + (dir === 'down' ? 1 : -1));
     };
 
-    // Тач: аналогично — считаем флики и игнорим 2 вниз у конца SportSection
+    // Тач: аналогично — игнорим SPORT_HOLD_STEPS свайпов вниз у конца SportSection
     let touchStartY = 0;
     const onTouchStart = (e: TouchEvent) => {
       touchStartY = e.touches[0].clientY;
@@ -289,7 +314,7 @@ export function SlideGate({
         if (p >= SPORT_END_THRESHOLD) {
           sportHoldCountRef.current += 1;
           if (sportHoldCountRef.current <= SPORT_HOLD_STEPS) {
-            return; // держим 1-й и 2-й свайп
+            return; // держим N раз
           }
           sportHoldCountRef.current = 0;
         } else {
