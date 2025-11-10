@@ -422,4 +422,12 @@
   left: 50%;
   transform: translateX(-50%);
   width: 100%;
+
+}
+
+
+@media screen and (max-width: 767px) {
+   .subtitle_cont {
+   padding: 0;
+   }
 }
