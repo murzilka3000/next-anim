@@ -14,7 +14,7 @@
 .header {
   display: grid;
   place-items: center;
-  padding: 100px 50px;
+  padding: 100px 50px 30px 50px;
 }
 
 .headerText {
@@ -60,7 +60,7 @@
 .board {
   position: relative;
   z-index: 1;
-  min-height: 870px;
+  min-height: 800px;
   overflow: hidden; /* на всякий: режем и тут */
   width: 100%;
   max-width: 1440px;
