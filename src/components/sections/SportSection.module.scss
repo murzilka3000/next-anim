@@ -275,4 +275,16 @@
   }
 }
 
+@media screen and (max-width: 767px) {
+  .card {
+    max-width: 270px;
+  }
 
+  .right {
+    height: 400px;
+  }
+
+  .caption {
+    padding: 23px;
+  }
+}
