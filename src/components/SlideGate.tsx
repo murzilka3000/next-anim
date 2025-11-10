@@ -6,7 +6,7 @@ import styles from './SlideGate.module.css';
 type Props = {
   children: React.ReactNode | React.ReactNode[];
   thresholdPx?: number;   // зона кромки (px), в пределах которой срабатывает докрутка
-  durationMs?: number;    // базовая длительность (используется как ориентир)
+  durationMs?: number;    // базовая длительность (ориентир)
   className?: string;
 };
 
@@ -27,15 +27,6 @@ function findScrollable(target: HTMLElement, within?: HTMLElement) {
   return null;
 }
 
-// эвристика: отличаем колёсико мыши от тачпада
-function isLikelyMouseWheel(e: WheelEvent) {
-  if (e.deltaMode === 1) return true; // «строки» — чаще мышь
-  const absY = Math.abs(e.deltaY);
-  const absX = Math.abs(e.deltaX);
-  // большие скачки — чаще мышь (на Win/Chrome ~100/125)
-  return absY >= 40 || absX >= 40;
-}
-
 // плавная прокрутка через RAF, всегда возвращает стоп-функцию
 function animateScrollTo(targetY: number, duration: number, onDone: () => void): () => void {
   const startY = window.scrollY;
@@ -49,7 +40,6 @@ function animateScrollTo(targetY: number, duration: number, onDone: () => void):
   }
 
   const start = performance.now();
-  // очень мягкая, без резкого старта/финиша
   const easeInOutSine = (t: number) => 0.5 * (1 - Math.cos(Math.PI * t));
 
   let rafId = 0;
@@ -81,7 +71,7 @@ function animateScrollTo(targetY: number, duration: number, onDone: () => void):
 export function SlideGate({
   children,
   thresholdPx = 24,
-  durationMs = 900, // базовая мягкость (ориентир для мыши)
+  durationMs = 900, // базовая мягкость
   className,
 }: Props) {
   const containerRef = useRef<HTMLDivElement>(null);
@@ -93,9 +83,9 @@ export function SlideGate({
   const animating = useRef(false);
   const animDirection = useRef<'down' | 'up' | null>(null);
 
-  // «мягкая передача» для мыши — планируем докрутку в следующем кадре
-  const handoffRafRef = useRef<number | null>(null);
-  const handoffDirRef = useRef<'down' | 'up' | null>(null);
+  // единый «замок жеста»: пока активен, игнорируем все wheel (мышь/тачпад)
+  const gestureLockedUntilRef = useRef<number>(0);
+  const GESTURE_TAIL_MS = 500; // хвост после анимации, чтобы съесть инерцию
 
   const childArray = React.Children.toArray(children).filter(Boolean);
 
@@ -111,6 +101,11 @@ export function SlideGate({
     const getTopAbs = (el: HTMLElement) =>
       el.getBoundingClientRect().top + window.scrollY;
     const getRect = (el: HTMLElement) => el.getBoundingClientRect();
+
+    const getContainerTopAbs = () =>
+      container.getBoundingClientRect().top + window.scrollY;
+    const getContainerBottomAbs = () =>
+      getContainerTopAbs() + container.offsetHeight;
 
     const getCurrentIndex = () => {
       const curY = window.scrollY;
@@ -138,6 +133,16 @@ export function SlideGate({
       );
     };
 
+    // у кромок всего контейнера — можно «выйти» наружу (к соседним обычным секциям)
+    const nearContainerTopOut = () => {
+      const r = container.getBoundingClientRect();
+      return r.top >= -1; // близко к верху окна
+    };
+    const nearContainerBottomOut = () => {
+      const r = container.getBoundingClientRect();
+      return r.bottom <= window.innerHeight + 1; // низ контейнера в зоне окна
+    };
+
     const stopCurrentAnim = () => {
       if (animStopRef.current) {
         animStopRef.current();
@@ -148,17 +153,16 @@ export function SlideGate({
       animDirection.current = null;
     };
 
-    // длительность по расстоянию (мягче и длиннее для мыши)
-    const durationFor = (distance: number, mode: 'wheel' | 'trackpad') => {
+    // длительность по расстоянию (мягко)
+    const durationFor = (distance: number) => {
       const dist = Math.max(0, distance);
-      if (mode === 'wheel') {
-        // 600–1600 мс, растёт с расстоянием
-        const ms = 600 + dist * 0.6;
-        return Math.max(700, Math.min(1600, ms));
-      }
-      // трекпад быстрее: 400–900 мс
-      const ms = 350 + dist * 0.4;
-      return Math.max(400, Math.min(900, ms));
+      // 650–1400 мс, растёт с расстоянием
+      const ms = 600 + dist * 0.5;
+      return Math.max(650, Math.min(1400, ms));
+    };
+
+    const lockGesturesFor = (ms: number) => {
+      gestureLockedUntilRef.current = Date.now() + ms;
     };
 
     const startSmoothTo = (y: number, ms: number) => {
@@ -166,11 +170,15 @@ export function SlideGate({
       animating.current = true;
       animTargetY.current = y;
       animDirection.current = window.scrollY < y ? 'down' : 'up';
+      // блокируем события на всю длительность анимации
+      lockGesturesFor(ms);
       animStopRef.current = animateScrollTo(y, ms, () => {
         animating.current = false;
         animTargetY.current = null;
         animDirection.current = null;
         animStopRef.current = null;
+        // добавляем хвост — съесть инерцию (мышь/тачпад)
+        lockGesturesFor(GESTURE_TAIL_MS);
       });
     };
 
@@ -187,50 +195,28 @@ export function SlideGate({
       }
     };
 
-    const scheduleHandoff = (dir: 'down' | 'up') => {
-      // отменяем предыдущую «передачу»
-      if (handoffRafRef.current != null) {
-        cancelAnimationFrame(handoffRafRef.current);
-        handoffRafRef.current = null;
-      }
-      handoffDirRef.current = dir;
-
-      handoffRafRef.current = requestAnimationFrame(() => {
-        handoffRafRef.current = null;
-
-        // после того как браузер применил шаг колеса — считаем всё заново
-        const currentIndexNow = getCurrentIndex();
-        const nextIndexNow = getNextIndex(currentIndexNow);
-        const prevIndexNow = getPrevIndex(currentIndexNow);
-        const curY = window.scrollY;
-
-        if (dir === 'down' && nextIndexNow != null) {
-          const nextTop = getTopAbs(slides[nextIndexNow]);
-          const dist = Math.abs(nextTop - curY);
-          const ms = durationFor(dist, 'wheel');
-          startSmoothTo(nextTop, ms);
-        } else if (dir === 'up' && prevIndexNow != null) {
-          const prevTop = getTopAbs(slides[prevIndexNow]);
-          const dist = Math.abs(prevTop - curY);
-          const ms = durationFor(dist, 'wheel');
-          startSmoothTo(prevTop, ms);
-        }
-      });
-    };
-
     const onWheel = (e: WheelEvent) => {
       if (!container.contains(e.target as Node)) return;
 
-      // при смене направления — останавливаем текущую анимацию
-      if (animating.current) {
-        if (
-          (e.deltaY > 0 && animDirection.current === 'up') ||
-          (e.deltaY < 0 && animDirection.current === 'down')
-        ) {
-          stopCurrentAnim();
-        } else {
-          return; // продолжаем существующую
-        }
+      const now = Date.now();
+      const dir: 'down' | 'up' = e.deltaY > 0 ? 'down' : 'up';
+
+      // Если пользователь у кромки SlideGate и скроллит наружу — даём выйти,
+      // даже если идёт анимация или активен «замок жеста».
+      if (dir === 'down' && nearContainerBottomOut()) {
+        // если анимация шла — отменяем её, выходим к следующим секциям
+        if (animating.current) stopCurrentAnim();
+        return; // не preventDefault — нативный скролл вниз
+      }
+      if (dir === 'up' && nearContainerTopOut()) {
+        if (animating.current) stopCurrentAnim();
+        return; // нативный скролл вверх
+      }
+
+      // Внутри SlideGate: если анимация идёт или замок активен — гасим события
+      if (animating.current || now < gestureLockedUntilRef.current) {
+        e.preventDefault();
+        return;
       }
 
       const currentIndex = getCurrentIndex();
@@ -252,54 +238,42 @@ export function SlideGate({
         if (e.deltaY < 0 && !atTop) return;
       }
 
-      const isMouse = isLikelyMouseWheel(e);
       const downEdge = nextIndex != null && nearBottomOf(currentIndex);
       const upEdge = prevIndex != null && nearTopOf(currentIndex);
 
-      if (!downEdge && !upEdge) return; // не у кромок — обычный скролл
+      // вне зон кромок слайда — даём странице крутиться как обычно
+      if (!downEdge && !upEdge) return;
+
+      // Берём управление: ровно один соседний слайд за жест
+      e.preventDefault();
 
       const curY = window.scrollY;
 
-      // вниз
-      if (e.deltaY > 0 && downEdge && nextIndex != null) {
+      if (dir === 'down' && downEdge && nextIndex != null) {
         const nextTop = getTopAbs(slides[nextIndex]);
         const dist = Math.abs(nextTop - curY);
-
-        if (isMouse) {
-          // Мышь: даём сделать естественный шаг, затем в след. кадр докручиваем
-          // не предотвращаем по событию — скролл произойдёт сам
-          scheduleHandoff('down');
-        } else {
-          // Тачпад: сразу, но мягко
-          const ms = durationFor(dist, 'trackpad');
-          e.preventDefault();
-          startSmoothTo(nextTop, ms);
-        }
+        const ms = durationFor(dist);
+        startSmoothTo(nextTop, ms);
         return;
       }
 
-      // вверх
-      if (e.deltaY < 0 && upEdge && prevIndex != null) {
+      if (dir === 'up' && upEdge && prevIndex != null) {
         const prevTop = getTopAbs(slides[prevIndex]);
         const dist = Math.abs(prevTop - curY);
-
-        if (isMouse) {
-          scheduleHandoff('up');
-        } else {
-          const ms = durationFor(dist, 'trackpad');
-          e.preventDefault();
-          startSmoothTo(prevTop, ms);
-        }
+        const ms = durationFor(dist);
+        startSmoothTo(prevTop, ms);
         return;
       }
     };
 
-    // свайпы (тач) — как раньше, плавно и быстрее
+    // свайпы (тач-экраны) — мягко, аналогично
     let touchStartY = 0;
     const onTouchStart = (e: TouchEvent) => {
       touchStartY = e.touches[0].clientY;
-      // если во время тача была анимация — останавливаем
       stopCurrentAnim();
+      // тач не блокируем по таймеру — сам жест короткий,
+      // но хвост колеса нас не касается
+      gestureLockedUntilRef.current = 0;
     };
     const onTouchEnd = (e: TouchEvent) => {
       if (animating.current) return;
@@ -331,6 +305,10 @@ export function SlideGate({
 
       const curY = window.scrollY;
 
+      // у кромки контейнера — даём выйти наружу нативно
+      if (dy < 0 && nearContainerBottomOut()) return;
+      if (dy > 0 && nearContainerTopOut()) return;
+
       if (dy < 0 && nextIndex != null && nearBottomOf(currentIndex)) {
         const nextTop = getTopAbs(slides[nextIndex]);
         const dist = Math.abs(nextTop - curY);
@@ -354,11 +332,11 @@ export function SlideGate({
       container.removeEventListener('wheel', onWheel as EventListener);
       container.removeEventListener('touchstart', onTouchStart as EventListener);
       container.removeEventListener('touchend', onTouchEnd as EventListener);
-      if (handoffRafRef.current != null) {
-        cancelAnimationFrame(handoffRafRef.current);
-        handoffRafRef.current = null;
+      if (animStopRef.current) {
+        animStopRef.current();
+        animStopRef.current = null;
       }
-      stopCurrentAnim();
+      gestureLockedUntilRef.current = 0;
     };
   }, [thresholdPx, durationMs, childArray.length]);
 
