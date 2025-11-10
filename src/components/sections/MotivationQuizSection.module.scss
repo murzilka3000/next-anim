@@ -17,11 +17,11 @@
   place-items: center;
 }
 
-// @media screen and (max-width: 767px) {
-//   .section {
-//     background: #fce2c1;
-//   }
-// }
+@media screen and (max-width: 767px) {
+  .section {
+    height: 500px!important;
+  }
+}
 
 .intro,
 .quiz {
