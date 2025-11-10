@@ -79,6 +79,32 @@ const MobileAnswerSlide: React.FC<{ myth: Myth }> = ({ myth }) => {
   const backRef = useRef<HTMLDivElement | null>(null);
   const [revealed, setRevealed] = useState(false);
 
+  // Для корректного скролла на мобильных при показе ответа
+  const touchStartRef = useRef<{ x: number; y: number } | null>(null);
+
+  const handleTouchStartCapture = (e: React.TouchEvent) => {
+    const t = e.touches[0];
+    touchStartRef.current = { x: t.clientX, y: t.clientY };
+  };
+
+  const handleTouchMoveCapture = (e: React.TouchEvent) => {
+    // Если ответ показан — даём вертикальным жестам пройти к странице,
+    // а горизонтальные по-прежнему отдаём Swiper'у (для перелистывания)
+    if (!revealed || !touchStartRef.current) return;
+    const t = e.touches[0];
+    const dx = Math.abs(t.clientX - touchStartRef.current.x);
+    const dy = Math.abs(t.clientY - touchStartRef.current.y);
+
+    // Вертикальный жест доминирует — не отдаём событие Swiper'у
+    if (dy > dx) {
+      e.stopPropagation();
+    }
+  };
+
+  const handleTouchEndCapture = () => {
+    touchStartRef.current = null;
+  };
+
   useEffect(() => {
     const front = frontRef.current;
     const back = backRef.current;
@@ -143,7 +169,14 @@ const MobileAnswerSlide: React.FC<{ myth: Myth }> = ({ myth }) => {
           reveal();
         }
       }}
-      style={{ cursor: revealed ? "default" : "pointer" }}
+      // Разрешаем нативные жесты, чтобы не блокировать скролл
+      onTouchStartCapture={handleTouchStartCapture}
+      onTouchMoveCapture={handleTouchMoveCapture}
+      onTouchEndCapture={handleTouchEndCapture}
+      style={{
+        cursor: revealed ? "default" : "pointer",
+        touchAction: "auto",
+      }}
     >
       <div className={styles.cardInner} ref={frontRef} aria-hidden={revealed}>
         <div className={styles.cardLabel}>{myth.title}</div>
@@ -515,6 +548,10 @@ export const MythsDragSection: React.FC = () => {
             keyboard={{ enabled: true }}
             slidesPerView={1}
             speed={450}
+            // Отступы между слайдами
+            spaceBetween={16}
+            // Чтобы не блокировать нативный вертикальный скролл страницы
+            touchStartPreventDefault={false}
           >
             {myths.map((m) => (
               <SwiperSlide className={styles.mobileSlide} key={`myth-${m.id}`}>
