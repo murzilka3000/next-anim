@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import styles from './SlideGate.module.css';
 
 type Props = {
@@ -79,14 +79,44 @@ export function SlideGate({
   const SPORT_HOLD_STEPS = 2;
   const sportHoldCountRef = useRef(0);
 
+  // Мобильный брейкпоинт: на мобилке SlideGate ОТКЛЮЧЕН
+  const [isMobile, setIsMobile] = useState(false);
+  useEffect(() => {
+    const mq = window.matchMedia('(max-width: 811px)');
+    const onChange = (e: MediaQueryListEvent | MediaQueryList) =>
+      setIsMobile('matches' in e ? e.matches : (e as MediaQueryList).matches);
+    onChange(mq);
+    // @ts-ignore
+    mq.addEventListener ? mq.addEventListener('change', onChange) : mq.addListener(onChange as any);
+    return () => {
+      // @ts-ignore
+      mq.removeEventListener ? mq.removeEventListener('change', onChange) : mq.removeListener(onChange as any);
+    };
+  }, []);
+
   const setSlideRef = (el: HTMLDivElement | null, i: number) => {
     slideRefs.current[i] = el || (null as unknown as HTMLDivElement);
   };
 
   useEffect(() => {
     const container = containerRef.current!;
+    if (!container) return;
+
+    // На мобильных — полностью выключаем SlideGate: не вешаем слушатели, не перехватываем скролл
+    if (isMobile) {
+      // безопасно остановим возможную анимацию
+      if (animStopRef.current) {
+        animStopRef.current();
+        animStopRef.current = null;
+      }
+      animating.current = false;
+      lockUntilRef.current = 0;
+      sportHoldCountRef.current = 0;
+      return;
+    }
+
     const slides = slideRefs.current.filter(Boolean);
-    if (!container || slides.length < 2) return;
+    if (slides.length < 2) return;
 
     const getTopAbs = (el: HTMLElement) => el.getBoundingClientRect().top + window.scrollY;
 
@@ -187,25 +217,22 @@ export function SlideGate({
       if (dir === 'down' && hasInSlideScrollDown(currentIndex)) return;
       if (dir === 'up' && hasInSlideScrollUp(currentIndex)) return;
 
-      // 5) Спец-правило только для SportSection (индекс 0) и только на десктопе/pin-сценарии (isTall)
+      // 5) Спец-правило только для SportSection (индекс 0)
       if (currentIndex === SPORT_SLIDE_INDEX && isTall(currentIndex)) {
         if (dir === 'down') {
-          const atInSlideEndDown = !hasInSlideScrollDown(currentIndex); // у самого низа секции
+          const atInSlideEndDown = !hasInSlideScrollDown(currentIndex);
           if (atInSlideEndDown) {
             if (sportHoldCountRef.current < SPORT_HOLD_STEPS) {
-              sportHoldCountRef.current += 1; // копим 2 «рыбка»
-              e.preventDefault();            // съедаем жест
+              sportHoldCountRef.current += 1; // копим игноры
+              e.preventDefault();
               return;
             }
-            // на 3-й жест — сбрасываем и идём дальше
             sportHoldCountRef.current = 0;
           }
         } else {
-          // любое движение вверх — сбрасывает накопленные игноры
           sportHoldCountRef.current = 0;
         }
       } else {
-        // на других слайдах — не копим холд
         sportHoldCountRef.current = 0;
       }
 
@@ -307,7 +334,7 @@ export function SlideGate({
       lockUntilRef.current = 0;
       sportHoldCountRef.current = 0;
     };
-  }, [durationMs]);
+  }, [durationMs, isMobile]);
 
   return (
     <section ref={containerRef} className={[styles.container, className].filter(Boolean).join(' ')}>

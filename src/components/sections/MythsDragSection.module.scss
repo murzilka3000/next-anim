@@ -6,7 +6,7 @@
   --border: rgba(111, 86, 71, 0.35);
   --shadow: 0 12px 30px rgba(0, 0, 0, 0.08);
 
-  background: var(--bg);
+  // background: var(--bg);
   color: var(--text);
   padding: clamp(28px, 6vw, 72px) clamp(20px, 6vw, 72px);
   position: relative;
@@ -17,12 +17,18 @@
   flex-direction: column;
 }
 
-
 @media screen and (max-width: 767px) {
   .section {
-    background: #fce2c1;
+    display: block;
+    height: auto;
   }
 }
+
+// @media screen and (max-width: 767px) {
+//   .section {
+//     background: #fce2c1;
+//   }
+// }
 
 /* Этап 1 */
 .intro {
@@ -71,7 +77,6 @@
 
 /* Этап 2 — desktop playground */
 .playground {
-
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: clamp(16px, 4vw, 48px);
@@ -380,8 +385,6 @@
   transform: translate(-50%, 50%);
 }
 
-
-
 .card {
   position: relative;
 }
@@ -393,13 +396,10 @@
   right: 0;
 }
 
-
-
 .card:has(.dropHint) {
-  border: 1px dashed #8E705F66;
+  border: 1px dashed #8e705f66;
   border-radius: 20px;
 }
-
 
 .abs_434 {
   display: flex;

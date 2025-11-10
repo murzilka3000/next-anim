@@ -9,11 +9,11 @@
   color: var(--text);
 }
 
-@media screen and (max-width: 767px) {
-  .section {
-    background: #fce2c1;
-  }
-}
+// @media screen and (max-width: 767px) {
+//   .section {
+//     background: transparent;
+//   }
+// }
 
 .isPinned {
   z-index: 50;
