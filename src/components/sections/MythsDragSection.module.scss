@@ -17,8 +17,6 @@
   flex-direction: column;
 }
 
-
-
 @media screen and (max-width: 767px) {
   .section {
     display: block;
@@ -414,4 +412,14 @@
   margin-top: 5px;
 }
 
-
+.vtrvgtr {
+  font-weight: 400;
+  font-size: 13px;
+  text-align: center;
+  color: var(--text);
+  position: absolute;
+  bottom: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 100%;
+}

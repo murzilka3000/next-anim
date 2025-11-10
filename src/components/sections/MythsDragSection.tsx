@@ -148,6 +148,11 @@ const MobileAnswerSlide: React.FC<{ myth: Myth }> = ({ myth }) => {
       <div className={styles.cardInner} ref={frontRef} aria-hidden={revealed}>
         <div className={styles.cardLabel}>{myth.title}</div>
         <div className={styles.cardText}>{myth.text}</div>
+        {!revealed && (
+          <p className={styles.vtrvgtr} aria-hidden={revealed}>
+            Нажмите на карточку, чтобы развеять миф
+          </p>
+        )}
       </div>
 
       <div className={styles.answer} ref={backRef} aria-hidden={!revealed}>
