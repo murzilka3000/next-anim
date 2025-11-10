@@ -1,174 +1,185 @@
-"use client"
+'use client';
 
-import React, { useEffect, useRef } from "react"
-import styles from "./SlideGate.module.css"
+import React, { useEffect, useRef } from 'react';
+import styles from './SlideGate.module.css';
 
 type Props = {
-  children: React.ReactNode[]
-  thresholdPx?: number
-  durationMs?: number
-  className?: string
-}
+  children: [React.ReactNode, React.ReactNode];
+  thresholdPx?: number; // при каком «вхождении» второй секции вниз сработает переход
+  durationMs?: number;  // параметр оставлен для совместимости, но нативный smooth не использует его
+  className?: string;
+};
 
 function isScrollable(el: HTMLElement) {
-  const style = window.getComputedStyle(el)
-  const canY = /auto|scroll/.test(style.overflowY) && el.scrollHeight > el.clientHeight + 1
-  return canY
+  const style = window.getComputedStyle(el);
+  const canY =
+    /auto|scroll/.test(style.overflowY) &&
+    el.scrollHeight > el.clientHeight + 1;
+  return canY;
 }
 
 function findScrollable(target: HTMLElement, within?: HTMLElement) {
-  let el: HTMLElement | null = target
+  let el: HTMLElement | null = target;
   while (el && (!within || within.contains(el))) {
-    if (isScrollable(el)) return el
-    el = el.parentElement
+    if (isScrollable(el)) return el;
+    el = el.parentElement;
   }
-  return null
+  return null;
 }
 
-function disableScrollTemporarily(ms = 600) {
-  document.body.style.overflow = "hidden"
-  setTimeout(() => {
-    document.body.style.overflow = ""
-  }, ms)
-}
+export function SlideGate({
+  children,
+  thresholdPx = 24,
+  // durationMs оставляем в пропсах, но используем нативный smooth
+  durationMs,
+  className,
+}: Props) {
+  const containerRef = useRef<HTMLDivElement>(null);
+  const firstRef = useRef<HTMLDivElement>(null);
+  const secondRef = useRef<HTMLDivElement>(null);
 
-export function SlideGate({ children, thresholdPx = 24, durationMs, className }: Props) {
-  const containerRef = useRef<HTMLDivElement>(null)
-  const slideRefs = useRef<HTMLDivElement[]>([])
-  const animTargetY = useRef<number | null>(null)
-  const animating = useRef(false)
+  // флаги анимации и целевая позиция
+  const animTargetY = useRef<number | null>(null);
+  const animating = useRef(false);
 
   useEffect(() => {
-    const container = containerRef.current
-    if (!container || !slideRefs.current.length) return
+    const container = containerRef.current!;
+    const first = firstRef.current!;
+    const second = secondRef.current!;
+    if (!container || !first || !second) return;
 
-    const slides = slideRefs.current
-    const getTop = (el: HTMLElement) => el.getBoundingClientRect().top + window.scrollY
-    const getCurrentIndex = () => {
-      const scrollY = window.scrollY
-      let closestIdx = 0
-      let minDelta = Infinity
-      slides.forEach((s, i) => {
-        const top = getTop(s)
-        const delta = Math.abs(scrollY - top)
-        if (delta < minDelta) {
-          minDelta = delta
-          closestIdx = i
-        }
-      })
-      return closestIdx
-    }
+    const getTop = (el: HTMLElement) => el.getBoundingClientRect().top + window.scrollY;
+    const getRect = (el: HTMLElement) => el.getBoundingClientRect();
+
+    const isSecondEntered = () => {
+      const r = getRect(second);
+      return r.top < window.innerHeight - thresholdPx; // второй уже виден снизу
+    };
+
+    const isNearSecondTop = () => {
+      const r = getRect(second);
+      return r.top <= thresholdPx; // верх второй у верхней кромки
+    };
 
     const startSmoothTo = (y: number) => {
-      disableScrollTemporarily()
-      animating.current = true
-      animTargetY.current = y
-      window.scrollTo({ top: y, behavior: "smooth" })
-    }
+      animating.current = true;
+      animTargetY.current = y;
+      window.scrollTo({ top: y, behavior: 'smooth' });
+    };
 
     const cancelAnimation = () => {
-      animating.current = false
-      animTargetY.current = null
-    }
+      animating.current = false;
+      animTargetY.current = null;
+    };
 
+    // следим, дошли ли до цели или пользователь прервал анимацию
     const onScroll = () => {
-      if (!animating.current || animTargetY.current == null) return
-      const delta = Math.abs(window.scrollY - animTargetY.current)
-      if (delta < 2) cancelAnimation()
-    }
-
-    const scrollToIndex = (index: number) => {
-      if (index < 0 || index >= slides.length) return
-      const y = getTop(slides[index])
-      startSmoothTo(y)
-    }
+      if (!animating.current || animTargetY.current == null) return;
+      const delta = Math.abs(window.scrollY - animTargetY.current);
+      // считаем «готово», когда почти попали, или перепрыгнули
+      if (delta < 2 || (window.scrollY > animTargetY.current && isSecondEntered())) {
+        cancelAnimation();
+      }
+    };
 
     const onWheel = (e: WheelEvent) => {
-      if (!container.contains(e.target as Node)) return
-      if (animating.current) return
+      if (!container.contains(e.target as Node)) return;
 
-      const currentIndex = getCurrentIndex()
-      const direction = e.deltaY > 0 ? 1 : -1
-      const nextIndex = currentIndex + direction
+      // если идёт программная прокрутка — не мешаем пользователю, не блокируем события
+      if (animating.current) return;
 
-      // внутренняя прокрутка — пропускаем
-      const currentSection = slides[currentIndex]
-      const scrollable = findScrollable(e.target as HTMLElement, currentSection)
+      const secondTopAbs = getTop(second);
+      const firstTopAbs = getTop(first);
+      const curY = window.scrollY;
+
+      // внутренняя прокрутка (если таргет внутри скроллимого контейнера)
+      const currentSection = isSecondEntered() ? second : first;
+      const scrollable = findScrollable(e.target as HTMLElement, currentSection);
       if (scrollable) {
-        const atBottom = Math.ceil(scrollable.scrollTop + scrollable.clientHeight) >= scrollable.scrollHeight
-        const atTop = scrollable.scrollTop <= 0
-        if (direction > 0 && !atBottom) return
-        if (direction < 0 && !atTop) return
+        const atBottom = Math.ceil(scrollable.scrollTop + scrollable.clientHeight) >= scrollable.scrollHeight;
+        const atTop = scrollable.scrollTop <= 0;
+        if (e.deltaY > 0 && !atBottom) return;
+        if (e.deltaY < 0 && !atTop) return;
       }
 
-      if (nextIndex >= 0 && nextIndex < slides.length) {
-        e.preventDefault()
-        scrollToIndex(nextIndex)
+      // Вниз: когда вторая уже видна, докрутить плавно к её началу
+      if (e.deltaY > 0 && isSecondEntered()) {
+        // если уже стоим на самом верху второй — не перехватываем
+        if (curY >= secondTopAbs - 1) return;
+        e.preventDefault(); // гасим «микрошаг» по колесику, чтобы не было дерганий
+        startSmoothTo(secondTopAbs);
+        return;
       }
-    }
+
+      // Вверх: когда верх второй у верхней кромки, плавно ве��нуться к началу первой
+      if (e.deltaY < 0 && isNearSecondTop()) {
+        // если уже у начала первой — пропускаем
+        if (curY <= firstTopAbs + 1) return;
+        e.preventDefault();
+        startSmoothTo(firstTopAbs);
+        return;
+      }
+      // иначе — даём странице крутиться как обычно
+    };
 
     // свайпы
-    let touchStartY = 0
+    let touchStartY = 0;
     const onTouchStart = (e: TouchEvent) => {
-      touchStartY = e.touches[0].clientY
-    }
-
+      touchStartY = e.touches[0].clientY;
+    };
     const onTouchEnd = (e: TouchEvent) => {
-      if (animating.current) return
-      const t = e.changedTouches[0]
-      const dy = t.clientY - touchStartY
-      const absY = Math.abs(dy)
-      const swipeThreshold = 40
-      if (absY < swipeThreshold) return
+      if (animating.current) return;
+      const t = e.changedTouches[0];
+      const dy = t.clientY - touchStartY;
+      const absY = Math.abs(dy);
+      const swipeThreshold = 40;
+      if (absY < swipeThreshold) return;
 
-      const direction = dy < 0 ? 1 : -1
-      const currentIndex = getCurrentIndex()
-      const nextIndex = currentIndex + direction
+      const secondTopAbs = getTop(second);
+      const firstTopAbs = getTop(first);
+      const curY = window.scrollY;
 
-      // проверка внутреннего скролла
-      const target = e.target as HTMLElement
-      const currentSection = slides[currentIndex]
-      const scrollable = findScrollable(target, currentSection)
+      // внутренняя прокрутка на таче — проверяем только на момент жеста (простая эвристика)
+      const target = e.target as HTMLElement;
+      const currentSection = isSecondEntered() ? second : first;
+      const scrollable = findScrollable(target, currentSection);
       if (scrollable) {
-        const atBottom = Math.ceil(scrollable.scrollTop + scrollable.clientHeight) >= scrollable.scrollHeight
-        const atTop = scrollable.scrollTop <= 0
-        if (direction > 0 && !atBottom) return
-        if (direction < 0 && !atTop) return
+        const atBottom = Math.ceil(scrollable.scrollTop + scrollable.clientHeight) >= scrollable.scrollHeight;
+        const atTop = scrollable.scrollTop <= 0;
+        if (dy < 0 && !atBottom) return;
+        if (dy > 0 && !atTop) return;
       }
 
-      if (nextIndex >= 0 && nextIndex < slides.length) {
-        scrollToIndex(nextIndex)
+      if (dy < 0 && isSecondEntered() && curY < secondTopAbs - 1) {
+        startSmoothTo(secondTopAbs);
+      } else if (dy > 0 && isNearSecondTop() && curY > firstTopAbs + 1) {
+        startSmoothTo(firstTopAbs);
       }
-    }
+    };
 
-    window.addEventListener("scroll", onScroll, { passive: true })
-    container.addEventListener("wheel", onWheel, { passive: false })
-    container.addEventListener("touchstart", onTouchStart, { passive: true })
-    container.addEventListener("touchend", onTouchEnd, { passive: true })
+    window.addEventListener('scroll', onScroll, { passive: true });
+    container.addEventListener('wheel', onWheel, { passive: false });
+    container.addEventListener('touchstart', onTouchStart, { passive: true });
+    container.addEventListener('touchend', onTouchEnd, { passive: true });
 
     return () => {
-      window.removeEventListener("scroll", onScroll)
-      container.removeEventListener("wheel", onWheel)
-      container.removeEventListener("touchstart", onTouchStart)
-      container.removeEventListener("touchend", onTouchEnd)
-    }
-  }, [thresholdPx, durationMs])
+      window.removeEventListener('scroll', onScroll);
+      container.removeEventListener('wheel', onWheel as EventListener);
+      container.removeEventListener('touchstart', onTouchStart as EventListener);
+      container.removeEventListener('touchend', onTouchEnd as EventListener);
+    };
+  }, [thresholdPx, durationMs]);
 
   return (
-    <section ref={containerRef} className={[styles.container, className].filter(Boolean).join(" ")}>
+    <section ref={containerRef} className={[styles.container, className].filter(Boolean).join(' ')}>
       <div className={styles.track}>
-        {children.map((child, i) => (
-          <div
-            key={i}
-            ref={(el) => {
-              if (el) slideRefs.current[i] = el
-            }}
-            className={styles.slide}
-          >
-            {child}
-          </div>
-        ))}
+        <div ref={firstRef} className={styles.slide}>
+          {children[0]}
+        </div>
+        <div ref={secondRef} className={styles.slide}>
+          {children[1]}
+        </div>
       </div>
     </section>
-  )
+  );
 }

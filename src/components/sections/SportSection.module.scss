@@ -5,7 +5,7 @@
 
   position: relative;
   z-index: 0;
-  background: transparent;
+  background: var(--bg);
   color: var(--text);
 }
 
@@ -273,3 +273,5 @@
     flex: 0 0 300px;
   }
 }
+
+
