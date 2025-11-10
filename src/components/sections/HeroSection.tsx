@@ -24,19 +24,21 @@ export const HeroSection = () => {
         .timeline({ repeat: -1, yoyo: true, defaults: { ease: "sine.inOut" } })
         .to(frisbeeSel, { y: "-=12", duration: 1.2 });
 
-      // Скролл-сцена
+      // Скролл‑сцена: без pinSpacing → не будет «длинной пустоты» после секции
       const tl = gsap.timeline({
         scrollTrigger: {
           trigger: container.current,
-          pin: true,
           start: "top top",
-          end: "+=50",
+          end: "+=360",         // комфортный ход под scrub (можно подправить)
           scrub: 1,
+          pin: true,
+          pinSpacing: false,    // ключевой параметр — убирает лишнее пустое место
+          invalidateOnRefresh: true,
         },
       });
 
       tl.to(".text-content", { opacity: 0, y: 50, duration: 0.5 })
-        // Прячем блики прямо перед началом зума
+        // Прячем блики перед зумом
         .to(glintSel, { autoAlpha: 0, duration: 0.2, ease: "none" }, ">-0.1")
         .to(
           frisbeeSel,
@@ -60,7 +62,6 @@ export const HeroSection = () => {
           },
           "<"
         );
-      // При обратном скролле GSAP сам вернёт autoAlpha для бликов.
     },
     { scope: container }
   );
@@ -70,6 +71,7 @@ export const HeroSection = () => {
       <a className={styles.abs_img} href="https://www.rfdf.ru/">
         <img src="/images/4.svg" alt="" />
       </a>
+
       <div className={styles.wrapper}>
         <div className={`${styles.contentWrapper} text-content`}>
           <div className={styles.logos}>
