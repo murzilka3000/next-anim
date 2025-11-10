@@ -10,6 +10,11 @@
   color: var(--text);
   padding: clamp(28px, 6vw, 72px) clamp(20px, 6vw, 72px);
   position: relative;
+  height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
 }
 
 
@@ -29,6 +34,7 @@
   max-width: 1440px;
   position: sticky;
   top: 0;
+  width: 100%;
 }
 
 .subtitle_cont {
@@ -74,6 +80,7 @@
   max-width: 1440px;
   margin-left: auto;
   margin-right: auto;
+  width: 100%;
 }
 
 .left,

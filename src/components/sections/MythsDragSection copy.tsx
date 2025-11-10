@@ -174,6 +174,7 @@ const MobileAnswerSlide: React.FC<{ myth: Myth }> = ({ myth }) => {
 
 export const MythsDragSection: React.FC = () => {
   const sectionRef = useRef<HTMLElement | null>(null);
+  const introRef = useRef<HTMLDivElement | null>(null);
 
   // desktop
   const playgroundRef = useRef<HTMLDivElement | null>(null);
@@ -283,27 +284,28 @@ export const MythsDragSection: React.FC = () => {
 
   useGSAP(
     () => {
+      const intro = introRef.current!;
       const play = playgroundRef.current!;
       const mm = gsap.matchMedia();
 
       // Десктоп
       mm.add("(min-width: 812px)", () => {
-        // Плавное появление интерактива при входе в секцию
         gsap.set(play, { opacity: 0, y: 24 });
-        gsap.to(play, {
-          opacity: 1,
-          y: 0,
-          ease: "none",
-          scrollTrigger: {
-            trigger: play,
-            start: "top 85%",
-            end: "top 60%",
-            scrub: true,
-            // без snap — никакого автоперелистывания
-            refreshPriority: -1,
-          },
-        });
         setDesktopCardHidden(false);
+
+        const tlIntro = gsap
+          .timeline({
+            scrollTrigger: {
+              trigger: intro,
+              start: "center center",
+              end: "+=550",
+              scrub: true,
+              // snap удалён, чтобы убрать автоперелистывание
+              refreshPriority: -1,
+            },
+          })
+          .to(intro, { opacity: 0, y: -10, ease: "none" })
+          .to(play, { opacity: 1, y: 0, ease: "none" }, "<");
 
         const card = dragCardRef.current!;
         const zone = dropZoneRef.current!;
@@ -382,6 +384,8 @@ export const MythsDragSection: React.FC = () => {
         ro.observe(sectionRef.current!);
 
         return () => {
+          tlIntro.scrollTrigger?.kill();
+          tlIntro.kill();
           ro.disconnect();
           dr.kill();
         };
@@ -396,6 +400,26 @@ export const MythsDragSection: React.FC = () => {
 
   return (
     <section ref={sectionRef} className={styles.section}>
+      {/* Этап 1: интро-текст (десктоп) */}
+      {!isMobile && (
+        <div ref={introRef} className={styles.intro}>
+          <h2 className={styles.title}>
+            Очень хочется делать <br /> силовые каждый день
+          </h2>
+          <div className={styles.subtitle_cont}>
+            <p className={styles.subtitle}>
+              как Джефф Безос, однако между <br /> намерением и действием часто{" "}
+              <br /> появляется надоедливое «но».
+            </p>
+          </div>
+          <p className={styles.lead}>
+            Давайте вместе с тренерами школы Springle разберём <br />
+            мифы, которые мешают вам сделать занятия спортом <br />
+            лёгкой привычкой.
+          </p>
+        </div>
+      )}
+
       {/* Этап 2: playground (десктоп) */}
       {!isMobile && (
         <div ref={playgroundRef} className={styles.playground}>
@@ -502,6 +526,23 @@ export const MythsDragSection: React.FC = () => {
       {/* Мобильный: один слайд на миф — клик по карточке переворачивает на ответ */}
       {isMobile && (
         <div ref={mobileRef} className={styles.mobileSlider}>
+          <div className={styles.intro}>
+            <h2 className={styles.title}>
+              Очень хочется делать <br /> силовые каждый день
+            </h2>
+            <div className={styles.subtitle_cont}>
+              <p className={styles.subtitle}>
+                как Джефф Безос, однако между <br /> намерением и действием
+                часто <br /> появляется надоедливое «но».
+              </p>
+            </div>
+            <p className={styles.lead}>
+              Давайте вместе с тренерами школы Springle разберём <br />
+              мифы, которые мешают вам сделать занятия спортом <br />
+              лёгкой привычкой.
+            </p>
+          </div>
+
           <Swiper
             modules={[Pagination, Mousewheel, Keyboard]}
             className={styles.swiper}

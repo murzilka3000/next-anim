@@ -6,14 +6,15 @@ import { MotivationQuizSection } from "@/components/sections/MotivationQuizSecti
 import { PeopleFrisbeeSection } from "@/components/sections/PeopleFrisbeeSection";
 import Finish from "@/components/sections/Finish";
 import { SlideGate } from "@/components/SlideGate";
+import { MythsIntroSection } from "@/components/sections/MythsIntroSection";
 
 export default function HomePage() {
   return (
     <main className={styles.main}>
       <HeroSection />
       <SportSection />
-
       <SlideGate thresholdPx={24} durationMs={1000}>
+        <MythsIntroSection />
         <MythsDragSection />
         <MotivationQuizSection />
       </SlideGate>
