@@ -571,7 +571,8 @@ export const MotivationQuizSection: React.FC = () => {
     overscrollBehavior: "contain",
     WebkitOverflowScrolling: "touch",
     padding: "55px 10px 55px 10px",
-    margin: 'auto 0'
+    margin: 'auto 0',
+    overflowX: 'hidden'
   };
 
   const closeBtnStyle: React.CSSProperties = {
