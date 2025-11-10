@@ -386,8 +386,28 @@ export const PeopleFrisbeeSection: React.FC = () => {
                       mImgRefs.current[i] = el;
                     }}
                     onClick={() => flyTo(i)}
+                    role="button"
+                    aria-label={fixText(`Передать тарелку: ${p.name}`)}
+                    style={{ cursor: "pointer" }}
                   />
-                  {p.tag && <div className={styles.mobileSkill}>{p.tag}</div>}
+                  {p.tag && (
+                    <div
+                      className={styles.mobileSkill}
+                      onClick={() => flyTo(i)}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter" || e.key === " ") {
+                          e.preventDefault();
+                          flyTo(i);
+                        }
+                      }}
+                      role="button"
+                      tabIndex={0}
+                      aria-label={fixText(`Передать тарелку: ${p.name}`)}
+                      style={{ cursor: "pointer" }}
+                    >
+                      {p.tag}
+                    </div>
+                  )}
                 </div>
                 <div className={styles.mobileCardCol}>
                   <div className={styles.mobileCard}>
