@@ -199,11 +199,23 @@
   .logos img {
     max-width: 140px;
   }
+
+  .frisbee {
+    width: 350px;
+    bottom: 30px;
+  }
+
+  .hand {
+    bottom: -170px;
+    right: 45%;
+  }
 }
 
 @media screen and (max-width: 376px) {
   .hand {
-    bottom: -200px;
+    bottom: -210px;
+    width: 140px;
+    right: 50%;
   }
 
   .frisbee {
@@ -232,10 +244,6 @@
     max-width: 400px;
   }
 }
-
-
-
-
 
 .logos > :first-child img {
   width: 100%;

@@ -23,7 +23,7 @@ const ANIM = {
 
 type Skill = { id: string; title: React.ReactNode; qId?: Question["id"] };
 
-/* ===== NBSP обработчик (висячие предлоги/союзы/частицы) ===== */
+/* ===== NBSP обработчик ===== */
 const IGNORE_TAGS = new Set([
   "SCRIPT",
   "STYLE",
@@ -42,7 +42,6 @@ const RX_AFTER_SHORT = new RegExp(
   `(^|[\\s(«„"'])(${SHORT})\\s+(?=[\\p{L}\\d])`,
   "giu"
 );
-
 const RX_BEFORE_LAST_SHORT = new RegExp(
   `(\\S)\\s(${SHORT})([.!?:,…»"')\\]]*\\s*$)`,
   "giu"
@@ -369,7 +368,7 @@ export const MotivationQuizSection: React.FC = () => {
   const handleStart = (e: React.MouseEvent) => {
     e.preventDefault();
     if (isMobile) {
-      setModalOpen(true); // рендерим модалку; начальные vis состояния выставятся в useEffect выше
+      setModalOpen(true);
     } else {
       transitionTimeline.current?.play();
     }
@@ -406,27 +405,6 @@ export const MotivationQuizSection: React.FC = () => {
     setIdx(0);
     setSelected(null);
     setAnswers({});
-    gsap.set(explainWrapRef.current, { height: 0 });
-
-    const tl = gsap
-      .timeline()
-      .to(resultsRef.current, {
-        autoAlpha: 0,
-        pointerEvents: "none",
-        duration: 0.3,
-        ease: "power2.inOut",
-      })
-      .to(
-        quizRef.current,
-        {
-          autoAlpha: 1,
-          pointerEvents: "auto",
-          duration: 0.3,
-          ease: "power2.inOut",
-        },
-        "<"
-      );
-    tl.timeScale(ANIM.speed);
   };
 
   const selectOption = (opt: Option) => {
@@ -437,31 +415,7 @@ export const MotivationQuizSection: React.FC = () => {
       ...prev,
       [q.id]: { selectedId: opt.id, correct: opt.correct },
     }));
-    // Переход на результаты теперь только по кнопке (см. nextQuestion).
   };
-
-  // Плавный показ объяснения: анимируем высоту обёртки и появление контента
-  useEffect(() => {
-    if (!selected) return;
-    const raf = requestAnimationFrame(() => {
-      const wrap = explainWrapRef.current;
-      const el = explainElRef.current;
-      if (!wrap || !el) return;
-
-      gsap.killTweensOf([wrap, el]);
-      const h = el.offsetHeight;
-
-      gsap.set(el, { y: -6, autoAlpha: 0, transformOrigin: "top center" });
-      gsap
-        .timeline()
-        .to(wrap, { height: h, duration: 0.32, ease: "power2.out" }, 0)
-        .to(el, { y: 0, autoAlpha: 1, duration: 0.28, ease: "power2.out" }, 0.02)
-        // Важно: используем .set на таймлайне, а не .add(() => gsap.set(...)),
-        // чтобы не возвращать Tween из коллбэка и не ловить TS-ошибку.
-        .set(wrap, { height: "auto" });
-    });
-    return () => cancelAnimationFrame(raf);
-  }, [selected, idx]);
 
   const nextQuestion = () => {
     if (isTransitioning) return;
@@ -475,12 +429,13 @@ export const MotivationQuizSection: React.FC = () => {
     const header = headerRef.current;
     const optionsList = optionsRef.current;
     const card = cardRef.current;
-    const explainEl = explainElRef.current;
-    const explainWrap = explainWrapRef.current;
 
     if (!header || !optionsList || !card) return;
 
     setIsTransitioning(true);
+
+    // Закрываем explain (CSS-анимация через grid-template-rows/opacity)
+    setSelected(null);
 
     const optionEls = Array.from(
       optionsList.querySelectorAll(`.${styles.option}`)
@@ -490,13 +445,13 @@ export const MotivationQuizSection: React.FC = () => {
       card.querySelectorAll(`.${styles.top_card}`)
     ) as HTMLElement[];
 
-    gsap.killTweensOf([header, ...optionEls, ...topCards, explainEl, explainWrap]);
+    gsap.killTweensOf([header, ...optionEls, ...topCards]);
 
     const tl = gsap.timeline({
       defaults: { ease: "power2.out" },
       onComplete: () => {
         setIdx((i) => i + 1);
-        setSelected(null);
+        setIsTransitioning(false);
       },
     });
 
@@ -513,18 +468,12 @@ export const MotivationQuizSection: React.FC = () => {
       );
     }
 
-    if (explainEl) {
-      tl.to(explainEl, { y: 8, autoAlpha: 0, duration: 0.24, ease: "power2.in" }, 0);
-    }
-    if (explainWrap) {
-      tl.to(explainWrap, { height: 0, duration: 0.28, ease: "power2.inOut" }, 0);
-    }
-
     tl.to(
       header,
       { y: -20, rotate: 5, autoAlpha: 0, duration: 0.32, ease: "power2.in" },
       0.05
     );
+
     if (topCards.length) {
       tl.to(
         topCards,
@@ -556,9 +505,6 @@ export const MotivationQuizSection: React.FC = () => {
       cardRef.current.querySelectorAll(`.${styles.top_card}`)
     ) as HTMLElement[];
 
-    // Сбрасываем обёртку объяснения (чтобы не дёргалось при смене вопроса)
-    if (explainWrapRef.current) gsap.set(explainWrapRef.current, { height: 0 });
-
     gsap.set(header, { y: 20, rotate: -3, autoAlpha: 0 });
     if (topCards.length) gsap.set(topCards, { y: 15, autoAlpha: 0 });
     if (optionEls.length) gsap.set(optionEls, { y: 12, autoAlpha: 0 });
@@ -566,7 +512,6 @@ export const MotivationQuizSection: React.FC = () => {
     entryTlRef.current?.kill();
     const tl = gsap.timeline({
       defaults: { ease: "power2.out" },
-      onComplete: () => setIsTransitioning(false),
     });
 
     if (topCards.length) {
@@ -584,6 +529,10 @@ export const MotivationQuizSection: React.FC = () => {
 
     tl.timeScale(ANIM.speed);
     entryTlRef.current = tl;
+
+    return () => {
+      tl.kill();
+    };
   }, [idx]);
 
   const nextDisabled = selected === null || isTransitioning;
@@ -669,13 +618,28 @@ export const MotivationQuizSection: React.FC = () => {
               })}
             </ul>
 
-            {/* Обёртка для плавного появления объяснения */}
-            <div ref={explainWrapRef} style={{ overflow: "hidden" }}>
-              {selected && (
-                <div className={styles.explain} ref={explainElRef}>
-                  {q.explanation}
-                </div>
-              )}
+            {/* Обёртка для плавного появления объяснения — без GSAP, чистый CSS */}
+            <div
+              ref={explainWrapRef}
+              data-nbsp-skip
+              style={{
+                display: "grid",
+                gridTemplateRows: selected ? "1fr" : "0fr",
+                transition: "grid-template-rows 380ms cubic-bezier(0.22, 1, 0.36, 1)",
+                overflow: "hidden",
+              }}
+            >
+              <div
+                ref={explainElRef}
+                className={styles.explain}
+                style={{
+                  opacity: selected ? 1 : 0,
+                  transform: selected ? "translateY(0)" : "translateY(6px)",
+                  transition: "opacity 380ms ease, transform 380ms ease",
+                }}
+              >
+                {q.explanation}
+              </div>
             </div>
           </div>
 
@@ -780,7 +744,12 @@ export const MotivationQuizSection: React.FC = () => {
       {isMobile &&
         modalOpen &&
         createPortal(
-          <div className={styles.frgfww} style={modalStyle} role="dialog" aria-modal>
+          <div
+            className={styles.frgfww}
+            style={modalStyle}
+            role="dialog"
+            aria-modal
+          >
             <button
               aria-label="Закрыть"
               onClick={closeModal}
