@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useRef, useEffect } from "react";
+import { createPortal } from "react-dom";
 import gsap from "gsap";
 import { useGSAP } from "@gsap/react";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
@@ -137,7 +138,6 @@ const skillsMap: Skill[] = [
 ];
 
 export const MotivationQuizSection: React.FC = () => {
-  
   const sectionRef = useRef<HTMLElement | null>(null);
   const introRef = useRef<HTMLDivElement | null>(null);
   const quizRef = useRef<HTMLDivElement | null>(null);
@@ -158,22 +158,19 @@ export const MotivationQuizSection: React.FC = () => {
     const onChange = (e: MediaQueryListEvent | MediaQueryList) =>
       setIsMobile("matches" in e ? e.matches : (e as MediaQueryList).matches);
     onChange(mq);
-    // @ts-ignore
-    mq.addEventListener
-      ? mq.addEventListener("change", onChange)
-      : mq.addListener(onChange as any);
+    if (mq.addEventListener) mq.addEventListener("change", onChange as any);
+    else (mq as any).addListener(onChange as any);
     return () => {
-      // @ts-ignore
-      mq.removeEventListener
-        ? mq.removeEventListener("change", onChange)
-        : mq.removeListener(onChange as any);
+      if (mq.removeEventListener)
+        mq.removeEventListener("change", onChange as any);
+      else (mq as any).removeListener(onChange as any);
     };
   }, []);
 
   // Мобильный попап
   const [modalOpen, setModalOpen] = useState(false);
 
-  // Лок скролла страницы, пока попап открыт (по всем правилам)
+  // Лок скролла страницы, пока попап открыт
   const savedScrollY = useRef(0);
   const prevBody = useRef({
     overflow: "",
@@ -185,13 +182,19 @@ export const MotivationQuizSection: React.FC = () => {
     paddingRight: "",
   });
   const prevHtmlScrollBehavior = useRef("");
+  const isScrollLockedRef = useRef(false);
 
   const lockPageScroll = () => {
-    if (typeof window === "undefined") return;
+    if (typeof window === "undefined" || isScrollLockedRef.current) return;
     const body = document.body;
     const html = document.documentElement;
 
-    savedScrollY.current = window.scrollY || window.pageYOffset || 0;
+    savedScrollY.current =
+      window.scrollY ||
+      window.pageYOffset ||
+      html.scrollTop ||
+      document.scrollingElement?.scrollTop ||
+      0;
 
     prevBody.current = {
       overflow: body.style.overflow,
@@ -206,7 +209,7 @@ export const MotivationQuizSection: React.FC = () => {
 
     html.style.scrollBehavior = "auto";
 
-    const scrollbarW = window.innerWidth - document.documentElement.clientWidth;
+    const scrollbarW = window.innerWidth - html.clientWidth;
 
     body.style.overflow = "hidden";
     body.style.position = "fixed";
@@ -215,16 +218,17 @@ export const MotivationQuizSection: React.FC = () => {
     body.style.right = "0";
     body.style.width = "100%";
     if (scrollbarW > 0) body.style.paddingRight = `${scrollbarW}px`;
+
+    isScrollLockedRef.current = true;
   };
 
   const unlockPageScroll = () => {
-    if (typeof window === "undefined") return;
+    if (typeof window === "undefined" || !isScrollLockedRef.current) return;
     const body = document.body;
     const html = document.documentElement;
 
-    const y = savedScrollY.current;
+    const y = savedScrollY.current || 0;
 
-    // восстановить стили
     body.style.overflow = prevBody.current.overflow;
     body.style.position = prevBody.current.position;
     body.style.top = prevBody.current.top;
@@ -233,31 +237,43 @@ export const MotivationQuizSection: React.FC = () => {
     body.style.width = prevBody.current.width;
     body.style.paddingRight = prevBody.current.paddingRight;
 
-    window.scrollTo(0, y);
     requestAnimationFrame(() => {
-      html.style.scrollBehavior = prevHtmlScrollBehavior.current;
+      window.scrollTo(0, y);
+      requestAnimationFrame(() => {
+        html.style.scrollBehavior = prevHtmlScrollBehavior.current;
+      });
     });
+
+    isScrollLockedRef.current = false;
   };
 
+  // Лочим скролл и после монтирования портала гарантированно показываем Quiz и скрываем Results
   useEffect(() => {
     if (isMobile && modalOpen) {
       lockPageScroll();
-    } else {
-      unlockPageScroll();
+      const rafId = requestAnimationFrame(() => {
+        if (quizRef.current)
+          gsap.set(quizRef.current, { autoAlpha: 1, pointerEvents: "auto" });
+        if (resultsRef.current)
+          gsap.set(resultsRef.current, { autoAlpha: 0, pointerEvents: "none" });
+      });
+      return () => {
+        cancelAnimationFrame(rafId);
+        unlockPageScroll();
+      };
     }
-    return () => {
-      // на размонтировании всегда возвращаем скролл
-      unlockPageScroll();
-    };
   }, [isMobile, modalOpen]);
+
+  // На размонтировании гарантированно вернуть скролл
+  useEffect(() => {
+    return () => unlockPageScroll();
+  }, []);
 
   // Закрытие по Esc внутри попапа
   useEffect(() => {
     if (!isMobile || !modalOpen) return;
     const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") {
-        setModalOpen(false);
-      }
+      if (e.key === "Escape") setModalOpen(false);
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
@@ -353,11 +369,7 @@ export const MotivationQuizSection: React.FC = () => {
   const handleStart = (e: React.MouseEvent) => {
     e.preventDefault();
     if (isMobile) {
-      setModalOpen(true); // откроем попап
-      if (quizRef.current)
-        gsap.set(quizRef.current, { autoAlpha: 1, pointerEvents: "auto" });
-      if (resultsRef.current)
-        gsap.set(resultsRef.current, { autoAlpha: 0, pointerEvents: "none" });
+      setModalOpen(true); // рендерим модалку; начальные vis состояния выставятся в useEffect выше
     } else {
       transitionTimeline.current?.play();
     }
@@ -365,7 +377,6 @@ export const MotivationQuizSection: React.FC = () => {
 
   const closeModal = () => {
     setModalOpen(false);
-    // состояние квиза не сбрасываем
   };
 
   const goToResults = () => {
@@ -549,24 +560,19 @@ export const MotivationQuizSection: React.FC = () => {
   const remaining = Math.max(0, total - (idx + 1));
   const topCount = Math.min(4, remaining);
 
-  // Стили попапа (мобилка): фиксированный, полноэкранный, со скроллом внутри
-  const modalStyle: React.CSSProperties | undefined =
-    isMobile && modalOpen
-      ? {
-          position: "fixed",
-          inset: 0,
-          zIndex: 9999,
-          background: "#ffeacf",
-          display: "flex",
-          flexDirection: "column",
-          overflowY: "auto",
-          overscrollBehavior: "contain",
-          WebkitOverflowScrolling: "touch",
-          padding: "55px 10px 55px 10px",
-        }
-      : isMobile
-      ? { display: "none" }
-      : undefined;
+  const modalStyle: React.CSSProperties = {
+    position: "fixed",
+    inset: 0,
+    zIndex: 9999,
+    background: "#ffeacf",
+    display: "flex",
+    flexDirection: "column",
+    overflowY: "auto",
+    overscrollBehavior: "contain",
+    WebkitOverflowScrolling: "touch",
+    padding: "55px 10px 55px 10px",
+    margin: 'auto 0'
+  };
 
   const closeBtnStyle: React.CSSProperties = {
     position: "fixed",
@@ -576,6 +582,135 @@ export const MotivationQuizSection: React.FC = () => {
     background: "rgba(0,0,0,0.0)",
     border: "none",
   };
+
+  const QuizAndResults = (
+    <>
+      {/* QUIZ */}
+      <div id="quiz" ref={quizRef} className={styles.quiz}>
+        <div className={styles.quizInner}>
+          <div className={styles.card} ref={cardRef}>
+            <div className={styles.card_abs}>
+              <div className={styles.cardHeader} ref={headerRef}>
+                <div className={styles.counter}>
+                  {q.title ?? `ВОПРОС ${idx + 1}/${total}`}
+                </div>
+                <div className={styles.prompt}>{q.prompt}</div>
+              </div>
+
+              {Array.from({ length: topCount }).map((_, i) => {
+                const modClass = (styles as any)[`modifier_class_${i + 1}`];
+                return (
+                  <div
+                    key={`tc-${i}`}
+                    className={`${styles.top_card} ${modClass}`}
+                  />
+                );
+              })}
+            </div>
+
+            <ul className={styles.options} ref={optionsRef}>
+              {q.options.map((opt) => {
+                const selectedThis = selected === opt.id;
+
+                let stateClass;
+                if (selected) {
+                  if (opt.correct) stateClass = styles.correct;
+                  else if (selectedThis) stateClass = styles.wrong;
+                }
+
+                return (
+                  <li
+                    key={opt.id}
+                    className={`${styles.option} ${stateClass ?? ""}`}
+                    onClick={() => selectOption(opt)}
+                    role="button"
+                    aria-pressed={selectedThis}
+                    aria-disabled={!!selected}
+                  >
+                    <span className={styles.radio}>
+                      <span className={styles.dot} />
+                    </span>
+                    <span className={styles.optionText}>{opt.text}</span>
+                  </li>
+                );
+              })}
+            </ul>
+
+            {selected && (
+              <div className={styles.explain} ref={explainElRef}>
+                {q.explanation}
+              </div>
+            )}
+          </div>
+
+          {!quizFinished && (
+            <button
+              className={`${styles.nextFab} ${
+                nextDisabled ? styles.disabled : ""
+              }`}
+              onClick={nextQuestion}
+              disabled={nextDisabled}
+              aria-label="Следующий вопрос"
+              title="Следующий вопрос"
+            >
+              <span className={styles.arrow}>
+                <img src="/images/str.svg" alt="" />
+              </span>
+            </button>
+          )}
+        </div>
+      </div>
+
+      {/* RESULTS */}
+      <div ref={resultsRef} className={styles.results}>
+        <div className={styles.resultsInner}>
+          <div className={styles.resultsHeader}>
+            <h3 className={styles.resultsTitle}>
+              <span className={styles.titlePrimary}>Ваша карта</span>
+              <span className={styles.titleAccent}>гибких навыков</span>
+            </h3>
+          </div>
+
+          <ul className={styles.skills}>
+            {skillsMap.map((s) => {
+              const raw = s.qId ? answers[s.qId] : undefined;
+              const state: true | false | null =
+                s.qId && raw !== undefined ? raw.correct : null;
+
+              let cls = styles.skill;
+              if (state === true) cls += ` ${styles.skillGood}`;
+              if (state === false) cls += ` ${styles.skillWarn}`;
+
+              return (
+                <li key={s.id} className={cls}>
+                  <span
+                    className={`${styles.skillIcon} ${
+                      state === true
+                        ? styles.iconGood
+                        : state === false
+                        ? styles.iconWarn
+                        : ""
+                    }`}
+                    aria-hidden
+                  >
+                    {state !== null && (
+                      <img
+                        className={styles.skillGlyph}
+                        src={state ? ICONS.good : ICONS.warn}
+                        alt=""
+                        loading="lazy"
+                      />
+                    )}
+                  </span>
+                  <span className={styles.skillTitle}>{s.title}</span>
+                </li>
+              );
+            })}
+          </ul>
+        </div>
+      </div>
+    </>
+  );
 
   return (
     <section className={styles.section} ref={sectionRef}>
@@ -606,148 +741,25 @@ export const MotivationQuizSection: React.FC = () => {
         </div>
       </div>
 
-      {/* QUIZ + RESULTS: на десктопе — в потоке; на мобилке — полноэкранный попап с блокировкой скролла страницы */}
-      <div
-        style={modalStyle}
-        role={isMobile && modalOpen ? "dialog" : undefined}
-        aria-modal={isMobile && modalOpen ? true : undefined}
-      >
-        {/* Кнопка закрытия попапа — только мобилка */}
-        {isMobile && modalOpen && (
-          <button
-            aria-label="Закрыть"
-            onClick={closeModal}
-            style={closeBtnStyle}
-          >
-            <img src="/images/clo.svg" alt="" />
-          </button>
+      {/* Десктоп: квиз и результаты в потоке */}
+      {!isMobile && <div>{QuizAndResults}</div>}
+
+      {/* Мобилка: попап через портал */}
+      {isMobile &&
+        modalOpen &&
+        createPortal(
+          <div className={styles.frgfww} style={modalStyle} role="dialog" aria-modal>
+            <button
+              aria-label="Закрыть"
+              onClick={closeModal}
+              style={closeBtnStyle}
+            >
+              <img src="/images/clo.svg" alt="" />
+            </button>
+            {QuizAndResults}
+          </div>,
+          document.body
         )}
-
-        {/* QUIZ */}
-        <div id="quiz" ref={quizRef} className={styles.quiz}>
-          <div className={styles.quizInner}>
-            <div className={styles.card} ref={cardRef}>
-              <div className={styles.card_abs}>
-                <div className={styles.cardHeader} ref={headerRef}>
-                  <div className={styles.counter}>
-                    {q.title ?? `ВОПРОС ${idx + 1}/${total}`}
-                  </div>
-                  <div className={styles.prompt}>{q.prompt}</div>
-                </div>
-
-                {Array.from({ length: topCount }).map((_, i) => {
-                  const modClass = (styles as any)[`modifier_class_${i + 1}`];
-                  return (
-                    <div
-                      key={`tc-${i}`}
-                      className={`${styles.top_card} ${modClass}`}
-                    />
-                  );
-                })}
-              </div>
-
-              <ul className={styles.options} ref={optionsRef}>
-                {q.options.map((opt) => {
-                  const selectedThis = selected === opt.id;
-
-                  let stateClass;
-                  if (selected) {
-                    if (opt.correct) stateClass = styles.correct;
-                    else if (selectedThis) stateClass = styles.wrong;
-                  }
-
-                  return (
-                    <li
-                      key={opt.id}
-                      className={`${styles.option} ${stateClass ?? ""}`}
-                      onClick={() => selectOption(opt)}
-                      role="button"
-                      aria-pressed={selectedThis}
-                      aria-disabled={!!selected}
-                    >
-                      <span className={styles.radio}>
-                        <span className={styles.dot} />
-                      </span>
-                      <span className={styles.optionText}>{opt.text}</span>
-                    </li>
-                  );
-                })}
-              </ul>
-
-              {selected && (
-                <div className={styles.explain} ref={explainElRef}>
-                  {q.explanation}
-                </div>
-              )}
-            </div>
-
-            {!quizFinished && (
-              <button
-                className={`${styles.nextFab} ${
-                  nextDisabled ? styles.disabled : ""
-                }`}
-                onClick={nextQuestion}
-                disabled={nextDisabled}
-                aria-label="Следующий вопрос"
-                title="Следующий вопрос"
-              >
-                <span className={styles.arrow}>
-                  <img src="/images/str.svg" alt="" />
-                </span>
-              </button>
-            )}
-          </div>
-        </div>
-
-        {/* RESULTS */}
-        <div ref={resultsRef} className={styles.results}>
-          <div className={styles.resultsInner}>
-            <div className={styles.resultsHeader}>
-              <h3 className={styles.resultsTitle}>
-                <span className={styles.titlePrimary}>Ваша карта</span>
-                <span className={styles.titleAccent}>гибких навыков</span>
-              </h3>
-            </div>
-
-            <ul className={styles.skills}>
-              {skillsMap.map((s) => {
-                const raw = s.qId ? answers[s.qId] : undefined;
-                const state: true | false | null =
-                  s.qId && raw !== undefined ? raw.correct : null;
-
-                let cls = styles.skill;
-                if (state === true) cls += ` ${styles.skillGood}`;
-                if (state === false) cls += ` ${styles.skillWarn}`;
-
-                return (
-                  <li key={s.id} className={cls}>
-                    <span
-                      className={`${styles.skillIcon} ${
-                        state === true
-                          ? styles.iconGood
-                          : state === false
-                          ? styles.iconWarn
-                          : ""
-                      }`}
-                      aria-hidden
-                    >
-                      {state !== null && (
-                        <img
-                          className={styles.skillGlyph}
-                          src={state ? ICONS.good : ICONS.warn}
-                          alt=""
-                          loading="lazy"
-                        />
-                      )}
-                    </span>
-                    <span className={styles.skillTitle}>{s.title}</span>
-                  </li>
-                );
-              })}
-            </ul>
-          </div>
-        </div>
-      </div>
     </section>
   );
 };

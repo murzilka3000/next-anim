@@ -19,7 +19,7 @@
 
 @media screen and (max-width: 767px) {
   .section {
-    height: 500px!important;
+    height: 500px !important;
   }
 }
 
@@ -257,7 +257,6 @@
     transform: translateY(0);
   }
 }
-
 
 .nextFab:active {
   transform: translateY(0);
@@ -576,6 +575,12 @@
 
   .cta {
     width: 100%;
+  }
+
+  .resultsInner {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
   }
 }
 
