@@ -137,6 +137,7 @@ const skillsMap: Skill[] = [
 ];
 
 export const MotivationQuizSection: React.FC = () => {
+  
   const sectionRef = useRef<HTMLElement | null>(null);
   const introRef = useRef<HTMLDivElement | null>(null);
   const quizRef = useRef<HTMLDivElement | null>(null);
@@ -158,10 +159,14 @@ export const MotivationQuizSection: React.FC = () => {
       setIsMobile("matches" in e ? e.matches : (e as MediaQueryList).matches);
     onChange(mq);
     // @ts-ignore
-    mq.addEventListener ? mq.addEventListener("change", onChange) : mq.addListener(onChange as any);
+    mq.addEventListener
+      ? mq.addEventListener("change", onChange)
+      : mq.addListener(onChange as any);
     return () => {
       // @ts-ignore
-      mq.removeEventListener ? mq.removeEventListener("change", onChange) : mq.removeListener(onChange as any);
+      mq.removeEventListener
+        ? mq.removeEventListener("change", onChange)
+        : mq.removeListener(onChange as any);
     };
   }, []);
 
@@ -217,7 +222,7 @@ export const MotivationQuizSection: React.FC = () => {
     const body = document.body;
     const html = document.documentElement;
 
-    const y = Math.abs(parseInt(body.style.top || "0", 10)) || 0;
+    const y = savedScrollY.current;
 
     // восстановить стили
     body.style.overflow = prevBody.current.overflow;
@@ -227,9 +232,11 @@ export const MotivationQuizSection: React.FC = () => {
     body.style.right = prevBody.current.right;
     body.style.width = prevBody.current.width;
     body.style.paddingRight = prevBody.current.paddingRight;
-    html.style.scrollBehavior = prevHtmlScrollBehavior.current;
 
     window.scrollTo(0, y);
+    requestAnimationFrame(() => {
+      html.style.scrollBehavior = prevHtmlScrollBehavior.current;
+    });
   };
 
   useEffect(() => {
@@ -263,7 +270,10 @@ export const MotivationQuizSection: React.FC = () => {
     processTextNodes(root);
     const mo = new MutationObserver((mut) => {
       for (const m of mut) {
-        if (m.type === "characterData" && m.target.nodeType === Node.TEXT_NODE) {
+        if (
+          m.type === "characterData" &&
+          m.target.nodeType === Node.TEXT_NODE
+        ) {
           const t = m.target as Text;
           const next = fixText(t.nodeValue || "");
           if (next !== t.nodeValue) t.nodeValue = next;
@@ -297,8 +307,10 @@ export const MotivationQuizSection: React.FC = () => {
 
   useGSAP(
     () => {
-      if (quizRef.current) gsap.set(quizRef.current, { autoAlpha: 0, pointerEvents: "none" });
-      if (resultsRef.current) gsap.set(resultsRef.current, { autoAlpha: 0, pointerEvents: "none" });
+      if (quizRef.current)
+        gsap.set(quizRef.current, { autoAlpha: 0, pointerEvents: "none" });
+      if (resultsRef.current)
+        gsap.set(resultsRef.current, { autoAlpha: 0, pointerEvents: "none" });
 
       const mm = gsap.matchMedia();
 
@@ -342,8 +354,10 @@ export const MotivationQuizSection: React.FC = () => {
     e.preventDefault();
     if (isMobile) {
       setModalOpen(true); // откроем попап
-      if (quizRef.current) gsap.set(quizRef.current, { autoAlpha: 1, pointerEvents: "auto" });
-      if (resultsRef.current) gsap.set(resultsRef.current, { autoAlpha: 0, pointerEvents: "none" });
+      if (quizRef.current)
+        gsap.set(quizRef.current, { autoAlpha: 1, pointerEvents: "auto" });
+      if (resultsRef.current)
+        gsap.set(resultsRef.current, { autoAlpha: 0, pointerEvents: "none" });
     } else {
       transitionTimeline.current?.play();
     }
@@ -548,7 +562,7 @@ export const MotivationQuizSection: React.FC = () => {
           overflowY: "auto",
           overscrollBehavior: "contain",
           WebkitOverflowScrolling: "touch",
-          padding: '55px 10px 55px 10px' 
+          padding: "55px 10px 55px 10px",
         }
       : isMobile
       ? { display: "none" }
@@ -573,10 +587,13 @@ export const MotivationQuizSection: React.FC = () => {
           </h2>
           <div className={styles.cont__cont}>
             <div className={styles.cont}>
-              <p className={styles.subtitle}>Осталось найти верную мотивацию.</p>
+              <p className={styles.subtitle}>
+                Осталось найти верную мотивацию.
+              </p>
               <p className={styles.lead}>
-                Регулярная физическая нагрузка помогает держать себя в форме, а ещё
-                развивает навыки, на которых строится успех в карьере и повседневной жизни.
+                Регулярная физическая нагрузка помогает держать себя в форме, а
+                ещё развивает навыки, на которых строится успех в карьере и
+                повседневной жизни.
               </p>
               <p className={styles.leadMuted}>
                 Давайте проверим, какие софт‑скиллы спорт поможет прокачать вам?
@@ -590,14 +607,19 @@ export const MotivationQuizSection: React.FC = () => {
       </div>
 
       {/* QUIZ + RESULTS: на десктопе — в потоке; на мобилке — полноэкранный попап с блокировкой скролла страницы */}
-      <div style={modalStyle} role={isMobile && modalOpen ? "dialog" : undefined} aria-modal={isMobile && modalOpen ? true : undefined}>
+      <div
+        style={modalStyle}
+        role={isMobile && modalOpen ? "dialog" : undefined}
+        aria-modal={isMobile && modalOpen ? true : undefined}
+      >
         {/* Кнопка закрытия попапа — только мобилка */}
         {isMobile && modalOpen && (
-          <button aria-label="Закрыть" onClick={closeModal} style={closeBtnStyle}>
-            <svg width="22" height="22" viewBox="0 0 22 22" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <path d="M1 20.7144L21 1.49365" stroke="#8E705F" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
-            <path d="M1 1L21 21" stroke="#8E705F" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
-          </svg>
+          <button
+            aria-label="Закрыть"
+            onClick={closeModal}
+            style={closeBtnStyle}
+          >
+            <img src="/images/clo.svg" alt="" />
           </button>
         )}
 
@@ -661,7 +683,9 @@ export const MotivationQuizSection: React.FC = () => {
 
             {!quizFinished && (
               <button
-                className={`${styles.nextFab} ${nextDisabled ? styles.disabled : ""}`}
+                className={`${styles.nextFab} ${
+                  nextDisabled ? styles.disabled : ""
+                }`}
                 onClick={nextQuestion}
                 disabled={nextDisabled}
                 aria-label="Следующий вопрос"
