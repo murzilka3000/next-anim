@@ -311,7 +311,6 @@ export const MotivationQuizSection: React.FC = () => {
 
   const [idx, setIdx] = useState(0);
   const [selected, setSelected] = useState<string | null>(null);
-  const [quizFinished, setQuizFinished] = useState(false);
   const [isTransitioning, setIsTransitioning] = useState(false);
 
   const [answers, setAnswers] = useState<
@@ -405,7 +404,6 @@ export const MotivationQuizSection: React.FC = () => {
   const restartQuiz = () => {
     setIdx(0);
     setSelected(null);
-    setQuizFinished(false);
     setAnswers({});
 
     const tl = gsap
@@ -437,17 +435,18 @@ export const MotivationQuizSection: React.FC = () => {
       ...prev,
       [q.id]: { selectedId: opt.id, correct: opt.correct },
     }));
-
-    if (idx === total - 1) {
-      setQuizFinished(true);
-      gsap.delayedCall(ANIM.delayBeforeResults, goToResults);
-    }
+    // Больше не переключаемся на результаты автоматически на последнем вопросе.
   };
 
   const nextQuestion = () => {
     if (isTransitioning) return;
+
     const isLast = idx >= total - 1;
-    if (isLast) return;
+    if (isLast) {
+      // На последнем вопросе — переходим к результатам по клику на кнопку
+      goToResults();
+      return;
+    }
 
     const header = headerRef.current;
     const optionsList = optionsRef.current;
@@ -556,6 +555,7 @@ export const MotivationQuizSection: React.FC = () => {
   }, [idx]);
 
   const nextDisabled = selected === null || isTransitioning;
+  const isLastQuestion = idx === total - 1;
 
   const remaining = Math.max(0, total - (idx + 1));
   const topCount = Math.min(4, remaining);
@@ -571,8 +571,8 @@ export const MotivationQuizSection: React.FC = () => {
     overscrollBehavior: "contain",
     WebkitOverflowScrolling: "touch",
     padding: "55px 10px 55px 10px",
-    margin: 'auto 0',
-    overflowX: 'hidden'
+    margin: "auto 0",
+    overflowX: "hidden",
   };
 
   const closeBtnStyle: React.CSSProperties = {
@@ -644,21 +644,17 @@ export const MotivationQuizSection: React.FC = () => {
             )}
           </div>
 
-          {!quizFinished && (
-            <button
-              className={`${styles.nextFab} ${
-                nextDisabled ? styles.disabled : ""
-              }`}
-              onClick={nextQuestion}
-              disabled={nextDisabled}
-              aria-label="Следующий вопрос"
-              title="Следующий вопрос"
-            >
-              <span className={styles.arrow}>
-                <img src="/images/str.svg" alt="" />
-              </span>
-            </button>
-          )}
+          <button
+            className={`${styles.nextFab} ${nextDisabled ? styles.disabled : ""}`}
+            onClick={nextQuestion}
+            disabled={nextDisabled}
+            aria-label={isLastQuestion ? "К результатам" : "Следующий вопрос"}
+            title={isLastQuestion ? "К результатам" : "Следующий вопрос"}
+          >
+            <span className={styles.arrow}>
+              <img src="/images/str.svg" alt="" />
+            </span>
+          </button>
         </div>
       </div>
 
