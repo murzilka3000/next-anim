@@ -4,9 +4,9 @@ import React, { useEffect, useRef } from 'react';
 import styles from './SlideGate.module.css';
 
 type Props = {
-  children: React.ReactNode | React.ReactNode[]; // теперь можно 2+ детей
-  thresholdPx?: number; // при каком «вхождении» следующей секции вниз сработает переход
-  durationMs?: number;  // параметр оставлен для совместимости, но нативный smooth не использует его
+  children: React.ReactNode | React.ReactNode[]; // можно 2+ секций
+  thresholdPx?: number; // при каком «вхождении» следующей секции вниз сработает докрутка
+  durationMs?: number;  // параметр оставлен для совместимости, но нативный smooth его не использует
   className?: string;
 };
 
@@ -53,11 +53,11 @@ export function SlideGate({
     const slides = slideRefs.current.filter(Boolean);
     if (!container || slides.length < 2) return;
 
-    const getTopAbs = (el: HTMLElement) => el.getBoundingClientRect().top + window.scrollY;
+    const getTopAbs = (el: HTMLElement) =>
+      el.getBoundingClientRect().top + window.scrollY;
     const getRect = (el: HTMLElement) => el.getBoundingClientRect();
 
     const getCurrentIndex = () => {
-      // индекс слайда, верх которого не ниже текущего скролла
       const curY = window.scrollY;
       let idx = 0;
       for (let i = 0; i < slides.length; i++) {
@@ -110,7 +110,7 @@ export function SlideGate({
     const onWheel = (e: WheelEvent) => {
       if (!container.contains(e.target as Node)) return;
 
-      // если идёт программная прокрутка — не мешаем пользователю, не блокируем события
+      // если идёт программная прокрутка — не мешаем пользователю
       if (animating.current) return;
 
       const curY = window.scrollY;
@@ -121,7 +121,6 @@ export function SlideGate({
       const prevIndex = getPrevIndex(currentIndex);
 
       const target = e.target as HTMLElement;
-      // слайд, откуда пришло событие
       const targetSlide =
         slides.find((s) => s.contains(target)) || slides[currentIndex];
 
@@ -139,17 +138,15 @@ export function SlideGate({
       // Вниз: когда следующий уже виден снизу — докрутить к его началу
       if (e.deltaY > 0 && nextIndex != null && isSlideEnteredFromBottom(nextIndex)) {
         const nextTop = getTopAbs(slides[nextIndex]);
-        // если уже стоим на самом верху следующего — не перехватываем
-        if (curY >= nextTop - 1) return;
+        if (curY >= nextTop - 1) return; // уже на начале следующего
         e.preventDefault(); // гасим «микрошаг» колесика
         startSmoothTo(nextTop);
         return;
       }
 
-      // Вверх: когда текущий «под кромкой», плавно вернуться к началу предыдущего
+      // Вверх: когда текущий «у кромки», вернуться к началу предыдущего
       if (e.deltaY < 0 && prevIndex != null && isSlideTopNearViewport(currentIndex)) {
         const prevTop = getTopAbs(slides[prevIndex]);
-        // если уже у начала предыдущего — пропускаем
         if (curY <= prevTop + 1) return;
         e.preventDefault();
         startSmoothTo(prevTop);
@@ -182,15 +179,15 @@ export function SlideGate({
       const targetSlide =
         slides.find((s) => s.contains(targetEl)) || slides[currentIndex];
 
-      // внутренняя прокрутка на таче — проверяем только на момент жеста (простая эвристика)
+      // внутренняя прокрутка на таче — проверяем только на момент жеста
       const scrollable = findScrollable(targetEl, targetSlide);
       if (scrollable) {
         const atBottom =
           Math.ceil(scrollable.scrollTop + scrollable.clientHeight) >=
           scrollable.scrollHeight;
         const atTop = scrollable.scrollTop <= 0;
-        if (dy < 0 && !atBottom) return; // свайп вверх, но список ещё скроллится вниз
-        if (dy > 0 && !atTop) return;    // свайп вниз, но список ещё скроллится вверх
+        if (dy < 0 && !atBottom) return; // свайп вверх, но внутри ещё есть скролл вниз
+        if (dy > 0 && !atTop) return;    // свайп вниз, но внутри ещё есть скролл вверх
       }
 
       // свайп вверх (вниз по странице)

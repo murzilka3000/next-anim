@@ -12,8 +12,9 @@ export default function HomePage() {
   return (
     <main className={styles.main}>
       <HeroSection />
-      <SportSection />
+
       <SlideGate thresholdPx={24} durationMs={1000}>
+        <SportSection />
         <MythsIntroSection />
         <MythsDragSection />
         <MotivationQuizSection />
