@@ -74,15 +74,12 @@ export default function RootLayout({
       lang="ru"
       className={`${inter.variable} ${manrope.variable} ${circe.variable} ${cofoRobert.variable} ${ptSerif.variable}`}
     >
-      {" "}
       <body className={inter.className}>
-        {" "}
-        {children}{" "}
+        {children}
         <Suspense fallback={null}>
-          {" "}
-          <YandexMetrika />{" "}
-        </Suspense>{" "}
-      </body>{" "}
+          <YandexMetrika />
+        </Suspense>
+      </body>
     </html>
   );
 }

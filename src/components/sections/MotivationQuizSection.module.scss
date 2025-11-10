@@ -54,7 +54,7 @@
   line-height: 87%;
   letter-spacing: -0.01em;
   color: var(--title);
-  margin-bottom: 20px;
+  margin-bottom: 15px;
 }
 
 .subtitle {
@@ -65,6 +65,7 @@
   line-height: 90%;
   letter-spacing: -0.01em;
   color: var(--title-2);
+  margin-bottom: 15px;
 }
 
 .lead {
@@ -72,12 +73,14 @@
   font-size: 20px;
   letter-spacing: -0.01em;
   color: var(--text);
+  margin-bottom: 10px;
 }
 
 .leadMuted {
   font-weight: 400;
   font-size: 20px;
   color: var(--text);
+  margin-bottom: 23px;
 }
 
 .cta {
@@ -293,7 +296,7 @@
   max-width: 718px;
   display: flex;
   flex-direction: column;
-  gap: 22px;
+  gap: 0px;
 }
 
 .cont__cont {
