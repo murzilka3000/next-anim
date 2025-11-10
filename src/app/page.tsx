@@ -13,7 +13,7 @@ export default function HomePage() {
     <main className={styles.main}>
       <HeroSection />
 
-      <SlideGate thresholdPx={24} durationMs={1000}>
+      <SlideGate>
         <SportSection />
         <MythsIntroSection />
         <MythsDragSection />
