@@ -50,7 +50,6 @@ const cofoRobert = localFont({
   variable: "--font-cofo-robert",
 });
 
-
 const ptSerif = localFont({
   src: "../../public/fonts/pt-serif-v19-cyrillic_cyrillic-ext_latin-italic.woff2",
   weight: "400",
@@ -71,15 +70,19 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="ru">
-      <body
-        className={`${inter.variable} ${manrope.variable} ${circe.variable} ${cofoRobert.variable} ${ptSerif.variable}`}
-      >
-        {children}
+    <html
+      lang="ru"
+      className={`${inter.variable} ${manrope.variable} ${circe.variable} ${cofoRobert.variable} ${ptSerif.variable}`}
+    >
+      {" "}
+      <body className={inter.className}>
+        {" "}
+        {children}{" "}
         <Suspense fallback={null}>
-          <YandexMetrika />
-        </Suspense>
-      </body>
+          {" "}
+          <YandexMetrika />{" "}
+        </Suspense>{" "}
+      </body>{" "}
     </html>
   );
 }
