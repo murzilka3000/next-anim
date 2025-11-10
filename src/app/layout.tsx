@@ -50,6 +50,15 @@ const cofoRobert = localFont({
   variable: "--font-cofo-robert",
 });
 
+
+const ptSerif = localFont({
+  src: "../../public/fonts/pt-serif-v19-cyrillic_cyrillic-ext_latin-italic.woff2",
+  weight: "400",
+  style: "italic",
+  display: "swap",
+  variable: "--font-pt",
+});
+
 export const metadata: Metadata = {
   title: "Спецпроект Frank Media x Springle: «Рывок в карьере»",
   description:
@@ -64,7 +73,7 @@ export default function RootLayout({
   return (
     <html lang="ru">
       <body
-        className={`${inter.variable} ${manrope.variable} ${circe.variable} ${cofoRobert.variable}`}
+        className={`${inter.variable} ${manrope.variable} ${circe.variable} ${cofoRobert.variable} ${ptSerif.variable}`}
       >
         {children}
         <Suspense fallback={null}>

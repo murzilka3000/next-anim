@@ -126,7 +126,7 @@ table {
 :root {
   --font-family: "Inter", sans-serif;
   --second-family: "Manrope", sans-serif;
-  --third-family: "PT Serif", sans-serif; /* PT Serif не был в файлах, но я оставил переменную */
+  --third-family: "PT Serif", sans-serif;
   --font3: "Circe", sans-serif;
   --font4: "CoFo Robert", sans-serif;
   --title: #8e705f;
