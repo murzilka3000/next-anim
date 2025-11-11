@@ -277,10 +277,16 @@
   }
   .mobileSlider {
     display: block;
-    max-width: 1440px;
+    max-width: 100%;
     margin-left: auto;
     margin-right: auto;
   }
+
+  .section {
+    height: auto !important;
+  }
+
+ 
 
   .swiper {
     width: 100%;
@@ -291,7 +297,6 @@
     align-items: stretch;
   }
 
-  /* Пагинация Swiper */
   :global(.swiper-pagination-bullets) {
     bottom: 8px;
   }
@@ -424,12 +429,16 @@
   left: 50%;
   transform: translateX(-50%);
   width: 100%;
-
 }
 
-
 @media screen and (max-width: 767px) {
-   .subtitle_cont {
-   padding: 0;
-   }
+  .subtitle_cont {
+    padding: 0;
+  }
+}
+
+@media screen and (max-width: 890px) {
+  .subtitle_cont {
+    padding: 0;
+  }
 }
