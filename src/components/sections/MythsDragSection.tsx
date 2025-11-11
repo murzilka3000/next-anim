@@ -73,6 +73,39 @@ function processTextNodes(root: Node) {
 }
 // ===== конец NBSP блока =====
 
+// Прелоадер изображений (без сужения типов до never)
+function preloadAndDecode(src?: string | null): Promise<void> {
+  return new Promise((resolve) => {
+    if (!src) return resolve();
+
+    const img = new Image();
+    let done = false;
+    const finish = () => {
+      if (done) return;
+      done = true;
+      resolve();
+    };
+
+    // Ставим обработчики заранее
+    img.onload = finish;
+    img.onerror = finish;
+
+    // Подсказываем браузеру
+    (img as any).decoding = "async";
+    img.src = src;
+
+    // Аккуратно проверяем поддержку decode без оператора "in" на img
+    const canDecode =
+      typeof (HTMLImageElement.prototype as any).decode === "function";
+    if (canDecode) {
+      (img as any)
+        .decode?.()
+        .then(finish)
+        .catch(finish);
+    }
+  });
+}
+
 // Мобильная флип‑карта: фронт (миф) → клик → оборот (ответ)
 const MobileAnswerSlide: React.FC<{ myth: Myth }> = ({ myth }) => {
   const frontRef = useRef<HTMLDivElement | null>(null);
@@ -88,14 +121,10 @@ const MobileAnswerSlide: React.FC<{ myth: Myth }> = ({ myth }) => {
   };
 
   const handleTouchMoveCapture = (e: React.TouchEvent) => {
-    // Если ответ показан — даём вертикальным жестам пройти к странице,
-    // а горизонтальные по-прежнему отдаём Swiper'у (для перелистывания)
     if (!revealed || !touchStartRef.current) return;
     const t = e.touches[0];
     const dx = Math.abs(t.clientX - touchStartRef.current.x);
     const dy = Math.abs(t.clientY - touchStartRef.current.y);
-
-    // Вертикальный жест доминирует — не отдаём событие Swiper'у
     if (dy > dx) {
       e.stopPropagation();
     }
@@ -195,6 +224,8 @@ const MobileAnswerSlide: React.FC<{ myth: Myth }> = ({ myth }) => {
               className={styles.avatar}
               src={myth.expert.photo}
               alt={fixText(myth.expert.name)}
+              loading="eager"
+              decoding="async"
             />
           ) : (
             <div className={styles.avatarPlaceholder} />
@@ -225,6 +256,10 @@ export const MythsDragSection: React.FC = () => {
   // hint (desktop)
   const hintImgRef = useRef<HTMLImageElement | null>(null);
   const hintTweenRef = useRef<gsap.core.Tween | null>(null);
+
+  // Draggable/RO refs для избежания гонок
+  const draggableRef = useRef<ReturnType<typeof Draggable.create>[number] | null>(null);
+  const roRef = useRef<ResizeObserver | null>(null);
 
   // NBSP
   useEffect(() => {
@@ -273,7 +308,7 @@ export const MythsDragSection: React.FC = () => {
   useEffect(() => {
     const mq = window.matchMedia("(max-width: 811px)");
     const handler = (e: MediaQueryListEvent | MediaQueryList) =>
-      setIsMobile("matches" in e ? e.matches : (e as MediaQueryList).matches);
+      setIsMobile("matches" in e ? (e as MediaQueryListEvent).matches : (e as MediaQueryList).matches);
     setIsMobile(mq.matches);
     // @ts-ignore
     mq.addEventListener
@@ -319,13 +354,25 @@ export const MythsDragSection: React.FC = () => {
   const current = myths[index];
   const answered = answeredIdx !== null ? myths[answeredIdx] : null;
 
+  // Прелоадим все фото экспертов один раз
+  const photoUrls = useMemo(
+    () => Array.from(new Set(myths.map((m) => m.expert.photo).filter(Boolean))) as string[],
+    [myths]
+  );
+
+  useEffect(() => {
+    photoUrls.forEach((src) => preloadAndDecode(src));
+  }, [photoUrls]);
+
   useGSAP(
     () => {
-      const play = playgroundRef.current!;
+      const play = playgroundRef.current;
       const mm = gsap.matchMedia();
 
       // Десктоп
       mm.add("(min-width: 812px)", () => {
+        if (!play) return;
+
         // Плавное появление интерактива при входе в секцию
         gsap.set(play, { opacity: 0, y: 24 });
         gsap.to(play, {
@@ -337,31 +384,33 @@ export const MythsDragSection: React.FC = () => {
             start: "top 85%",
             end: "top 60%",
             scrub: true,
-            // без snap — никакого автоперелистывания
             refreshPriority: -1,
           },
         });
         setDesktopCardHidden(false);
 
-        const card = dragCardRef.current!;
-        const zone = dropZoneRef.current!;
+        const card = dragCardRef.current;
+        const zone = dropZoneRef.current;
+        const sectionEl = sectionRef.current;
+
+        if (!card || !zone || !sectionEl) return;
 
         const isOverZone = () => {
           const cr = card.getBoundingClientRect();
           const zr = zone.getBoundingClientRect();
           const cx = cr.left + cr.width / 2;
           const cy = cr.top + cr.height / 2;
-          return (
-            cx >= zr.left && cx <= zr.right && cy >= zr.top && cy <= zr.bottom
-          );
+          return cx >= zr.left && cx <= zr.right && cy >= zr.top && cy <= zr.bottom;
         };
 
         const onDropSuccess = () => {
           // помечаем, что был первый успешный дроп
           setHasDroppedOnce(true);
 
+          const nextPhoto = myths[index]?.expert?.photo;
+          const wait = preloadAndDecode(nextPhoto);
+
           setAnsweredIdx(index);
-          const ans = answerRef.current!;
           const isLast = index >= myths.length - 1;
 
           const tl = gsap.timeline();
@@ -375,9 +424,7 @@ export const MythsDragSection: React.FC = () => {
           if (isLast) {
             tl.call(() => setDesktopCardHidden(true));
           } else {
-            tl.call(() =>
-              setIndex((i) => Math.min(i + 1, myths.length - 1))
-            ).to(card, {
+            tl.call(() => setIndex((i) => Math.min(i + 1, myths.length - 1))).to(card, {
               opacity: 1,
               scale: 1,
               duration: 0.28,
@@ -385,23 +432,30 @@ export const MythsDragSection: React.FC = () => {
             });
           }
 
-          gsap.killTweensOf(ans);
-          gsap.fromTo(
-            ans,
-            {
-              rotateY: 90,
-              opacity: 0,
-              transformPerspective: 900,
-              transformOrigin: "50% 50%",
-            },
-            { rotateY: 0, opacity: 1, duration: 0.55, ease: "power2.out" }
-          );
+          wait.then(() => {
+            requestAnimationFrame(() => {
+              const ans = answerRef.current;
+              if (!ans) return;
+              gsap.killTweensOf(ans);
+              gsap.fromTo(
+                ans,
+                {
+                  rotateY: 90,
+                  opacity: 0,
+                  transformPerspective: 900,
+                  transformOrigin: "50% 50%",
+                },
+                { rotateY: 0, opacity: 1, duration: 0.55, ease: "power2.out" }
+              );
+            });
+          });
         };
 
-        const dr = Draggable.create(card, {
+        // Создаём Draggable
+        const created = Draggable.create(card, {
           type: "x,y",
           edgeResistance: 0.2,
-          bounds: sectionRef.current!,
+          bounds: sectionEl,
           onDrag() {
             if (isOverZone()) zone.classList.add(styles.active);
             else zone.classList.remove(styles.active);
@@ -409,19 +463,31 @@ export const MythsDragSection: React.FC = () => {
           onDragEnd() {
             zone.classList.remove(styles.active);
             if (isOverZone()) onDropSuccess();
-            else
-              gsap.to(card, { x: 0, y: 0, duration: 0.25, ease: "power2.out" });
+            else gsap.to(card, { x: 0, y: 0, duration: 0.25, ease: "power2.out" });
           },
-        })[0];
+        });
 
-        const ro = new ResizeObserver(() =>
-          dr.applyBounds(sectionRef.current!)
-        );
-        ro.observe(sectionRef.current!);
+        const dr = created?.[0];
+        if (!dr) return;
+
+        draggableRef.current = dr;
+        dr.applyBounds(sectionEl);
+
+        // ResizeObserver с защитой
+        const ro = new ResizeObserver(() => {
+          const inst = draggableRef.current;
+          const sec = sectionRef.current;
+          if (!inst || !sec) return;
+          inst.applyBounds(sec);
+        });
+        ro.observe(sectionEl);
+        roRef.current = ro;
 
         return () => {
-          ro.disconnect();
-          dr.kill();
+          roRef.current?.disconnect();
+          roRef.current = null;
+          draggableRef.current?.kill();
+          draggableRef.current = null;
         };
       });
 
@@ -505,6 +571,8 @@ export const MythsDragSection: React.FC = () => {
                         className={styles.avatar}
                         src={answered.expert.photo}
                         alt={fixText(answered.expert.name)}
+                        loading="eager"
+                        decoding="async"
                       />
                     ) : (
                       <div className={styles.avatarPlaceholder} />
@@ -548,9 +616,7 @@ export const MythsDragSection: React.FC = () => {
             keyboard={{ enabled: true }}
             slidesPerView={1}
             speed={450}
-            // Отступы между слайдами
             spaceBetween={16}
-            // Чтобы не блокировать нативный вертикальный скролл страницы
             touchStartPreventDefault={false}
           >
             {myths.map((m) => (
