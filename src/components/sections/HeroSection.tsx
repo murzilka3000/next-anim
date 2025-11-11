@@ -43,7 +43,7 @@ export const HeroSection = () => {
         .to(
           frisbeeSel,
           {
-            scale: 500,
+            scale: 540,
             rotation: 0,
             duration: 2,
             ease: "power1.inOut",

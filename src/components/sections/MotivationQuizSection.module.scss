@@ -265,8 +265,6 @@
     align-items: center;
     justify-content: center;
   }
-
- 
 }
 
 .nextFab:active {
@@ -599,4 +597,23 @@
 
 .options:has(.wrong) .correct .dot {
   background: transparent;
+}
+
+@media screen and (max-width: 880px) {
+  .title {
+    max-width: 500px;
+  }
+
+  .subtitle {
+    text-align: left;
+  }
+  .cont {
+    max-width: 600px;
+  }
+}
+
+@media screen and (max-width: 600px) {
+.subtitle {
+    text-align: right;
+  }
 }
