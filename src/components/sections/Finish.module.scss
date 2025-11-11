@@ -238,11 +238,11 @@
     font-size: 21px;
   }
 
-  .modal__btn {
-    font-family: var(--second-family);
-    padding: 10px 20px;
-    font-size: 16px;
-  }
+  // .modal__btn {
+  //   font-family: var(--second-family);
+  //   padding: 10px 20px;
+  //   font-size: 16px;
+  // }
 
   .tarelka {
     width: 280px;
@@ -300,10 +300,7 @@
     background-image: url("/images/bg-2.svg");
   }
 
-  .modal__btn {
-    width: 100%;
-    max-width: 230px;
-  }
+  
 }
 
 @media screen and (max-width: 551px) {
@@ -334,10 +331,10 @@
 }
 
 @media screen and (max-width: 450px) {
-  .modal__btn {
-    padding: 13px 10px;
-    font-size: 18px;
-  }
+  // .modal__btn {
+  //   padding: 13px 10px;
+  //   font-size: 18px;
+  // }
 
   .modal__title {
     font-size: 21px;

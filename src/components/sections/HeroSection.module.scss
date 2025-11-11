@@ -252,3 +252,16 @@
 
 
 
+
+
+@media screen and (max-width: 900px) {
+  .sec_cont {
+  margin-top: 100px;
+}
+}
+
+@media screen and (max-width: 600px) {
+  .sec_cont {
+  margin-top: 0px;
+}
+}
