@@ -10,6 +10,12 @@
   position: relative;
 }
 
+@media screen and (max-width: 600px) {
+  .finish  {
+    padding-bottom: 30px;
+  }
+}
+
 .finish__container {
   position: relative;
   overflow: hidden;

@@ -6,7 +6,8 @@
   --border: rgba(111, 86, 71, 0.35);
   --shadow: 0 12px 30px rgba(0, 0, 0, 0.08);
 
-  // background: var(--bg);
+  // background: #FFEACF;
+  
   color: var(--text);
   padding: clamp(28px, 6vw, 72px) clamp(20px, 6vw, 72px);
   position: relative;
@@ -440,5 +441,21 @@
 @media screen and (max-width: 890px) {
   .subtitle_cont {
     padding: 0;
+  }
+}
+
+@media screen and (max-width: 768px) {
+  .section  {
+    padding-left: 10px;
+    padding-right: 10px;
+    padding-bottom: 0;
+  }
+
+  .lead {
+    margin-bottom: 0;
+  }
+
+  .title {
+    margin-top: 50px;
   }
 }
