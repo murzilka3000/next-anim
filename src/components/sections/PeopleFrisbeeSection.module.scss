@@ -434,3 +434,27 @@
 .board > :last-child .tag_right {
   right: -20px !important;
 }
+
+
+
+@media screen and (max-width: 767px) {
+   .mobileGrid > :first-child .mobileImg {
+    width: 106px!important;
+   }
+
+   .mobileGrid > :nth-child(2) .mobileImg {
+    width: 146px!important;
+   }
+
+     .mobileGrid > :nth-child(3) .mobileImg {
+    width: 127px!important;
+   }
+
+      .mobileGrid > :nth-child(4) .mobileImg {
+    width: 143px!important;
+   }
+
+      .mobileGrid > :nth-child(5) .mobileImg {
+    width: 127px!important;
+   }
+}
