@@ -29,10 +29,10 @@ export const HeroSection = () => {
         scrollTrigger: {
           trigger: container.current,
           start: "top top",
-          end: "+=360",         // комфортный ход под scrub (можно подправить)
+          end: "+=360", // комфортный ход под scrub (можно подправить)
           scrub: 1,
           pin: true,
-          pinSpacing: false,    // ключевой параметр — убирает лишнее пустое место
+          pinSpacing: false, // ключевой параметр — убирает лишнее пустое место
           invalidateOnRefresh: true,
         },
       });
@@ -75,13 +75,13 @@ export const HeroSection = () => {
       <div className={styles.wrapper}>
         <div className={`${styles.contentWrapper} text-content`}>
           <div className={styles.logos}>
-            <a href="https://frankmedia.ru/ ">
+            <a href="https://frankmedia.ru/?utm_source=springle.frankmedia.ru">
               <img src="/images/3.svg" alt="" />
             </a>
             <a href="">
               <img src="/images/2.svg" alt="" />
             </a>
-            <a href="https://springle.ru/?erid=2SDnjeVK1nf">
+            <a href="https://springle.ru/?erid=2SDnjeVK1nf&utm_source=springle.frankmedia.ru">
               <img src="/images/1.svg" alt="" />
             </a>
           </div>

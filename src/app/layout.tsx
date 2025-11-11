@@ -3,6 +3,8 @@ import localFont from "next/font/local";
 import "./globals.css";
 import YandexMetrika from "@/components/YandexMetrika";
 import { Suspense } from "react";
+import YMScrollEndGoal from "@/components/YMScrollEndGoal";
+import CookieConsent from "@/components/CookieConsent";
 
 const inter = localFont({
   src: "../../public/fonts/inter-v20-cyrillic_cyrillic-ext_latin-regular.woff2",
@@ -77,7 +79,9 @@ export default function RootLayout({
       <body className={inter.className}>
         {children}
         <Suspense fallback={null}>
+          <YMScrollEndGoal />
           <YandexMetrika />
+          <CookieConsent />
         </Suspense>
       </body>
     </html>

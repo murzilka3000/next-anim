@@ -572,6 +572,11 @@ const Finish = () => {
             <a
               className={s.modal__btn}
               href="https://springle.timepad.ru/event/3608707/"
+              target="_blank"
+              rel="noopener noreferrer"
+              onClick={() =>
+                (window as any).ym?.(105181480, "reachGoal", "add_to_calendar")
+              }
             >
               Записать в календарь
             </a>

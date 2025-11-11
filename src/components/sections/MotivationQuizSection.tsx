@@ -367,6 +367,10 @@ export const MotivationQuizSection: React.FC = () => {
 
   const handleStart = (e: React.MouseEvent) => {
     e.preventDefault();
+
+    // Yandex.Metrica goal
+    (window as any).ym?.(105181480, "reachGoal", "take_test");
+
     if (isMobile) {
       setModalOpen(true);
     } else {
@@ -625,7 +629,8 @@ export const MotivationQuizSection: React.FC = () => {
               style={{
                 display: "grid",
                 gridTemplateRows: selected ? "1fr" : "0fr",
-                transition: "grid-template-rows 380ms cubic-bezier(0.22, 1, 0.36, 1)",
+                transition:
+                  "grid-template-rows 380ms cubic-bezier(0.22, 1, 0.36, 1)",
                 overflow: "hidden",
               }}
             >
@@ -644,7 +649,9 @@ export const MotivationQuizSection: React.FC = () => {
           </div>
 
           <button
-            className={`${styles.nextFab} ${nextDisabled ? styles.disabled : ""}`}
+            className={`${styles.nextFab} ${
+              nextDisabled ? styles.disabled : ""
+            }`}
             onClick={nextQuestion}
             disabled={nextDisabled}
             aria-label={isLastQuestion ? "К результатам" : "Следующий вопрос"}
