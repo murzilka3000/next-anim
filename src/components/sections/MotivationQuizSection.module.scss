@@ -353,7 +353,7 @@
   }
 
   .subtitle {
-    font-size: 30px;
+    font-size: 36px;
   }
 
   .lead,
@@ -363,21 +363,25 @@
 }
 
 @media screen and (max-width: 880px) {
-  .title {
-    font-size: 34px;
-  }
+  // .title {
+  //   font-size: 34px;
+  // }
 
-  .subtitle {
-    font-size: 20px;
-  }
+  // .subtitle {
+  //   font-size: 20px;
+  // }
 
-  .lead,
-  .leadMuted {
-    font-size: 16px;
-  }
+  // .lead,
+  // .leadMuted {
+  //   font-size: 16px;
+  // }
 
-  .subtitle {
-    text-align: right;
+  // .subtitle {
+  //   text-align: right;
+  // }
+
+  .cont {
+    max-width: 510px;
   }
 
   .introInner,
@@ -599,21 +603,42 @@
   background: transparent;
 }
 
-@media screen and (max-width: 880px) {
-  .title {
-    max-width: 500px;
-  }
+// @media screen and (max-width: 880px) {
+//   .title {
+//     max-width: 500px;
+//   }
 
-  .subtitle {
-    text-align: left;
-  }
-  .cont {
-    max-width: 600px;
-  }
-}
+//   .subtitle {
+//     text-align: left;
+//   }
+//   .cont {
+//     max-width: 600px;
+//   }
+// }
 
 @media screen and (max-width: 600px) {
 .subtitle {
     text-align: right;
   }
+}
+
+
+@media screen and (max-width: 767px) {
+  .title {
+        font-size: 34px;
+        max-width: 500px;
+    }
+
+    .subtitle {
+        font-size: 20px;
+    }
+
+
+        .lead, .leadMuted {
+        font-size: 16px;
+    }
+
+        .cont {
+        max-width: 283px;
+    }
 }
