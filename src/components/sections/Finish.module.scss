@@ -413,11 +413,12 @@
 
 @media screen and (max-width: 1104px) {
   .span12 {
-    left: 30%;
+    left: 10%;
+    max-width: 140px;
   }
 
   .stbr {
-    left: 30%;
+    left: 35%;
     bottom: 0
   }
 }
