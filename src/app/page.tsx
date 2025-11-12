@@ -11,15 +11,15 @@ import { MythsIntroSection } from "@/components/sections/MythsIntroSection";
 export default function HomePage() {
   return (
     <main className={styles.main}>
-      {/* <HeroSection /> */}
+      <HeroSection />
 
-      {/* <SlideGate>
+      <SlideGate>
         <SportSection />
         <MythsIntroSection />
         <MythsDragSection />
         <MotivationQuizSection />
       </SlideGate>
-      <PeopleFrisbeeSection /> */}
+      <PeopleFrisbeeSection />
       <Finish />
     </main>
   );
