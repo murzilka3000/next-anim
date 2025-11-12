@@ -265,3 +265,10 @@
   margin-top: 0px;
 }
 }
+
+
+.frisbee {
+  transform-box: fill-box;      // важно для SVG
+  transform-origin: 50% 50%;    // масштаб из центра
+  will-change: transform;
+}

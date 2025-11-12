@@ -19,6 +19,13 @@ export const HeroSection = () => {
       const frisbeeSel = ".frisbee";
       const glintSel = `${frisbeeSel} [data-glint], ${frisbeeSel} .glint`;
 
+      // Гарантируем масштабирование SVG из центра его bbox (иначе на маленькой высоте «уводит»)
+      gsap.set(frisbeeSel, {
+        transformOrigin: "50% 50%",
+        transformBox: "fill-box",
+        force3D: true,
+      });
+
       // Лёгкое парение тарелки
       gsap
         .timeline({ repeat: -1, yoyo: true, defaults: { ease: "sine.inOut" } })
@@ -34,6 +41,8 @@ export const HeroSection = () => {
           pin: true,
           pinSpacing: false, // ключевой параметр — убирает лишнее пустое место
           invalidateOnRefresh: true,
+          // На iOS/маленькой высоте уменьшает «скачки» из-за адресной строки
+          pinType: "transform",
         },
       });
 
