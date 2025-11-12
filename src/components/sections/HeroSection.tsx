@@ -11,6 +11,9 @@ import styles from "./HeroSection.module.scss";
 
 gsap.registerPlugin(useGSAP, ScrollTrigger);
 
+// Убираем скачки из-за появления/скрытия адресной строки на мобилках
+ScrollTrigger.config({ ignoreMobileResize: true });
+
 export const HeroSection = () => {
   const container = useRef<HTMLElement | null>(null);
 
@@ -19,30 +22,35 @@ export const HeroSection = () => {
       const frisbeeSel = ".frisbee";
       const glintSel = `${frisbeeSel} [data-glint], ${frisbeeSel} .glint`;
 
-      // Гарантируем масштабирование SVG из центра его bbox (иначе на маленькой высоте «уводит»)
+      // Гарантируем масштабирование SVG из центра его bbox
       gsap.set(frisbeeSel, {
         transformOrigin: "50% 50%",
         transformBox: "fill-box",
         force3D: true,
       });
 
+      // Хинт браузеру: контейнер будет пиниться трансформом — готовим композитинг заранее
+      if (container.current) {
+        gsap.set(container.current, { willChange: "transform" });
+      }
+
       // Лёгкое парение тарелки
       gsap
         .timeline({ repeat: -1, yoyo: true, defaults: { ease: "sine.inOut" } })
         .to(frisbeeSel, { y: "-=12", duration: 1.2 });
 
-      // Скролл‑сцена: без pinSpacing → не будет «длинной пустоты» после секции
+      // Скролл‑сцена
       const tl = gsap.timeline({
         scrollTrigger: {
           trigger: container.current,
           start: "top top",
-          end: "+=360", // комфортный ход под scrub (можно подправить)
+          end: "+=360", // комфортный ход под scrub
           scrub: 1,
           pin: true,
-          pinSpacing: false, // ключевой параметр — убирает лишнее пустое место
+          pinSpacing: false, // убирает лишнее пустое место после секции
           invalidateOnRefresh: true,
-          // На iOS/маленькой высоте уменьшает «скачки» из-за адресной строки
-          pinType: "transform",
+          pinType: "transform", // стабилизирует поведение на iOS
+          anticipatePin: 1, // сглаживает «рывок» в момент начала пина
         },
       });
 

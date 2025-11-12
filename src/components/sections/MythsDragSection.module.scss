@@ -459,3 +459,10 @@
     margin-top: 50px;
   }
 }
+
+
+@media screen and (max-width: 380px) {
+  .title {
+      font-size: 33px;
+  }
+}

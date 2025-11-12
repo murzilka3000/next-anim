@@ -23,6 +23,14 @@
   }
 }
 
+
+@media screen and (max-width: 500px) {
+  .section {
+    height: 400px !important;
+  }
+}
+
+
 .intro,
 .quiz {
   position: absolute;
