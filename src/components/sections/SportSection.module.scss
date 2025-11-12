@@ -7,14 +7,17 @@
   z-index: 0;
   background: transparent;
   color: var(--text);
-  padding-top: 100px;
+  padding-top: 200px;
 }
 
-// @media screen and (max-width: 767px) {
-//   .section {
-//     background: transparent;
-//   }
-// }
+
+
+
+@media screen and (max-width: 500px) {
+  .section {
+    padding-top: 100px;
+  }
+}
 
 .isPinned {
   z-index: 50;
