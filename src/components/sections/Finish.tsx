@@ -417,22 +417,7 @@ const Finish = () => {
               >
                 <span
                   aria-hidden
-                  style={{
-                    position: "absolute",
-                    left: "50%",
-                    bottom: "-4px",
-                    width: "82%",
-                    maxWidth: "340px",
-                    height: "26px",
-                    transform: "translateX(-50%) scale(1, 0.35)",
-                    borderRadius: "50%",
-                    background:
-                      "radial-gradient(50% 50% at 50% 50%, rgba(0,0,0,0.7) 0%, rgba(0,0,0,1) 100%)",
-                    filter: "blur(33px)",
-                    opacity: 0.45,
-                    pointerEvents: "none",
-                    zIndex: 0,
-                  }}
+                  className={s.span12}
                 />
                 <img
                   className={`${s.finish__image} ${s.isClickable}`}
@@ -492,22 +477,7 @@ const Finish = () => {
               >
                 <span
                   aria-hidden
-                  style={{
-                    position: "absolute",
-                    left: "50%",
-                    bottom: "40px",
-                    width: "82%",
-                    maxWidth: "340px",
-                    height: "36px",
-                    transform: "translateX(-50%) scale(1, 0.35)",
-                    borderRadius: "50%",
-                    background:
-                      "radial-gradient(50% 50% at 50% 50%, rgba(0,0,0,1) 0%, rgba(0,0,0,1) 100%)",
-                    filter: "blur(33px)",
-                    opacity: 0.45,
-                    pointerEvents: "none",
-                    zIndex: 0,
-                  }}
+                  className={s.stbr}
                 />
                 <img
                   className={`${s.finish__image} ${s.isClickable}`}

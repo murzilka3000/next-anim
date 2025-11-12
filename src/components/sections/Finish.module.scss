@@ -11,7 +11,7 @@
 }
 
 @media screen and (max-width: 600px) {
-  .finish  {
+  .finish {
     padding-bottom: 30px;
   }
 }
@@ -305,8 +305,6 @@
   .modal__card {
     background-image: url("/images/bg-2.svg");
   }
-
-  
 }
 
 @media screen and (max-width: 551px) {
@@ -347,7 +345,7 @@
   }
 
   .modal__card {
-    width:  350px;
+    width: 350px;
   }
 
   .isClickable {
@@ -364,10 +362,87 @@
   }
 }
 
-
 .finish__content img {
   max-width: 58px;
 }
 
 
 
+
+
+.span12 {
+  position: absolute;
+  left: 50%;
+  bottom: -4px;
+  width: 82%;
+  max-width: 340px;
+  height: 26px;
+  transform: translateX(-50%) scale(1, 0.35);
+  border-radius: 50%;
+  background: radial-gradient(
+    50% 50% at 50% 50%,
+    rgba(0, 0, 0, 0.7) 0%,
+    rgba(0, 0, 0, 1) 100%
+  );
+  filter: blur(33px);
+  opacity: 0.45;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.stbr {
+  position: absolute;
+  left: 50%;
+  bottom: 40px;
+  width: 82%;
+  max-width: 340px;
+  height: 36px;
+  transform: translateX(-50%) scale(1, 0.35);
+  border-radius: 50%;
+  background: radial-gradient(
+    50% 50% at 50% 50%,
+    rgba(0, 0, 0, 1) 0%,
+    rgba(0, 0, 0, 1) 100%
+  );
+  filter: blur(33px);
+  opacity: 0.45;
+  pointer-events: none;
+  z-index: 0;
+}
+
+
+@media screen and (max-width: 1104px) {
+  .span12 {
+    left: 30%;
+  }
+
+  .stbr {
+    left: 30%;
+    bottom: 0
+  }
+}
+
+@media screen and (max-width: 551px) {
+  .span12 {
+    left: 10%;
+    max-width: 140px;
+  }
+
+  .stbr {
+    left: 50%;
+    bottom: 0;
+  }
+}
+
+
+@media screen and (max-width: 450px) {
+  .span12 {
+    left: 10%;
+    max-width: 140px;
+  }
+
+  .stbr {
+    left: 70%;
+    bottom: 0;
+  }
+}
