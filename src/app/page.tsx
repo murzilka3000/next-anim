@@ -12,7 +12,6 @@ export default function HomePage() {
   return (
     <main className={styles.main}>
       <HeroSection />
-
       <SlideGate>
         <SportSection />
         <MythsIntroSection />
