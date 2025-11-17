@@ -39,7 +39,7 @@ export default function CookieConsent() {
     <div className={s.cookie} role="dialog" aria-live="polite" aria-label="Сайт использует cookies">
       <p className={s.text}>
         Мы используем cookies, <br /> чтобы сайт работал лучше <br />
-        <a href="">Политика конфиденциальности</a>
+        <a href="https://frankmedia.ru/privacy-policy">Политика конфиденциальности</a>
       </p>
       <button className={s.btn} onClick={accept} aria-label="Принять cookies">
         Принять
