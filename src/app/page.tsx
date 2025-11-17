@@ -18,8 +18,10 @@ export default function HomePage() {
         <MythsDragSection />
         <MotivationQuizSection />
       </SlideGate>
-      <PeopleFrisbeeSection />
-      <Finish />
+      <div className="bg__123">
+        <PeopleFrisbeeSection />
+        <Finish />
+      </div>
     </main>
   );
 }

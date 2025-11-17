@@ -1,14 +1,14 @@
 .section {
   position: relative;
   overflow-x: hidden; /* режем горизонталь */
-  background: url("/images/trava.webp") center / cover no-repeat;
+  // background: url("/images/trava.webp") center / cover no-repeat;
 }
 
-@media screen and (max-width: 600px) {
-  .section {
-    background: url("/images/field-2.png") center / cover no-repeat;
-  }
-}
+// @media screen and (max-width: 600px) {
+//   .section {
+//     background: url("/images/field-2.png") center / cover no-repeat;
+//   }
+// }
 
 /* заголовок сверху */
 .header {

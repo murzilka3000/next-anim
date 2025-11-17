@@ -127,6 +127,13 @@
   min-height: 564px;
 }
 
+
+@media screen and (max-width: 767px) {
+  .cardInner  {
+    box-shadow: 0 0 20px 0 rgba(149, 127, 98, 0);
+  }
+}
+
 .cardLabel {
   font-family: var(--second-family);
   font-weight: 700;

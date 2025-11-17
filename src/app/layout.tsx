@@ -76,11 +76,27 @@ export default function RootLayout({
       lang="ru"
       className={`${inter.variable} ${manrope.variable} ${circe.variable} ${cofoRobert.variable} ${ptSerif.variable}`}
     >
+      <head>
+        {/* Компонент Метрики теперь здесь, он сам вставит скрипт в <head> */}
+        <Suspense fallback={null}>
+          <YandexMetrika />
+        </Suspense>
+      </head>
       <body className={inter.className}>
+        {/* Код <noscript> должен быть в самом верху <body> */}
+        <noscript>
+          <div>
+            <img
+              src="https://mc.yandex.ru/watch/105181480"
+              style={{ position: "absolute", left: "-9999px" }}
+              alt=""
+            />
+          </div>
+        </noscript>
+
         {children}
         <Suspense fallback={null}>
           <YMScrollEndGoal />
-          <YandexMetrika />
           <CookieConsent />
         </Suspense>
       </body>

@@ -166,3 +166,19 @@ body {
     background: #fce2c1;
   }
 } */
+
+.bg__123 {
+  background: url("/images/1234.webp");
+  background-position: center;
+  background-repeat: no-repeat;
+  background-size: cover;
+}
+
+@media screen and (max-width: 767px) {
+  .bg__123 {
+    background: url("/images/123.webp");
+    background-position: center;
+    background-repeat: no-repeat;
+    background-size: cover;
+  }
+}
