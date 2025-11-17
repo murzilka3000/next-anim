@@ -38,7 +38,8 @@ export default function CookieConsent() {
   return (
     <div className={s.cookie} role="dialog" aria-live="polite" aria-label="Сайт использует cookies">
       <p className={s.text}>
-        Мы используем cookies, <br /> чтобы сайт работал лучше
+        Мы используем cookies, <br /> чтобы сайт работал лучше <br />
+        <a href="">Политика конфиденциальности</a>
       </p>
       <button className={s.btn} onClick={accept} aria-label="Принять cookies">
         Принять
